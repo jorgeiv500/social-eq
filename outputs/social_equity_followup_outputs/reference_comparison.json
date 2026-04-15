@@ -1,0 +1,68 @@
+{
+  "tables": {
+    "table_gnn_performance_available.csv": {
+      "produced_shape": [
+        3,
+        3
+      ],
+      "reference_shape": [
+        3,
+        3
+      ],
+      "max_abs_diff": 0.0
+    },
+    "table_priority_summary.csv": {
+      "produced_shape": [
+        4,
+        4
+      ],
+      "reference_shape": [
+        4,
+        4
+      ],
+      "max_abs_diff": 0.019604792807233706
+    },
+    "table_allocation_changes_S2_vs_S1.csv": {
+      "produced_shape": [
+        10,
+        7
+      ],
+      "reference_shape": [
+        10,
+        7
+      ],
+      "max_abs_diff": 212.0
+    },
+    "table_equity_metrics.csv": {
+      "produced_shape": [
+        4,
+        6
+      ],
+      "reference_shape": [
+        4,
+        6
+      ],
+      "max_abs_diff": 410.87450920192043
+    },
+    "table_equity_metrics_final.csv": {
+      "produced_shape": [
+        4,
+        23
+      ],
+      "reference_shape": [
+        4,
+        9
+      ]
+    },
+    "table_robustness_fast.csv": {
+      "produced_shape": [
+        13,
+        5
+      ],
+      "reference_shape": [
+        8,
+        5
+      ]
+    }
+  }
+}

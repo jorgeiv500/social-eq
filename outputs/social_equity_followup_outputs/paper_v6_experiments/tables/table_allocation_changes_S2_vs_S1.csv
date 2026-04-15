@@ -1,0 +1,11 @@
+UTAM,S1_ports,S2_ports,vulnerability_index,net_change,vulnerability_quartile,interpretation
+UTAM572,215,216,0.47673297543004456,1,2,Gain under socially weighted equity
+UTAM67,0,1,0.5740179346561264,1,3,Gain under socially weighted equity
+UTAM20,0,1,0.28163450153969494,1,1,Gain under socially weighted equity
+UTAM65,0,1,0.5699002176660094,1,3,Gain under socially weighted equity
+UTAM98,9,10,0.3218987409866714,1,1,Gain under socially weighted equity
+UTAM44,2,1,0.5892480868425617,-1,3,Loss under socially weighted equity
+UTAM111,183,182,0.3004573354393389,-1,1,Loss under socially weighted equity
+UTAM103,143,142,0.26031143194074,-1,1,Loss under socially weighted equity
+UTAM610,348,347,0.07150780822183547,-1,1,Loss under socially weighted equity
+UTAM100,190,189,0.30162881695408783,-1,1,Loss under socially weighted equity

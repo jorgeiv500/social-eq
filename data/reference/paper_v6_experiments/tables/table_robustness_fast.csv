@@ -1,0 +1,9 @@
+alternative_specification,delta_weighted_gini,delta_vulnerable_coverage,rank_stability,interpretation
+Lambda x 0.75,-0.024950152860326952,-0.05555555555555555,0.9283675570358216,Accessibility-decay sensitivity
+Lambda x 1.25,0.013625256942260452,0.0,0.978964110500884,Accessibility-decay sensitivity
+Epsilon 0.056,2.6579693829312245e-05,0.0,0.9831745006519577,Fidelity-equity sensitivity
+Epsilon 0.080,0.0,0.0,1.0,Fidelity-equity sensitivity
+Epsilon 0.100,-1.6383887292220622e-05,0.0,0.9915830192385401,Fidelity-equity sensitivity
+Kappa 2.00,1.3877787807814457e-17,0.0,1.0,Social-weight intensity
+Kappa 4.00,0.0,0.0,1.0,Social-weight intensity
+Kappa 6.00,0.0,0.0,1.0,Social-weight intensity

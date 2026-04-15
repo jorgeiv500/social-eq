@@ -1,0 +1,32 @@
+{
+  "inputs": {
+    "utam_shapefile.zip": {
+      "source": "/Users/jorgeiv500/Downloads/a. Shapefile UTAM.zip",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_shapefile.zip"
+    },
+    "priority_utam_scores.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/priority_utam_scores.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/priority_utam_scores.csv"
+    },
+    "temporal_attention_by_utam.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/temporal_attention_by_utam.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/temporal_attention_by_utam.csv"
+    },
+    "learning_loss_history.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/learning_loss_history.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv"
+    },
+    "utam_social_vulnerability.csv": {
+      "source": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/utam_social_vulnerability.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_social_vulnerability.csv"
+    },
+    "utam_travel_time_matrix.csv": {
+      "source": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/utam_travel_time_matrix.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_travel_time_matrix.csv"
+    }
+  },
+  "reference_dir": {
+    "source": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/paper_v6_experiments",
+    "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/reference/paper_v6_experiments"
+  }
+}
