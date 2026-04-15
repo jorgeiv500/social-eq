@@ -1,79 +1,89 @@
 # Bogotá EV Charging Social Equity Reproduction
 
-Repositorio para replicar en local el experimento del paper:
+Reproducible local pipeline for:
 
 `Socially equitable EV charging allocation in Bogotá: Linking mobility learning and lexicographic optimization`
 
-El pipeline toma un conjunto mínimo de insumos versionados en `data/inputs`, reproduce los escenarios `S0`-`S3`, ejecuta la batería rápida de robustez y exporta las figuras/tablas del manuscrito en `outputs/social_equity_followup_outputs/paper_v6_experiments`.
+The repository stages a minimal input bundle, solves scenarios `S0`-`S3` with `Pyomo + NEOS/CPLEX`, runs the rapid robustness battery, and exports the curated paper figures/tables under:
 
-La optimización se ejecuta por defecto en `NEOS` usando `CPLEX`, siguiendo la lógica del cuaderno original.
+`outputs/social_equity_followup_outputs/paper_v6_experiments`
 
-## Estructura
+## Repository layout
 
-- `data/inputs`: insumos mínimos para la reproducción principal.
-- `data/reference`: opcional; salidas de referencia para comparación.
-- `scripts/stage_inputs.py`: copia insumos desde rutas locales conocidas (`Downloads` y Google Drive sincronizado).
-- `scripts/reproduce_followup.py`: ejecuta la reproducción completa.
-- `src/social_eq/followup.py`: lógica del modelo, tablas y figuras.
+- `data/inputs`: versioned inputs required for reproduction.
+- `data/reference`: optional reference outputs for comparison.
+- `scripts/stage_inputs.py`: stages local inputs from known `Downloads` and synchronized Google Drive paths.
+- `scripts/reproduce_followup.py`: runs the full reproduction pipeline.
+- `src/social_eq/followup.py`: model logic, figures, tables, cleanup, and paper-package export.
+- `docs/jtg_figure_style_notes.md`: visual rules transferred from the reference article.
+- `docs/paper_submission_recommendations.md`: recommended main-text vs supplementary figure/table plan.
 
-## Uso rápido
+## Quick start
 
-1. Crear o activar el entorno virtual.
-2. Instalar el proyecto:
+1. Install the project into the virtual environment:
 
 ```bash
 .venv/bin/pip install -e .
 ```
 
-3. Preparar insumos locales:
+2. Stage local inputs:
 
 ```bash
 .venv/bin/python scripts/stage_inputs.py
 ```
 
-4. Ejecutar la reproducción:
+3. Run the full reproduction:
 
 ```bash
 .venv/bin/python scripts/reproduce_followup.py
 ```
 
-Si quieres sobrescribir el correo para `NEOS`, exporta antes:
+If you want to override the NEOS account used by the solver:
 
 ```bash
-export NEOS_EMAIL="tu_correo@dominio.com"
+export NEOS_EMAIL="your_email@domain.com"
 ```
 
-## Salidas principales
+## Solver and reproducibility notes
 
-El script genera, entre otros:
+- Optimization runs through `NEOS` with `CPLEX` by default.
+- The staged manifest is written to `data/inputs/input_manifest.json`.
+- The run manifest is written to `outputs/social_equity_followup_outputs/run_manifest.json`.
+- The current reproduction closes the OD matrix with `survey_graph_completed` when the alternative full matrix is unavailable locally.
 
-- `fig_priority_map.png`
-- `fig_gnn_learning_history.png`
+## Curated paper outputs
+
+Main paper figures:
+
+- `fig_official_ev_growth.png`
+- `fig_social_context_panels.png`
 - `fig_attention_profile.png`
-- `fig_allocation_S0.png`
-- `fig_allocation_S1.png`
-- `fig_allocation_S2.png`
-- `fig_allocation_S3.png`
+- `fig_allocation_composite.png`
 - `fig_net_change_S2_minus_S1.png`
-- `fig_net_change_S3_minus_S2.png`
-- `fig_S3_protected_set.png`
 - `fig_lorenz_curves.png`
+- `fig_policy_tradeoff.png`
+
+Supplementary figures:
+
+- `fig_growth_progression.png`
+- `fig_gnn_learning_history.png`
 - `fig_robustness.png`
 
-y las tablas:
+Main paper tables:
 
-- `table_gnn_performance_available.csv`
-- `table_priority_summary.csv`
-- `table_allocation_changes_S2_vs_S1.csv`
-- `table_equity_metrics.csv`
+- `table_scenario_design.csv`
 - `table_equity_metrics_final.csv`
-- `table_robustness_fast.csv`
-- `table_robustness.csv`
+- `table_official_ev_growth.csv`
+- `table_policy_tradeoff.csv`
 
-## Notas
+The pipeline also builds:
 
-- La optimización se envía a `NEOS/CPLEX` vía `Pyomo`.
-- `scripts/stage_inputs.py` además puede copiar una carpeta de referencia desde Google Drive sincronizado para contrastar resultados.
-- Si faltan insumos, revisa `data/inputs/input_manifest.json` después del staging.
-- La carpeta `outputs/social_equity_followup_outputs/reference_comparison.json` resume la distancia entre las tablas reproducidas y la carpeta de referencia.
-- En este entorno no fue posible reconstruir la matriz alternativa vía OSRM por un problema de SSL del cliente local; por eso la corrida actual usa `survey_graph_completed` como cierre de la matriz OD y no reproduce exactamente todas las métricas de equidad de la referencia.
+- `outputs/social_equity_followup_outputs/paper_v6_experiments/paper_submission_package/`
+- `outputs/social_equity_followup_outputs/paper_v6_experiments/paper_submission_package.zip`
+
+These contain the curated figures, tables, documentation, and the minimal reproducibility files for submission support.
+
+## Important result note
+
+In the current reproducible run, `S3` is identical to `S2`.
+Therefore `S3-S2` net-change maps are structurally empty and are intentionally omitted from the curated package.

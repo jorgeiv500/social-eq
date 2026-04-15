@@ -16,6 +16,9 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm
+from matplotlib.patches import Patch
 from pyomo.environ import (
     ConcreteModel,
     Constraint,
@@ -29,9 +32,69 @@ from pyomo.environ import (
 )
 from pyomo.opt import SolverFactory, SolverManagerFactory, TerminationCondition
 from scipy.sparse.csgraph import shortest_path
+from shapely.affinity import rotate as rotate_geometry
 
 warnings.filterwarnings("ignore")
 plt.style.use("default")
+
+PAPER_PANEL = "#fbf8f4"
+PAPER_GRID = "#d9d1c8"
+PAPER_TEXT = "#2d2a26"
+MAP_EDGE = "#f4eee5"
+MAP_MISSING = "#e8e0d5"
+SEQUENTIAL_CMAP = LinearSegmentedColormap.from_list(
+    "social_eq_seq",
+    ["#1f1f22", "#42305f", "#7b3f7a", "#c95a49", "#f1c57b"],
+)
+DIVERGING_CMAP = LinearSegmentedColormap.from_list(
+    "social_eq_div",
+    ["#2e3f68", "#8fa8c8", "#f8f5f0", "#e7a787", "#b84c4d"],
+)
+SCENARIO_COLORS = {
+    "S0": "#2e3f68",
+    "S1": "#6f86b1",
+    "S2": "#c95a49",
+    "S3": "#7b3f7a",
+}
+PROTECTED_COLORS = {0: "#e8dfd2", 1: "#c95a49"}
+TIME_WINDOWS = [
+    (-0.5, 5.5, "Residential", "#e7eef4"),
+    (7.5, 17.5, "Work", "#f7e5de"),
+    (17.5, 21.5, "Public", "#f7edd7"),
+]
+PAPER_MAIN_FIGURES = (
+    "fig_official_ev_growth.png",
+    "fig_social_context_panels.png",
+    "fig_attention_profile.png",
+    "fig_allocation_composite.png",
+    "fig_net_change_S2_minus_S1.png",
+    "fig_lorenz_curves.png",
+    "fig_policy_tradeoff.png",
+)
+PAPER_SUPPLEMENTARY_FIGURES = (
+    "fig_growth_progression.png",
+    "fig_gnn_learning_history.png",
+    "fig_robustness.png",
+)
+PAPER_KEEP_FIGURES = PAPER_MAIN_FIGURES + PAPER_SUPPLEMENTARY_FIGURES
+PAPER_MAIN_TABLES = (
+    "table_scenario_design.csv",
+    "table_equity_metrics_final.csv",
+    "table_official_ev_growth.csv",
+    "table_policy_tradeoff.csv",
+)
+PAPER_SUPPLEMENTARY_TABLES = (
+    "table_priority_summary.csv",
+    "table_equity_metrics.csv",
+    "table_robustness.csv",
+    "table_allocation_changes_S2_vs_S1.csv",
+    "table_gnn_performance_available.csv",
+    "scenario_S0.csv",
+    "scenario_S1.csv",
+    "scenario_S2.csv",
+    "scenario_S3.csv",
+)
+PAPER_KEEP_TABLES = PAPER_MAIN_TABLES + PAPER_SUPPLEMENTARY_TABLES
 
 
 @dataclass
@@ -1022,8 +1085,8 @@ def run_refined_scenarios(paths: ProjectPaths, inputs: InputFiles, config: Model
     export_section_tables(paths, scenario_metrics, scenario_outputs, df_inputs, attention, loss_hist, robust_df)
     export_figures(paths, utam, df_inputs, loss_hist, scenario_outputs, protected_mask_s3, robust_df)
     save_scenario_outputs(paths, scenario_outputs)
-    package_outputs(paths)
     save_run_manifest(paths, inputs, config, scenario_metrics, robust_df)
+    package_outputs(paths)
 
     reference_comparison = compare_with_reference(paths)
     return ScenarioRun(
@@ -1381,6 +1444,99 @@ def export_section_tables(
         100.0 * (priority_summary["objective_abs_dev"] - u0) / max(u0, 1e-9),
     )
     priority_summary.to_csv(paths.tables_dir / "table_priority_summary.csv", index=False)
+    scenario_design = scenario_metrics[
+        [
+            "scenario",
+            "epsilon_used",
+            "kappa_used",
+            "floor_type",
+            "objective_abs_dev",
+            "coverage_within_threshold_vulnerable",
+        ]
+    ].copy()
+    role_map = {
+        "S0": "Priority-matching baseline",
+        "S1": "Equity relaxation without vulnerability weights",
+        "S2": "Socially weighted equity scenario",
+        "S3": "Soft-floor protection for vulnerable geography",
+    }
+    scenario_design["policy_role"] = scenario_design["scenario"].map(role_map)
+    scenario_design["relative_fidelity_loss_vs_S0_pct"] = scenario_design["scenario"].map(
+        priority_summary.set_index("scenario")["relative_fidelity_loss_vs_S0_pct"]
+    ).fillna(0.0)
+    scenario_design["vulnerable_coverage_pct"] = 100.0 * scenario_design["coverage_within_threshold_vulnerable"]
+    if {"S2", "S3"}.issubset(set(scenario_metrics["scenario"].astype(str))):
+        s2_row = scenario_metrics.loc[scenario_metrics["scenario"].eq("S2")].iloc[0]
+        s3_row = scenario_metrics.loc[scenario_metrics["scenario"].eq("S3")].iloc[0]
+        s3_same_as_s2 = bool(
+            math.isclose(float(s2_row["objective_abs_dev"]), float(s3_row["objective_abs_dev"]), rel_tol=0.0, abs_tol=1e-9)
+            and math.isclose(
+                float(s2_row["coverage_within_threshold_vulnerable"]),
+                float(s3_row["coverage_within_threshold_vulnerable"]),
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+            and math.isclose(
+                float(s2_row["accessibility_weighted_gini"]),
+                float(s3_row["accessibility_weighted_gini"]),
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        )
+    else:
+        s3_same_as_s2 = False
+    scenario_design["binding_status"] = np.where(
+        scenario_design["scenario"].eq("S3") & s3_same_as_s2,
+        "Non-binding floor; allocation equals S2",
+        np.where(
+            scenario_design["scenario"].eq("S3"),
+            "Floor changes the allocation",
+            "",
+        ),
+    )
+    scenario_design = scenario_design[
+        [
+            "scenario",
+            "policy_role",
+            "epsilon_used",
+            "kappa_used",
+            "floor_type",
+            "binding_status",
+            "relative_fidelity_loss_vs_S0_pct",
+            "vulnerable_coverage_pct",
+            "objective_abs_dev",
+        ]
+    ]
+    scenario_design.to_csv(paths.tables_dir / "table_scenario_design.csv", index=False)
+    tradeoff_table = scenario_metrics[
+        [
+            "scenario",
+            "objective_abs_dev",
+            "accessibility_weighted_gini",
+            "coverage_within_threshold_vulnerable",
+            "mean_access_high_vulnerability",
+        ]
+    ].copy()
+    baseline_weighted_gini = float(
+        tradeoff_table.loc[tradeoff_table["scenario"].eq("S0"), "accessibility_weighted_gini"].iloc[0]
+    )
+    baseline_high_access = float(
+        tradeoff_table.loc[tradeoff_table["scenario"].eq("S0"), "mean_access_high_vulnerability"].iloc[0]
+    )
+    tradeoff_table = tradeoff_table.merge(
+        priority_summary[["scenario", "relative_fidelity_loss_vs_S0_pct"]],
+        on="scenario",
+        how="left",
+    )
+    tradeoff_table["relative_fidelity_loss_vs_S0_pct"] = tradeoff_table["relative_fidelity_loss_vs_S0_pct"].fillna(0.0)
+    tradeoff_table["vulnerable_coverage_pct"] = 100.0 * tradeoff_table["coverage_within_threshold_vulnerable"]
+    tradeoff_table["weighted_gini_improvement_vs_S0_bp"] = 10000.0 * (
+        baseline_weighted_gini - tradeoff_table["accessibility_weighted_gini"]
+    )
+    tradeoff_table["high_vulnerability_access_delta_vs_S0"] = (
+        tradeoff_table["mean_access_high_vulnerability"] - baseline_high_access
+    )
+    tradeoff_table.to_csv(paths.tables_dir / "table_policy_tradeoff.csv", index=False)
 
     s1_df = scenario_outputs["S1"]
     s2_df = scenario_outputs["S2"]
@@ -1424,6 +1580,190 @@ def export_section_tables(
     equity_metrics.to_csv(paths.tables_dir / "table_equity_metrics.csv", index=False)
     scenario_metrics.to_csv(paths.tables_dir / "table_equity_metrics_final.csv", index=False)
     robust_df.to_csv(paths.tables_dir / "table_robustness_fast.csv", index=False)
+    official_growth = load_official_ev_growth(paths)
+    if official_growth is not None and len(official_growth):
+        official_growth.to_csv(paths.tables_dir / "table_official_ev_growth.csv", index=False)
+
+
+def configure_line_axis(ax: Any, title: str, xlabel: str, ylabel: str) -> None:
+    ax.set_title(title, loc="left", fontsize=12, fontweight="semibold", color=PAPER_TEXT, pad=10)
+    ax.set_xlabel(xlabel, color=PAPER_TEXT)
+    ax.set_ylabel(ylabel, color=PAPER_TEXT)
+    ax.set_facecolor("white")
+    ax.grid(axis="y", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+    ax.grid(axis="x", visible=False)
+    ax.spines["top"].set_visible(True)
+    ax.spines["top"].set_color(PAPER_TEXT)
+    ax.spines["top"].set_linewidth(1.2)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#6d655e")
+    ax.spines["bottom"].set_color("#6d655e")
+    ax.tick_params(colors=PAPER_TEXT)
+
+
+def add_time_window_bands(ax: Any) -> None:
+    for start, end, label, color in TIME_WINDOWS:
+        ax.axvspan(start, end, color=color, alpha=0.9, zorder=0)
+        ax.text(
+            (start + end) / 2,
+            0.97,
+            label,
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            fontsize=8.5,
+            color="#5a544e",
+        )
+
+
+def horizontalize_bogota(gdf: gpd.GeoDataFrame, target_epsg: int = 3116) -> gpd.GeoDataFrame:
+    projected = gdf.to_crs(target_epsg) if gdf.crs is not None and gdf.crs.to_epsg() != target_epsg else gdf.copy()
+    if projected.crs is None:
+        projected = projected.set_crs(target_epsg)
+    centroids = np.column_stack([projected.geometry.centroid.x, projected.geometry.centroid.y])
+    if len(centroids) < 2:
+        return projected
+    centered = centroids - centroids.mean(axis=0)
+    _, _, vh = np.linalg.svd(centered, full_matrices=False)
+    angle = float(np.degrees(np.arctan2(vh[0, 1], vh[0, 0])))
+    origin = tuple(projected.unary_union.centroid.coords[0])
+    rotated = projected.copy()
+    rotated["geometry"] = rotated.geometry.apply(lambda geom: rotate_geometry(geom, -angle, origin=origin))
+    minx, miny, maxx, maxy = rotated.total_bounds
+    if (maxy - miny) > (maxx - minx):
+        rotated["geometry"] = rotated.geometry.apply(lambda geom: rotate_geometry(geom, 90, origin=origin))
+    return rotated
+
+
+def plot_map_panel(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    column: str,
+    title: str,
+    cmap: Any,
+    *,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    norm: Any | None = None,
+) -> None:
+    kwargs: dict[str, Any] = {
+        "column": column,
+        "ax": ax,
+        "cmap": cmap,
+        "linewidth": 0.35,
+        "edgecolor": MAP_EDGE,
+        "missing_kwds": {"color": MAP_MISSING},
+    }
+    if norm is not None:
+        kwargs["norm"] = norm
+    else:
+        kwargs["vmin"] = vmin
+        kwargs["vmax"] = vmax
+    gdf.plot(**kwargs)
+    ax.set_title(title, loc="left", fontsize=11.5, fontweight="semibold", color=PAPER_TEXT, pad=8)
+    ax.set_axis_off()
+    ax.set_facecolor(PAPER_PANEL)
+    ax.set_aspect("equal")
+    ax.margins(0.01)
+
+
+def add_horizontal_colorbar(
+    fig: Any,
+    ax: Any,
+    cmap: Any,
+    norm: Any,
+    label: str,
+    *,
+    fraction: float = 0.05,
+    pad: float = 0.04,
+) -> None:
+    cbar = fig.colorbar(
+        ScalarMappable(norm=norm, cmap=cmap),
+        ax=ax,
+        orientation="horizontal",
+        fraction=fraction,
+        pad=pad,
+        aspect=35,
+    )
+    cbar.outline.set_visible(False)
+    cbar.ax.tick_params(labelsize=8, colors=PAPER_TEXT)
+    cbar.set_label(label, fontsize=9, color=PAPER_TEXT)
+
+
+def plot_binary_map_panel(ax: Any, gdf: gpd.GeoDataFrame, column: str, title: str) -> None:
+    colors = gdf[column].fillna(0).astype(int).map(PROTECTED_COLORS).fillna(MAP_MISSING)
+    gdf.assign(_fill=colors).plot(color=colors, ax=ax, linewidth=0.35, edgecolor=MAP_EDGE)
+    ax.set_title(title, loc="left", fontsize=11.5, fontweight="semibold", color=PAPER_TEXT, pad=8)
+    ax.set_axis_off()
+    ax.set_facecolor(PAPER_PANEL)
+    ax.set_aspect("equal")
+    ax.margins(0.01)
+
+
+def load_optional_growth_long(paths: ProjectPaths) -> pd.DataFrame | None:
+    candidate_names = [
+        "annual_growth_by_utam.csv",
+        "utam_annual_growth.csv",
+        "growth_by_year_utam.csv",
+    ]
+    for name in candidate_names:
+        candidate = paths.input_dir / name
+        if not candidate.exists():
+            continue
+        growth = pd.read_csv(candidate)
+        growth = growth.rename(columns={find_utam_col(growth): "UTAM"})
+        growth["UTAM"] = growth["UTAM"].map(normalize_zone_code)
+        lower_map = {str(column).lower(): column for column in growth.columns}
+        if {"utam", "year"}.issubset(lower_map):
+            value_col = next(
+                (
+                    column
+                    for column in growth.columns
+                    if str(column).lower() not in {"utam", "year"} and pd.api.types.is_numeric_dtype(growth[column])
+                ),
+                None,
+            )
+            if value_col is not None:
+                return growth[["UTAM", lower_map["year"], value_col]].rename(
+                    columns={lower_map["year"]: "year", value_col: "value"}
+                )
+        year_cols = [column for column in growth.columns if str(column).lower().startswith("year_")]
+        if year_cols:
+            long_df = growth.melt(
+                id_vars=["UTAM"],
+                value_vars=year_cols,
+                var_name="year",
+                value_name="value",
+            )
+            long_df["year"] = long_df["year"].str.extract(r"(\d+)").astype(int)
+            return long_df
+    return None
+
+
+def load_official_ev_growth(paths: ProjectPaths) -> pd.DataFrame | None:
+    candidate = paths.input_dir / "bogota_official_ev_growth.csv"
+    if not candidate.exists():
+        return None
+    growth = pd.read_csv(candidate)
+    required = {"year", "checkpoint_date", "electric_vehicles"}
+    if not required.issubset({str(column) for column in growth.columns}):
+        return None
+    growth = growth.copy()
+    growth["year"] = pd.to_numeric(growth["year"], errors="coerce")
+    growth["checkpoint_date"] = pd.to_datetime(growth["checkpoint_date"], errors="coerce")
+    growth["electric_vehicles"] = pd.to_numeric(growth["electric_vehicles"], errors="coerce")
+    growth = growth.dropna(subset=["year", "electric_vehicles"]).sort_values(["year", "checkpoint_date"]).reset_index(drop=True)
+    if growth.empty:
+        return None
+    growth["year"] = growth["year"].astype(int)
+    growth["annual_addition"] = growth["electric_vehicles"].diff()
+    growth["annual_growth_pct"] = 100.0 * growth["annual_addition"] / growth["electric_vehicles"].shift(1)
+    growth["checkpoint_label"] = np.where(
+        growth["checkpoint_date"].notna(),
+        growth["checkpoint_date"].dt.strftime("%Y\n%b"),
+        growth["year"].astype(str),
+    )
+    return growth
 
 
 def export_figures(
@@ -1438,156 +1778,442 @@ def export_figures(
     utam_map = utam[["UTAM", "geometry"]].copy()
     if utam_map.crs is None:
         utam_map = utam_map.set_crs(4326)
-
+    utam_map = horizontalize_bogota(utam_map)
     gdf_priority = utam_map.merge(df_inputs[["UTAM", "priority_norm", "vulnerability_index"]], on="UTAM", how="left")
-    fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-    gdf_priority.plot(column="priority_norm", legend=True, cmap="viridis", linewidth=0.2, edgecolor="white", ax=ax)
-    ax.set_title("Learned zone-level priority index")
-    ax.set_axis_off()
-    fig.savefig(paths.figures_dir / "fig_priority_map.png", dpi=300, bbox_inches="tight")
+    protected_df = pd.DataFrame({"UTAM": df_inputs["UTAM"], "protected_s3": protected_mask_s3.astype(int)})
+    gdf_protected = utam_map.merge(protected_df, on="UTAM", how="left")
+
+    priority_norm = Normalize(
+        vmin=float(np.nanmin(gdf_priority["priority_norm"].to_numpy(dtype=float))),
+        vmax=float(np.nanmax(gdf_priority["priority_norm"].to_numpy(dtype=float))),
+    )
+    vulnerability_norm = Normalize(
+        vmin=float(np.nanmin(gdf_priority["vulnerability_index"].to_numpy(dtype=float))),
+        vmax=float(np.nanmax(gdf_priority["vulnerability_index"].to_numpy(dtype=float))),
+    )
+
+    fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
+    plot_map_panel(ax, gdf_priority, "priority_norm", "Learned priority surface across Bogota", SEQUENTIAL_CMAP, norm=priority_norm)
+    add_horizontal_colorbar(fig, ax, SEQUENTIAL_CMAP, priority_norm, "Normalized priority")
+    fig.savefig(paths.figures_dir / "fig_priority_map.png", dpi=300, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
+    plot_binary_map_panel(ax, gdf_protected, "protected_s3", "Protected S3 geography for the soft-floor policy")
+    ax.legend(
+        handles=[
+            Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected UTAM"),
+            Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Unprotected UTAM"),
+        ],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=2,
+        frameon=False,
+        fontsize=9,
+    )
+    fig.savefig(paths.figures_dir / "fig_S3_protected_set.png", dpi=300, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+    fig, axes = plt.subplots(1, 3, figsize=(17.2, 5.2), constrained_layout=True)
+    plot_map_panel(axes[0], gdf_priority, "priority_norm", "a. Learned priority", SEQUENTIAL_CMAP, norm=priority_norm)
+    plot_map_panel(axes[1], gdf_priority, "vulnerability_index", "b. Social vulnerability", SEQUENTIAL_CMAP, norm=vulnerability_norm)
+    plot_binary_map_panel(axes[2], gdf_protected, "protected_s3", "c. Protected geography")
+    add_horizontal_colorbar(fig, axes[0], SEQUENTIAL_CMAP, priority_norm, "Priority", fraction=0.05, pad=0.03)
+    add_horizontal_colorbar(fig, axes[1], SEQUENTIAL_CMAP, vulnerability_norm, "Vulnerability", fraction=0.05, pad=0.03)
+    axes[2].legend(
+        handles=[
+            Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected"),
+            Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Other UTAM"),
+        ],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=2,
+        frameon=False,
+        fontsize=8.8,
+    )
+    fig.savefig(paths.figures_dir / "fig_social_context_panels.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     if loss_hist is not None and len(loss_hist):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+        fig, ax = plt.subplots(1, 1, figsize=(11, 4.4), constrained_layout=True)
+        cols_lower = {str(column).lower(): column for column in loss_hist.columns}
+        x = (
+            pd.to_numeric(loss_hist[cols_lower["epoch"]], errors="coerce").to_numpy(dtype=float)
+            if "epoch" in cols_lower
+            else np.arange(len(loss_hist), dtype=float)
+        )
         for column in loss_hist.columns:
-            if str(column).lower() == "epoch":
+            if str(column).lower() == "epoch" or not pd.api.types.is_numeric_dtype(loss_hist[column]):
                 continue
-            if pd.api.types.is_numeric_dtype(loss_hist[column]):
-                ax.plot(loss_hist[column], label=column)
-        ax.set_title("GNN learning history")
-        ax.set_xlabel("Iteration")
-        ax.set_ylabel("Loss / metric")
-        ax.legend(loc="best", fontsize=8)
-        fig.savefig(paths.figures_dir / "fig_gnn_learning_history.png", dpi=300, bbox_inches="tight")
+            values = pd.to_numeric(loss_hist[column], errors="coerce").to_numpy(dtype=float)
+            color = SCENARIO_COLORS["S0"] if "train" in str(column).lower() else SCENARIO_COLORS["S2"]
+            ax.plot(x, values, color=color, linewidth=2.2, alpha=0.25)
+            ax.plot(
+                x,
+                pd.Series(values).rolling(window=5, min_periods=1).mean(),
+                color=color,
+                linewidth=2.6,
+                label=str(column).replace("_", " "),
+            )
+        configure_line_axis(ax, "GNN learning history", "Iteration", "Loss / error")
+        ax.legend(loc="upper right", frameon=False, fontsize=9)
+        fig.savefig(paths.figures_dir / "fig_gnn_learning_history.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
-    fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(13.4, 4.8), constrained_layout=True)
     attention = pd.read_csv(paths.input_dir / "temporal_attention_by_utam.csv")
     attention = attention.rename(columns={find_utam_col(attention): "UTAM"})
+    attention["UTAM"] = attention["UTAM"].map(normalize_zone_code)
     hour_cols = [f"hour_{hour}" for hour in range(24) if f"hour_{hour}" in attention.columns]
+    priority_raw = pd.read_csv(paths.input_dir / "priority_utam_scores.csv")
+    priority_raw = priority_raw.rename(columns={find_utam_col(priority_raw): "UTAM"})
+    priority_raw["UTAM"] = priority_raw["UTAM"].map(normalize_zone_code)
+    trip_cols = [f"trip_hour_{hour:02d}" for hour in range(24) if f"trip_hour_{hour:02d}" in priority_raw.columns]
+    hours = np.arange(24)
     if hour_cols:
-        ax.plot(range(len(hour_cols)), attention[hour_cols].mean(axis=0).to_numpy(dtype=float), marker="o")
-        ax.set_xticks(range(len(hour_cols)))
-        ax.set_xticklabels([column.replace("hour_", "") for column in hour_cols], rotation=0)
-        ax.set_title("Average temporal attention profile")
-        ax.set_xlabel("Hour")
-        ax.set_ylabel("Mean attention")
-    fig.savefig(paths.figures_dir / "fig_attention_profile.png", dpi=300, bbox_inches="tight")
+        mean_attention = attention[hour_cols].mean(axis=0).to_numpy(dtype=float)
+        mean_attention = mean_attention / max(float(np.nanmax(mean_attention)), 1e-9)
+        smoothed_attention = pd.Series(mean_attention).rolling(window=3, center=True, min_periods=1).mean().to_numpy()
+        trip_profile = None
+        if len(trip_cols) == 24:
+            trip_profile = priority_raw[trip_cols].mean(axis=0).to_numpy(dtype=float)
+            trip_profile = trip_profile / max(float(np.nanmax(trip_profile)), 1e-9)
+        add_time_window_bands(axes[0])
+        axes[0].plot(hours, smoothed_attention, color=SCENARIO_COLORS["S2"], linewidth=2.8, label="GNN attention")
+        axes[0].scatter(hours, mean_attention, color=SCENARIO_COLORS["S2"], s=18, zorder=3)
+        if trip_profile is not None:
+            axes[0].plot(hours, trip_profile, color=SCENARIO_COLORS["S0"], linewidth=2.2, linestyle="--", label="Observed trip pressure")
+        configure_line_axis(axes[0], "a. Daily schedule signature", "Hour", "Relative intensity")
+        axes[0].set_xticks(hours)
+        axes[0].set_xlim(-0.4, 23.4)
+        axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
+
+        attention_vuln = attention.merge(df_inputs[["UTAM", "vulnerability_index"]], on="UTAM", how="left")
+        top_cut = float(attention_vuln["vulnerability_index"].quantile(0.75))
+        low_cut = float(attention_vuln["vulnerability_index"].quantile(0.25))
+        high_profile = attention_vuln.loc[attention_vuln["vulnerability_index"] >= top_cut, hour_cols].mean(axis=0).to_numpy(dtype=float)
+        low_profile = attention_vuln.loc[attention_vuln["vulnerability_index"] <= low_cut, hour_cols].mean(axis=0).to_numpy(dtype=float)
+        scale = max(float(np.nanmax(high_profile)), float(np.nanmax(low_profile)), 1e-9)
+        high_profile = high_profile / scale
+        low_profile = low_profile / scale
+        add_time_window_bands(axes[1])
+        axes[1].plot(hours, pd.Series(high_profile).rolling(window=3, center=True, min_periods=1).mean(), color=SCENARIO_COLORS["S2"], linewidth=2.8, label="High vulnerability")
+        axes[1].plot(hours, pd.Series(low_profile).rolling(window=3, center=True, min_periods=1).mean(), color=SCENARIO_COLORS["S0"], linewidth=2.8, label="Low vulnerability")
+        axes[1].scatter(hours, high_profile, color=SCENARIO_COLORS["S2"], s=16, zorder=3)
+        axes[1].scatter(hours, low_profile, color=SCENARIO_COLORS["S0"], s=16, zorder=3)
+        configure_line_axis(axes[1], "b. Attention split by social vulnerability", "Hour", "Relative intensity")
+        axes[1].set_xticks(hours)
+        axes[1].set_xlim(-0.4, 23.4)
+        axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
+    fig.savefig(paths.figures_dir / "fig_attention_profile.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
+    ordered_scenarios = [name for name in ["S0", "S1", "S2", "S3"] if name in scenario_outputs]
     all_ports = []
-    for scenario_name, df_scenario in scenario_outputs.items():
-        if "ports_total" in df_scenario.columns:
-            all_ports.extend(pd.to_numeric(df_scenario["ports_total"], errors="coerce").dropna().tolist())
+    for scenario_name in ordered_scenarios:
+        if "ports_total" in scenario_outputs[scenario_name].columns:
+            all_ports.extend(pd.to_numeric(scenario_outputs[scenario_name]["ports_total"], errors="coerce").dropna().tolist())
     ports_vmin = float(np.min(all_ports)) if all_ports else 0.0
     ports_vmax = float(np.max(all_ports)) if all_ports else 1.0
+    ports_norm = Normalize(vmin=ports_vmin, vmax=ports_vmax)
 
-    for scenario_name, df_scenario in scenario_outputs.items():
-        gdf = utam_map.merge(df_scenario[["UTAM", "ports_total", "accessibility"]], on="UTAM", how="left")
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-        gdf.plot(
-            column="ports_total",
-            legend=True,
-            cmap="YlOrRd",
-            linewidth=0.2,
-            edgecolor="white",
-            ax=ax,
-            vmin=ports_vmin,
-            vmax=ports_vmax,
-        )
-        ax.set_title(f"{scenario_name} total port allocation")
-        ax.set_axis_off()
-        fig.savefig(paths.figures_dir / f"fig_allocation_{scenario_name}.png", dpi=300, bbox_inches="tight")
+    for scenario_name in ordered_scenarios:
+        gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total", "accessibility"]], on="UTAM", how="left")
+        fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
+        plot_map_panel(ax, gdf, "ports_total", f"{scenario_name} total port allocation", SEQUENTIAL_CMAP, norm=ports_norm)
+        add_horizontal_colorbar(fig, ax, SEQUENTIAL_CMAP, ports_norm, "Charging ports")
+        fig.savefig(paths.figures_dir / f"fig_allocation_{scenario_name}.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
-    if "S1" in scenario_outputs and "S2" in scenario_outputs:
-        delta = scenario_outputs["S2"][["UTAM", "ports_total"]].merge(
-            scenario_outputs["S1"][["UTAM", "ports_total"]],
-            on="UTAM",
-            suffixes=("_S2", "_S1"),
-        )
-        delta["delta_ports"] = delta["ports_total_S2"] - delta["ports_total_S1"]
-        gdf_delta = utam_map.merge(delta[["UTAM", "delta_ports"]], on="UTAM", how="left")
-        dmax = np.nanmax(np.abs(gdf_delta["delta_ports"].to_numpy(dtype=float)))
-        dmax = float(dmax) if np.isfinite(dmax) and dmax > 0 else 1.0
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-        gdf_delta.plot(
-            column="delta_ports",
-            legend=True,
-            cmap="coolwarm",
-            linewidth=0.2,
-            edgecolor="white",
-            ax=ax,
-            vmin=-dmax,
-            vmax=dmax,
-        )
-        ax.set_title("Net change in total ports: S2 minus S1")
-        ax.set_axis_off()
-        fig.savefig(paths.figures_dir / "fig_net_change_S2_minus_S1.png", dpi=300, bbox_inches="tight")
+    if ordered_scenarios:
+        fig, axes = plt.subplots(1, len(ordered_scenarios), figsize=(4.25 * len(ordered_scenarios), 5.0), constrained_layout=True)
+        if len(ordered_scenarios) == 1:
+            axes = [axes]
+        for axis, scenario_name in zip(axes, ordered_scenarios):
+            gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
+            plot_map_panel(axis, gdf, "ports_total", f"{scenario_name}", SEQUENTIAL_CMAP, norm=ports_norm)
+        add_horizontal_colorbar(fig, list(axes), SEQUENTIAL_CMAP, ports_norm, "Charging ports", fraction=0.05, pad=0.04)
+        fig.savefig(paths.figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
-    if "S2" in scenario_outputs and "S3" in scenario_outputs:
-        delta32 = scenario_outputs["S3"][["UTAM", "ports_total"]].merge(
-            scenario_outputs["S2"][["UTAM", "ports_total"]],
-            on="UTAM",
-            suffixes=("_S3", "_S2"),
+    delta_specs: list[tuple[str, str, str, str]] = []
+    if {"S0", "S1"}.issubset(scenario_outputs):
+        delta_specs.append(("S1", "S0", "delta_s1_s0", "S1 minus S0"))
+    if {"S1", "S2"}.issubset(scenario_outputs):
+        delta_specs.append(("S2", "S1", "delta_s2_s1", "S2 minus S1"))
+    if {"S2", "S3"}.issubset(scenario_outputs):
+        delta_specs.append(("S3", "S2", "delta_s3_s2", "S3 minus S2"))
+    if {"S0", "S3"}.issubset(scenario_outputs):
+        delta_specs.append(("S3", "S0", "delta_s3_s0", "S3 minus S0"))
+
+    growth_long = load_optional_growth_long(paths)
+    if growth_long is not None and len(growth_long):
+        growth_long["year"] = pd.to_numeric(growth_long["year"], errors="coerce")
+        growth_long["value"] = pd.to_numeric(growth_long["value"], errors="coerce")
+        annual_specs = []
+        for year in sorted(growth_long["year"].dropna().astype(int).unique()):
+            year_df = growth_long.loc[growth_long["year"].eq(year), ["UTAM", "value"]]
+            annual_specs.append((year_df, str(year)))
+        if len(annual_specs) > 1:
+            growth_maps: list[tuple[gpd.GeoDataFrame, str]] = []
+            previous_df, previous_label = annual_specs[0]
+            for current_df, current_label in annual_specs[1:]:
+                diff_df = current_df.merge(previous_df, on="UTAM", how="left", suffixes=("_curr", "_prev"))
+                diff_df["delta_value"] = diff_df["value_curr"] - diff_df["value_prev"]
+                growth_maps.append((utam_map.merge(diff_df[["UTAM", "delta_value"]], on="UTAM", how="left"), f"{current_label} minus {previous_label}"))
+                previous_df, previous_label = current_df, current_label
+        else:
+            growth_maps = []
+    else:
+        growth_maps = []
+        for current_name, previous_name, delta_column, label in delta_specs:
+            delta = scenario_outputs[current_name][["UTAM", "ports_total"]].merge(
+                scenario_outputs[previous_name][["UTAM", "ports_total"]],
+                on="UTAM",
+                suffixes=(f"_{current_name}", f"_{previous_name}"),
+            )
+            delta[delta_column] = delta[f"ports_total_{current_name}"] - delta[f"ports_total_{previous_name}"]
+            growth_maps.append((utam_map.merge(delta[["UTAM", delta_column]], on="UTAM", how="left"), label))
+    filtered_growth_maps: list[tuple[gpd.GeoDataFrame, str, str]] = []
+    for gdf_delta, label in growth_maps:
+        delta_cols = [column for column in gdf_delta.columns if str(column).startswith("delta_")]
+        if not delta_cols:
+            continue
+        delta_col = delta_cols[-1]
+        delta_values = pd.to_numeric(gdf_delta[delta_col], errors="coerce").fillna(0.0).to_numpy(dtype=float)
+        if len(delta_values) == 0 or float(np.nanmax(np.abs(delta_values))) <= 1e-9:
+            continue
+        filtered_growth_maps.append((gdf_delta, label, delta_col))
+    growth_maps = [(gdf_delta, label) for gdf_delta, label, _ in filtered_growth_maps]
+
+    if growth_maps:
+        all_growth_values = np.concatenate(
+            [
+                pd.to_numeric(
+                    gdf.select_dtypes(include=[np.number]).iloc[:, -1],
+                    errors="coerce",
+                ).fillna(0.0).to_numpy(dtype=float)
+                for gdf, _ in growth_maps
+            ]
         )
-        delta32["delta_ports"] = delta32["ports_total_S3"] - delta32["ports_total_S2"]
-        gdf_delta32 = utam_map.merge(delta32[["UTAM", "delta_ports"]], on="UTAM", how="left")
-        dmax32 = np.nanmax(np.abs(gdf_delta32["delta_ports"].to_numpy(dtype=float)))
-        dmax32 = float(dmax32) if np.isfinite(dmax32) and dmax32 > 0 else 1.0
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-        gdf_delta32.plot(
-            column="delta_ports",
-            legend=True,
-            cmap="coolwarm",
-            linewidth=0.2,
-            edgecolor="white",
-            ax=ax,
-            vmin=-dmax32,
-            vmax=dmax32,
-        )
-        ax.set_title("Net change in total ports: S3 minus S2")
-        ax.set_axis_off()
-        fig.savefig(paths.figures_dir / "fig_net_change_S3_minus_S2.png", dpi=300, bbox_inches="tight")
+        delta_max = float(np.nanmax(np.abs(all_growth_values))) if len(all_growth_values) else 1.0
+        delta_max = delta_max if np.isfinite(delta_max) and delta_max > 0 else 1.0
+        delta_norm = TwoSlopeNorm(vmin=-delta_max, vcenter=0.0, vmax=delta_max)
+
+        label_to_path = {
+            "S2 minus S1": paths.figures_dir / "fig_net_change_S2_minus_S1.png",
+            "S3 minus S2": paths.figures_dir / "fig_net_change_S3_minus_S2.png",
+        }
+        for gdf_delta, label, column in filtered_growth_maps:
+            if label not in label_to_path:
+                continue
+            fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
+            plot_map_panel(ax, gdf_delta, column, f"Net reallocation in ports: {label}", DIVERGING_CMAP, norm=delta_norm)
+            add_horizontal_colorbar(fig, ax, DIVERGING_CMAP, delta_norm, "Net change in ports")
+            fig.savefig(label_to_path[label], dpi=300, bbox_inches="tight", facecolor="white")
+            plt.close(fig)
+
+        fig, axes = plt.subplots(1, len(growth_maps), figsize=(4.2 * len(growth_maps), 5.0), constrained_layout=True)
+        if len(growth_maps) == 1:
+            axes = [axes]
+        for axis, (gdf_delta, label, column) in zip(axes, filtered_growth_maps):
+            plot_map_panel(axis, gdf_delta, column, label, DIVERGING_CMAP, norm=delta_norm)
+        figure_name = "fig_growth_over_time.png" if growth_long is not None else "fig_growth_progression.png"
+        add_horizontal_colorbar(fig, list(axes), DIVERGING_CMAP, delta_norm, "Net change in ports", fraction=0.05, pad=0.04)
+        fig.savefig(paths.figures_dir / figure_name, dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
-    protected_df = pd.DataFrame({"UTAM": df_inputs["UTAM"], "protected_s3": protected_mask_s3.astype(int)})
-    gdf_protected = utam_map.merge(protected_df, on="UTAM", how="left")
-    fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-    gdf_protected.plot(column="protected_s3", legend=True, cmap="Set1", linewidth=0.2, edgecolor="white", ax=ax)
-    ax.set_title("Protected set used in S3 soft-floor scenario")
-    ax.set_axis_off()
-    fig.savefig(paths.figures_dir / "fig_S3_protected_set.png", dpi=300, bbox_inches="tight")
+    official_growth = load_official_ev_growth(paths)
+    if official_growth is not None and len(official_growth):
+        years = official_growth["year"].to_numpy(dtype=float)
+        counts = official_growth["electric_vehicles"].to_numpy(dtype=float)
+        additions = official_growth["annual_addition"].to_numpy(dtype=float)
+        growth_pct = official_growth["annual_growth_pct"].to_numpy(dtype=float)
+        tick_labels = official_growth["checkpoint_label"].astype(str).tolist()
+        fig, axes = plt.subplots(
+            1,
+            2,
+            figsize=(13.6, 4.8),
+            gridspec_kw={"width_ratios": [1.55, 1.0]},
+            constrained_layout=True,
+        )
+        axes[0].fill_between(years, counts, 0.0, color="#f1c57b", alpha=0.28)
+        axes[0].plot(years, counts, color=SCENARIO_COLORS["S2"], linewidth=2.8)
+        axes[0].scatter(years, counts, s=58, color=SCENARIO_COLORS["S2"], edgecolor="white", linewidth=1.2, zorder=3)
+        label_offset = 0.03 * max(float(np.nanmax(counts)), 1.0)
+        for x_val, y_val in zip(years, counts):
+            axes[0].text(
+                x_val,
+                y_val + label_offset,
+                f"{int(round(y_val)):,}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+                color=PAPER_TEXT,
+            )
+        configure_line_axis(
+            axes[0],
+            "a. Official registered electric vehicles in Bogota",
+            "Official checkpoint",
+            "Registered electric vehicles",
+        )
+        axes[0].set_xticks(years)
+        axes[0].set_xticklabels(tick_labels, fontsize=8.8)
+        axes[0].set_ylim(0.0, max(float(np.nanmax(counts)) * 1.18, 1.0))
+        axes[0].text(
+            0.0,
+            -0.24,
+            "RDA official checkpoints; the observed cut-off date is not December in every year.",
+            transform=axes[0].transAxes,
+            ha="left",
+            va="top",
+            fontsize=8.3,
+            color="#6d655e",
+        )
+
+        delta_years = years[1:]
+        delta_values = additions[1:]
+        delta_labels = tick_labels[1:]
+        bars = axes[1].bar(delta_years, delta_values, width=0.56, color=SCENARIO_COLORS["S3"], alpha=0.92)
+        mean_delta = float(np.nanmean(delta_values)) if len(delta_values) else 0.0
+        axes[1].axhline(mean_delta, linestyle="--", color="#8a8178", linewidth=1.4)
+        delta_offset = 0.04 * max(float(np.nanmax(delta_values)), 1.0)
+        for x_val, y_val, pct_val in zip(delta_years, delta_values, growth_pct[1:]):
+            axes[1].text(
+                x_val,
+                y_val + delta_offset,
+                f"+{int(round(y_val)):,}\n({pct_val:.1f}%)",
+                ha="center",
+                va="bottom",
+                fontsize=8.6,
+                color=PAPER_TEXT,
+            )
+        configure_line_axis(
+            axes[1],
+            "b. Year-to-year growth in registered EVs",
+            "Checkpoint reached",
+            "Additional electric vehicles",
+        )
+        axes[1].set_xticks(delta_years)
+        axes[1].set_xticklabels(delta_labels, fontsize=8.8)
+        axes[1].set_ylim(0.0, max(float(np.nanmax(delta_values)) * 1.22, 1.0))
+        axes[1].text(
+            0.98,
+            0.96,
+            f"Mean annual addition: {int(round(mean_delta)):,}",
+            transform=axes[1].transAxes,
+            ha="right",
+            va="top",
+            fontsize=8.3,
+            color="#6d655e",
+        )
+        fig.savefig(paths.figures_dir / "fig_official_ev_growth.png", dpi=300, bbox_inches="tight", facecolor="white")
+        plt.close(fig)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.6, 5.0), constrained_layout=True)
+    for axis, title, curve_fn in zip(
+        axes,
+        ["a. Unweighted Lorenz curves", "b. Vulnerability-weighted Lorenz curves"],
+        [lorenz_curve, weighted_lorenz],
+    ):
+        axis.plot([0, 1], [0, 1], linestyle="--", color="#9c7acb", linewidth=2.0)
+        for scenario_name in ordered_scenarios:
+            df_scenario = scenario_outputs[scenario_name]
+            if curve_fn is weighted_lorenz:
+                x, y = curve_fn(df_scenario["accessibility"], 1.0 + df_scenario["vulnerability_index"])
+            else:
+                x, y = curve_fn(df_scenario["accessibility"])
+            axis.plot(x, y, color=SCENARIO_COLORS.get(scenario_name, "#444444"), linewidth=2.4, label=scenario_name)
+        configure_line_axis(axis, title, "Population share", "Accessibility share")
+        axis.set_xlim(0, 1)
+        axis.set_ylim(0, 1.02)
+        axis.legend(loc="upper left", frameon=False, fontsize=9)
+    fig.savefig(paths.figures_dir / "fig_lorenz_curves.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
-    for scenario_name, df_scenario in scenario_outputs.items():
-        x, y = lorenz_curve(df_scenario["accessibility"])
-        axes[0].plot(x, y, label=scenario_name)
-        xw, yw = weighted_lorenz(df_scenario["accessibility"], 1.0 + df_scenario["vulnerability_index"])
-        axes[1].plot(xw, yw, label=scenario_name)
-    for axis, title in zip(axes, ["Unweighted Lorenz curves", "Vulnerability-weighted Lorenz curves"]):
-        axis.plot([0, 1], [0, 1], linestyle="--")
-        axis.set_title(title)
-        axis.set_xlabel("Population share")
-        axis.set_ylabel("Accessibility share")
-        axis.legend()
-    fig.savefig(paths.figures_dir / "fig_lorenz_curves.png", dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    tradeoff_path = paths.tables_dir / "table_policy_tradeoff.csv"
+    if tradeoff_path.exists():
+        tradeoff_df = pd.read_csv(tradeoff_path)
+        tradeoff_df["relative_fidelity_loss_vs_S0_pct"] = pd.to_numeric(
+            tradeoff_df["relative_fidelity_loss_vs_S0_pct"], errors="coerce"
+        ).fillna(0.0)
+        tradeoff_df["vulnerable_coverage_pct"] = pd.to_numeric(
+            tradeoff_df["vulnerable_coverage_pct"], errors="coerce"
+        )
+        tradeoff_df = tradeoff_df.dropna(subset=["vulnerable_coverage_pct"]).sort_values("relative_fidelity_loss_vs_S0_pct")
+        if len(tradeoff_df):
+            fig, ax = plt.subplots(1, 1, figsize=(8.4, 4.8), constrained_layout=True)
+            ax.plot(
+                tradeoff_df["relative_fidelity_loss_vs_S0_pct"],
+                tradeoff_df["vulnerable_coverage_pct"],
+                color="#b8aea4",
+                linewidth=1.7,
+                zorder=1,
+            )
+            grouped = (
+                tradeoff_df.groupby(
+                    ["relative_fidelity_loss_vs_S0_pct", "vulnerable_coverage_pct"],
+                    dropna=False,
+                    sort=False,
+                )["scenario"]
+                .agg(list)
+                .reset_index()
+            )
+            for _, row in grouped.iterrows():
+                scenario_list = [str(item) for item in row["scenario"]]
+                label = " / ".join(scenario_list)
+                color = SCENARIO_COLORS.get(scenario_list[-1], "#6d655e") if len(scenario_list) == 1 else "#7b3f7a"
+                ax.scatter(
+                    row["relative_fidelity_loss_vs_S0_pct"],
+                    row["vulnerable_coverage_pct"],
+                    s=110 if len(scenario_list) > 1 else 88,
+                    color=color,
+                    edgecolor="white",
+                    linewidth=1.2,
+                    zorder=3,
+                )
+                ax.text(
+                    row["relative_fidelity_loss_vs_S0_pct"] + 0.22,
+                    row["vulnerable_coverage_pct"] + 0.12,
+                    label,
+                    fontsize=9,
+                    color=PAPER_TEXT,
+                    ha="left",
+                    va="bottom",
+                )
+            configure_line_axis(
+                ax,
+                "Policy trade-off frontier",
+                "Relative fidelity loss vs S0 (%)",
+                "High-vulnerability UTAMs within 15 min (%)",
+            )
+            x_vals = tradeoff_df["relative_fidelity_loss_vs_S0_pct"].to_numpy(dtype=float)
+            y_vals = tradeoff_df["vulnerable_coverage_pct"].to_numpy(dtype=float)
+            x_pad = max(0.5, 0.08 * max(float(np.nanmax(x_vals)) - float(np.nanmin(x_vals)), 1.0))
+            y_pad = max(0.4, 0.08 * max(float(np.nanmax(y_vals)) - float(np.nanmin(y_vals)), 1.0))
+            ax.set_xlim(float(np.nanmin(x_vals)) - x_pad, float(np.nanmax(x_vals)) + 2.2 * x_pad)
+            ax.set_ylim(float(np.nanmin(y_vals)) - y_pad, float(np.nanmax(y_vals)) + 1.5 * y_pad)
+            fig.savefig(paths.figures_dir / "fig_policy_tradeoff.png", dpi=300, bbox_inches="tight", facecolor="white")
+            plt.close(fig)
 
     if len(robust_df):
-        fig, ax = plt.subplots(1, 1, figsize=(8.5, 5.2))
-        y_pos = np.arange(len(robust_df))
-        ax.scatter(robust_df["delta_weighted_gini"], y_pos, label="Delta weighted Gini")
-        ax.scatter(robust_df["rank_stability"], y_pos, label="Rank stability")
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(robust_df["alternative_specification"])
-        ax.axvline(0, linestyle="--")
-        ax.set_title("Robustness relative to S2")
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight")
+        robust_plot = robust_df.copy()
+        robust_plot["alternative_specification"] = robust_plot["alternative_specification"].astype(str)
+        robust_plot = robust_plot.sort_values("delta_weighted_gini", ascending=True).reset_index(drop=True)
+        y_pos = np.arange(len(robust_plot))
+        fig, axes = plt.subplots(1, 2, figsize=(13, max(4.6, 0.33 * len(robust_plot) + 2.2)), constrained_layout=True)
+        for axis, metric, color, title, baseline in [
+            (axes[0], "delta_weighted_gini", SCENARIO_COLORS["S2"], "a. Delta weighted Gini relative to S2", 0.0),
+            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability relative to S2", 1.0),
+        ]:
+            values = pd.to_numeric(robust_plot[metric], errors="coerce").to_numpy(dtype=float)
+            axis.hlines(y_pos, baseline, values, color=color, linewidth=2.0, alpha=0.75)
+            axis.scatter(values, y_pos, color=color, s=36, zorder=3)
+            axis.axvline(baseline, linestyle="--", color="#8a8178", linewidth=1.4)
+            configure_line_axis(axis, title, metric.replace("_", " "), "")
+            axis.set_yticks(y_pos)
+            axis.set_yticklabels(robust_plot["alternative_specification"], fontsize=8.5)
+        fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
 
@@ -1596,13 +2222,69 @@ def save_scenario_outputs(paths: ProjectPaths, scenario_outputs: dict[str, pd.Da
         df_scenario.to_csv(paths.tables_dir / f"scenario_{scenario_name}.csv", index=False)
 
 
+def clean_output_artifacts(paths: ProjectPaths) -> None:
+    obsolete_zip = paths.experiment_dir / "paper_v6_figures_tables.zip"
+    if obsolete_zip.exists():
+        obsolete_zip.unlink()
+    for figure_path in paths.figures_dir.glob("*.png"):
+        if figure_path.name not in PAPER_KEEP_FIGURES:
+            figure_path.unlink()
+    for table_path in paths.tables_dir.glob("*.csv"):
+        if table_path.name not in PAPER_KEEP_TABLES:
+            table_path.unlink()
+
+
 def package_outputs(paths: ProjectPaths) -> None:
-    zip_path = paths.experiment_dir / "paper_v6_figures_tables.zip"
+    clean_output_artifacts(paths)
+    package_dir = paths.experiment_dir / "paper_submission_package"
+    if package_dir.exists():
+        shutil.rmtree(package_dir)
+    for relative in [
+        "figures/main",
+        "figures/supplementary",
+        "tables/main",
+        "tables/supplementary",
+        "docs",
+        "reproducibility",
+    ]:
+        (package_dir / relative).mkdir(parents=True, exist_ok=True)
+    for name in PAPER_MAIN_FIGURES:
+        source = paths.figures_dir / name
+        if source.exists():
+            shutil.copy2(source, package_dir / "figures" / "main" / name)
+    for name in PAPER_SUPPLEMENTARY_FIGURES:
+        source = paths.figures_dir / name
+        if source.exists():
+            shutil.copy2(source, package_dir / "figures" / "supplementary" / name)
+    for name in PAPER_MAIN_TABLES:
+        source = paths.tables_dir / name
+        if source.exists():
+            shutil.copy2(source, package_dir / "tables" / "main" / name)
+    for name in PAPER_SUPPLEMENTARY_TABLES:
+        source = paths.tables_dir / name
+        if source.exists():
+            shutil.copy2(source, package_dir / "tables" / "supplementary" / name)
+    misc_files = [
+        (paths.root / "README.md", package_dir / "reproducibility" / "README.md"),
+        (paths.root / "pyproject.toml", package_dir / "reproducibility" / "pyproject.toml"),
+        (paths.root / "scripts" / "stage_inputs.py", package_dir / "reproducibility" / "stage_inputs.py"),
+        (paths.root / "scripts" / "reproduce_followup.py", package_dir / "reproducibility" / "reproduce_followup.py"),
+        (paths.root / "src" / "social_eq" / "followup.py", package_dir / "reproducibility" / "followup.py"),
+        (paths.root / "docs" / "jtg_figure_style_notes.md", package_dir / "docs" / "jtg_figure_style_notes.md"),
+        (paths.root / "docs" / "paper_submission_recommendations.md", package_dir / "docs" / "paper_submission_recommendations.md"),
+        (paths.input_dir / "input_manifest.json", package_dir / "docs" / "input_manifest.json"),
+        (paths.input_dir / "bogota_official_ev_growth.csv", package_dir / "docs" / "bogota_official_ev_growth.csv"),
+        (paths.output_dir / "run_manifest.json", package_dir / "docs" / "run_manifest.json"),
+    ]
+    for source, target in misc_files:
+        if source.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    zip_path = paths.experiment_dir / "paper_submission_package.zip"
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for subdir in [paths.figures_dir, paths.tables_dir]:
-            for file_path in subdir.rglob("*"):
-                if file_path.is_file():
-                    zf.write(file_path, file_path.relative_to(paths.experiment_dir))
+        for file_path in package_dir.rglob("*"):
+            if file_path.is_file():
+                zf.write(file_path, file_path.relative_to(paths.experiment_dir))
 
 
 def save_run_manifest(

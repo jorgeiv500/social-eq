@@ -6,3 +6,4 @@ __pycache__/
 .tmp_check/
 .DS_Store
 outputs/**/*.zip
+outputs/**/paper_submission_package/

@@ -5,8 +5,7 @@
     "attention_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/temporal_attention_by_utam.csv",
     "vulnerability_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_social_vulnerability.csv",
     "travel_matrix_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_travel_time_matrix.csv",
-    "loss_history_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv",
-    "alt_travel_matrix_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_travel_time_matrix_osrm.csv"
+    "loss_history_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv"
   },
   "config": {
     "venues": [

@@ -30,6 +30,9 @@ CANDIDATES = {
         Path("/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/utam_travel_time_matrix.csv"),
     ],
 }
+REPO_NATIVE_INPUTS = [
+    "bogota_official_ev_growth.csv",
+]
 
 REFERENCE_SOURCE = Path(
     "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/paper_v6_experiments"
@@ -67,6 +70,11 @@ def main() -> int:
             shutil.rmtree(REFERENCE_DIR)
         shutil.copytree(REFERENCE_SOURCE, REFERENCE_DIR)
         manifest["reference_dir"] = {"source": str(REFERENCE_SOURCE), "staged_to": str(REFERENCE_DIR)}
+
+    for target_name in REPO_NATIVE_INPUTS:
+        target = INPUT_DIR / target_name
+        if target.exists():
+            manifest["inputs"][target_name] = {"source": "repo_native", "staged_to": str(target)}
 
     (INPUT_DIR / "input_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 

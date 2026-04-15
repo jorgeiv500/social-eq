@@ -1,0 +1,5 @@
+scenario,policy_role,epsilon_used,kappa_used,floor_type,binding_status,relative_fidelity_loss_vs_S0_pct,vulnerable_coverage_pct,objective_abs_dev
+S0,Priority-matching baseline,0.0,,none,,0.0,77.77777777777779,62.8284379878768
+S1,Equity relaxation without vulnerability weights,0.03,0.0,none,,2.999999999999935,86.11111111111111,64.71329112751306
+S2,Socially weighted equity scenario,0.08,4.0,none,,7.999999999999993,88.88888888888889,67.85471302690694
+S3,Soft-floor protection for vulnerable geography,0.08,4.0,soft,Non-binding floor; allocation equals S2,8.000000000000016,88.88888888888889,67.85471302690695
