@@ -2,11 +2,30 @@
 
 Reproducible local pipeline for:
 
-`Socially equitable EV charging allocation in Bogotá: Linking mobility learning and lexicographic optimization`
+`Public electric-vehicle charging and accessibility inequality in Bogotá: A socio-spatial allocation framework`
+(enviado a *Journal of Transport Geography*)
 
 The repository stages a minimal input bundle, solves scenarios `S0`-`S3` with `Pyomo + NEOS/CPLEX`, runs the rapid robustness battery, and exports the curated paper figures/tables under:
 
 `outputs/social_equity_followup_outputs/paper_v6_experiments`
+
+## Versión enviada a la revista
+
+La carpeta `submission/jtg_2026-04/` es el **registro canónico** de lo que se envió:
+el fuente LaTeX, manuscrito y suplemento en PDF, las nueve figuras finales, las tablas
+de respaldo, el código que las generó y los manifiestos de la corrida.
+Su `README.md` incluye el mapeo figura↔archivo, las cifras clave y las sumas de verificación.
+
+- Número de manuscrito: **JTRG-D-26-00692**
+- PDF compilado: 2026-04-17 (pdfTeX / TeX Live 2025)
+- Enviado a la revista: 2026-04-17
+- Figuras y tablas: 2026-04-17
+- Corrida de escenarios S0–S3: 2026-04-15 (Pyomo + NEOS/CPLEX)
+- Fuente LaTeX: incluido en `submission/jtg_2026-04/00_latex_fuente/` (exportado de Overleaf)
+
+El material intermedio y las copias superadas quedaron en
+`outputs/social_equity_followup_outputs/paper_v6_experiments/_archivo_superado/`
+(fuera del control de versiones).
 
 ## Repository layout
 
@@ -17,6 +36,7 @@ The repository stages a minimal input bundle, solves scenarios `S0`-`S3` with `P
 - `src/social_eq/followup.py`: model logic, figures, tables, cleanup, and paper-package export.
 - `docs/jtg_figure_style_notes.md`: visual rules transferred from the reference article.
 - `docs/paper_submission_recommendations.md`: recommended main-text vs supplementary figure/table plan.
+- `submission/jtg_2026-04/`: paquete definitivo del envío a *Journal of Transport Geography*.
 
 ## Quick start
 
@@ -53,35 +73,35 @@ export NEOS_EMAIL="your_email@domain.com"
 
 ## Curated paper outputs
 
-Main paper figures:
+Los artefactos se exportan a `outputs/social_equity_followup_outputs/paper_v6_experiments/`
+y se consolidan en `submission/jtg_2026-04/`.
 
-- `fig_official_ev_growth.png`
-- `fig_social_context_panels.png`
-- `fig_attention_profile.png`
-- `fig_allocation_composite.png`
-- `fig_net_change_S2_minus_S1.png`
-- `fig_lorenz_curves.png`
-- `fig_policy_tradeoff.png`
+Figuras del texto principal (7 de las 8; la figura 2 es un diagrama TikZ dentro del LaTeX):
 
-Supplementary figures:
+- `fig_official_ev_growth.png` (Fig. 1)
+- `fig_social_context_panels.png` (Fig. 3)
+- `fig_attention_profile.png` (Fig. 4)
+- `fig_allocation_composite.png` (Fig. 5)
+- `fig_net_change_S2_minus_S1.png` (Fig. 6)
+- `fig_lorenz_curves.png` (Fig. 7)
+- `fig_policy_tradeoff.png` (Fig. 8, cuatro paneles)
 
-- `fig_growth_progression.png`
-- `fig_gnn_learning_history.png`
-- `fig_robustness.png`
+Figuras del suplemento:
 
-Main paper tables:
+- `fig_growth_progression.png` (Fig. S1)
+- `fig_robustness.png` (Fig. S2)
 
-- `table_scenario_design.csv`
-- `table_equity_metrics_final.csv`
-- `table_official_ev_growth.csv`
-- `table_policy_tradeoff.csv`
+Figuras generadas como respaldo, no incluidas en el envío:
 
-The pipeline also builds:
+- `fig_gnn_learning_history.png`, `fig_priority_map.png`, `fig_S3_protected_set.png`,
+  `fig_allocation_S0.png`–`fig_allocation_S3.png`
 
-- `outputs/social_equity_followup_outputs/paper_v6_experiments/paper_submission_package/`
-- `outputs/social_equity_followup_outputs/paper_v6_experiments/paper_submission_package.zip`
+Tablas del texto principal:
 
-These contain the curated figures, tables, documentation, and the minimal reproducibility files for submission support.
+- `table_scenario_design.csv` (Tabla 2)
+- `table_equity_metrics_final.csv` (Tabla 3)
+- `table_policy_tradeoff.csv` (Tabla 4)
+- `table_official_ev_growth.csv` (respaldo de la Fig. 1)
 
 ## Important result note
 

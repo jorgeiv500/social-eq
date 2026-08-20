@@ -1,0 +1,22 @@
+Journal of Transport Geography pre-submission checklist
+
+Completed in this package
+- Main manuscript supplied as anonymized LaTeX source and PDF
+- Separate title-page file supplied with author names, affiliations, corresponding author email, competing-interest statement, acknowledgements, funding, and CRediT statement
+- Abstract reduced to 242 words
+- Keywords present (7)
+- Highlights file present with 4 bullets, each under 85 characters
+- Supplementary appendix cited in the manuscript and included as a separate file
+- Generative-AI declaration included in the manuscript
+- Data-availability statement included in the manuscript
+- Supplementary appendix synchronized with additional figures and compiled successfully
+
+Manual checks before upload
+- Confirm the proposed CRediT role allocation with all authors before upload
+- Complete the Elsevier declarations tool and upload the generated .doc/.docx declaration file
+- Upload all source files together with the manuscript PDF, title page, highlights file, and supplementary appendix
+- Confirm every in-text citation matches the bibliography after the final editorial pass
+- Run one last spelling/grammar skim after any final wording edits
+
+Optional but worth considering
+- Prepare a graphical abstract if the authors want an extra discoverability asset

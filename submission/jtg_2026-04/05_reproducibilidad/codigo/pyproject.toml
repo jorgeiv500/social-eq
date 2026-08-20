@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "social-eq"
+version = "0.1.0"
+description = "Local reproduction pipeline for the Bogotá EV charging social equity follow-up paper."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "geopandas>=0.14,<1.1",
+  "highspy>=1.11,<2",
+  "matplotlib>=3.9,<4",
+  "numpy>=1.26,<2",
+  "openpyxl>=3.1,<4",
+  "pandas>=2.2,<3",
+  "pyogrio>=0.11,<1",
+  "pyomo>=6.9,<7",
+  "pypdf>=6,<7",
+  "pyyaml>=6,<7",
+  "requests>=2.32,<3",
+  "scipy>=1.13,<2",
+  "shapely>=2.0,<3",
+  "tqdm>=4.67,<5",
+]
+
+[project.scripts]
+reproduce-followup = "social_eq.followup:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

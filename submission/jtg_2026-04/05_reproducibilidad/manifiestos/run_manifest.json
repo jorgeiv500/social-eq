@@ -1,0 +1,59 @@
+{
+  "inputs": {
+    "utam_zip": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_shapefile.zip",
+    "priority_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/priority_utam_scores.csv",
+    "attention_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/temporal_attention_by_utam.csv",
+    "vulnerability_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_social_vulnerability.csv",
+    "travel_matrix_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_travel_time_matrix.csv",
+    "loss_history_csv": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv"
+  },
+  "config": {
+    "venues": [
+      "residential",
+      "workplace",
+      "public"
+    ],
+    "quotas": {
+      "residential": 7352,
+      "workplace": 2739,
+      "public": 779
+    },
+    "lambda_v": {
+      "residential": 15.0,
+      "workplace": 25.0,
+      "public": 10.0
+    },
+    "epsilon_relax": 0.025,
+    "vulnerability_top_share": 0.25,
+    "coverage_threshold_min": 15.0,
+    "kernel_eps": 1e-08,
+    "use_osrm_if_survey_incomplete": false,
+    "solver_backend": "neos",
+    "solver_name": "cplex",
+    "neos_email": "jorgei.romerog@utadeo.edu.co",
+    "solver_time_limit": 3600,
+    "solver_mip_gap": 0.01,
+    "solver_threads": null,
+    "epsilon_s1": 0.03,
+    "epsilon_s2": 0.08,
+    "epsilon_s3": 0.08,
+    "s2_kappa": 4.0,
+    "s3_protected_share": 0.15,
+    "s3_floor_quantile": 0.1,
+    "s3_floor_gamma": 0.95,
+    "s3_shortfall_penalty": 100.0,
+    "robustness_lambda_factors_fast": [
+      0.75,
+      1.25
+    ],
+    "robustness_floor_gammas_fast": [
+      0.65,
+      0.8,
+      0.95
+    ],
+    "robustness_time_limit_sec": 180,
+    "robustness_mip_gap": 0.02
+  },
+  "scenario_metrics_rows": 4,
+  "robustness_rows": 13
+}

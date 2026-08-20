@@ -1,0 +1,4 @@
+- Official EV registrations in Bogot\'a rose from 2,039 to 8,899 by November 2024
+- Mobility learning is translated into auditable charger-allocation targets
+- Social weighting improves vulnerable coverage through ten one-port reallocations
+- The soft-floor extension serves as a non-binding robustness check

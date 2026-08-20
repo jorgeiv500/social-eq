@@ -7,3 +7,11 @@ __pycache__/
 .DS_Store
 outputs/**/*.zip
 outputs/**/paper_submission_package/
+outputs/**/_archivo_superado/
+
+# Revisión doble ciego JTRG-D-26-00692: estos archivos identifican a los autores
+# y el repositorio es público. Se mantienen solo en local.
+submission/jtg_2026-04/01_manuscrito/00_editorial_manager_JTRG-D-26-00692.pdf
+submission/jtg_2026-04/01_manuscrito/03_title_page_author_details.pdf
+submission/jtg_2026-04/01_manuscrito/04_cover_letter_to_editor.pdf
+submission/jtg_2026-04/00_latex_fuente/data_additional/title_page_author_details.tex

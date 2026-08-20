@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 from pyomo.environ import (
     ConcreteModel,
     Constraint,
@@ -42,6 +42,10 @@ PAPER_GRID = "#d9d1c8"
 PAPER_TEXT = "#2d2a26"
 MAP_EDGE = "#f4eee5"
 MAP_MISSING = "#e8e0d5"
+MAP_OUTLINE = "#c6b8a8"
+MAP_SCALE = "#6f675f"
+MAP_DELTA_ZERO = "#ddd2c6"
+MAP_DELTA_EDGE = "#e7dbce"
 SEQUENTIAL_CMAP = LinearSegmentedColormap.from_list(
     "social_eq_seq",
     ["#1f1f22", "#42305f", "#7b3f7a", "#c95a49", "#f1c57b"],
@@ -1530,6 +1534,10 @@ def export_section_tables(
     )
     tradeoff_table["relative_fidelity_loss_vs_S0_pct"] = tradeoff_table["relative_fidelity_loss_vs_S0_pct"].fillna(0.0)
     tradeoff_table["vulnerable_coverage_pct"] = 100.0 * tradeoff_table["coverage_within_threshold_vulnerable"]
+    baseline_coverage_pct = float(tradeoff_table.loc[tradeoff_table["scenario"].eq("S0"), "vulnerable_coverage_pct"].iloc[0])
+    tradeoff_table["vulnerable_coverage_gain_pp_vs_S0"] = (
+        tradeoff_table["vulnerable_coverage_pct"] - baseline_coverage_pct
+    )
     tradeoff_table["weighted_gini_improvement_vs_S0_bp"] = 10000.0 * (
         baseline_weighted_gini - tradeoff_table["accessibility_weighted_gini"]
     )
@@ -1616,6 +1624,25 @@ def add_time_window_bands(ax: Any) -> None:
         )
 
 
+def shorten_robustness_label(text: str) -> str:
+    replacements = {
+        "Alternative travel-time matrix": "Alternative time matrix",
+        "Low decay (all lambda x 0.75)": "Low decay",
+        "High decay (all lambda x 1.25)": "High decay",
+        "Alternative epsilon tolerance (0.056)": "epsilon = 0.056",
+        "Alternative epsilon tolerance (0.080)": "epsilon = 0.080",
+        "Alternative epsilon tolerance (0.100)": "epsilon = 0.100",
+        "Alternative vulnerability emphasis kappa (2.00)": "kappa = 2.0",
+        "Alternative vulnerability emphasis kappa (4.00)": "kappa = 4.0",
+        "Alternative vulnerability emphasis kappa (6.00)": "kappa = 6.0",
+        "PCA weights for vulnerability index": "PCA vulnerability index",
+        "Soft floor gamma (0.65)": "gamma = 0.65",
+        "Soft floor gamma (0.80)": "gamma = 0.80",
+        "Soft floor gamma (0.95)": "gamma = 0.95",
+    }
+    return replacements.get(text, text)
+
+
 def horizontalize_bogota(gdf: gpd.GeoDataFrame, target_epsg: int = 3116) -> gpd.GeoDataFrame:
     projected = gdf.to_crs(target_epsg) if gdf.crs is not None and gdf.crs.to_epsg() != target_epsg else gdf.copy()
     if projected.crs is None:
@@ -1645,21 +1672,49 @@ def plot_map_panel(
     vmin: float | None = None,
     vmax: float | None = None,
     norm: Any | None = None,
+    linewidth: float = 0.35,
+    edgecolor: str = MAP_EDGE,
+    zero_fill: str | None = None,
+    zero_tol: float = 1e-9,
+    show_scale_bar: bool = False,
+    focus_extent: tuple[float, float, float, float] | None = None,
+    show_focus_box: bool = False,
+    show_focus_inset: bool = False,
 ) -> None:
-    kwargs: dict[str, Any] = {
-        "column": column,
-        "ax": ax,
-        "cmap": cmap,
-        "linewidth": 0.35,
-        "edgecolor": MAP_EDGE,
-        "missing_kwds": {"color": MAP_MISSING},
-    }
-    if norm is not None:
-        kwargs["norm"] = norm
-    else:
-        kwargs["vmin"] = vmin
-        kwargs["vmax"] = vmax
-    gdf.plot(**kwargs)
+    plot_map_values(
+        ax,
+        gdf,
+        column,
+        cmap,
+        vmin=vmin,
+        vmax=vmax,
+        norm=norm,
+        linewidth=linewidth,
+        edgecolor=edgecolor,
+        zero_fill=zero_fill,
+        zero_tol=zero_tol,
+    )
+    draw_map_outline(ax, gdf)
+    if show_focus_inset and focus_extent is not None:
+        draw_focus_box(ax, focus_extent)
+        add_focus_inset(
+            ax,
+            gdf,
+            column,
+            cmap,
+            focus_extent,
+            vmin=vmin,
+            vmax=vmax,
+            norm=norm,
+            linewidth=max(0.30, linewidth),
+            edgecolor=edgecolor,
+            zero_fill=zero_fill,
+            zero_tol=zero_tol,
+        )
+    elif show_focus_box and focus_extent is not None:
+        draw_focus_box(ax, focus_extent)
+    if show_scale_bar:
+        add_scale_bar(ax, gdf)
     ax.set_title(title, loc="left", fontsize=11.5, fontweight="semibold", color=PAPER_TEXT, pad=8)
     ax.set_axis_off()
     ax.set_facecolor(PAPER_PANEL)
@@ -1676,28 +1731,242 @@ def add_horizontal_colorbar(
     *,
     fraction: float = 0.05,
     pad: float = 0.04,
+    cax: Any | None = None,
 ) -> None:
-    cbar = fig.colorbar(
-        ScalarMappable(norm=norm, cmap=cmap),
-        ax=ax,
-        orientation="horizontal",
-        fraction=fraction,
-        pad=pad,
-        aspect=35,
-    )
+    colorbar_kwargs: dict[str, Any] = {
+        "orientation": "horizontal",
+    }
+    if cax is not None:
+        colorbar_kwargs["cax"] = cax
+    else:
+        colorbar_kwargs.update(
+            {
+                "ax": ax,
+                "fraction": fraction,
+                "pad": pad,
+                "aspect": 35,
+            }
+        )
+    cbar = fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), **colorbar_kwargs)
     cbar.outline.set_visible(False)
     cbar.ax.tick_params(labelsize=8, colors=PAPER_TEXT)
     cbar.set_label(label, fontsize=9, color=PAPER_TEXT)
 
 
-def plot_binary_map_panel(ax: Any, gdf: gpd.GeoDataFrame, column: str, title: str) -> None:
+def plot_binary_map_panel(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    column: str,
+    title: str,
+    *,
+    show_scale_bar: bool = False,
+    focus_extent: tuple[float, float, float, float] | None = None,
+    show_focus_box: bool = False,
+) -> None:
     colors = gdf[column].fillna(0).astype(int).map(PROTECTED_COLORS).fillna(MAP_MISSING)
     gdf.assign(_fill=colors).plot(color=colors, ax=ax, linewidth=0.35, edgecolor=MAP_EDGE)
+    draw_map_outline(ax, gdf)
+    if show_focus_box and focus_extent is not None:
+        draw_focus_box(ax, focus_extent)
+    if show_scale_bar:
+        add_scale_bar(ax, gdf)
     ax.set_title(title, loc="left", fontsize=11.5, fontweight="semibold", color=PAPER_TEXT, pad=8)
     ax.set_axis_off()
     ax.set_facecolor(PAPER_PANEL)
     ax.set_aspect("equal")
     ax.margins(0.01)
+
+
+def plot_map_values(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    column: str,
+    cmap: Any,
+    *,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    norm: Any | None = None,
+    linewidth: float = 0.35,
+    edgecolor: str = MAP_EDGE,
+    zero_fill: str | None = None,
+    zero_tol: float = 1e-9,
+) -> None:
+    kwargs: dict[str, Any] = {
+        "column": column,
+        "ax": ax,
+        "cmap": cmap,
+        "linewidth": linewidth,
+        "edgecolor": edgecolor,
+        "missing_kwds": {"color": MAP_MISSING},
+    }
+    if norm is not None:
+        kwargs["norm"] = norm
+    else:
+        kwargs["vmin"] = vmin
+        kwargs["vmax"] = vmax
+    if zero_fill is not None:
+        values = pd.to_numeric(gdf[column], errors="coerce")
+        zero_mask = values.notna() & np.isclose(values.to_numpy(dtype=float), 0.0, atol=zero_tol)
+        if bool(np.any(zero_mask)):
+            gdf.loc[zero_mask].plot(ax=ax, color=zero_fill, linewidth=linewidth, edgecolor=edgecolor)
+        nonzero_mask = values.notna() & ~zero_mask
+        if bool(np.any(nonzero_mask)):
+            gdf.loc[nonzero_mask].plot(**kwargs)
+        missing_mask = values.isna()
+        if bool(np.any(missing_mask)):
+            gdf.loc[missing_mask].plot(ax=ax, color=MAP_MISSING, linewidth=linewidth, edgecolor=edgecolor)
+    else:
+        gdf.plot(**kwargs)
+
+
+def draw_map_outline(ax: Any, gdf: gpd.GeoDataFrame) -> None:
+    if gdf.empty:
+        return
+    outline = gdf.dissolve()
+    outline.boundary.plot(
+        ax=ax,
+        color=MAP_OUTLINE,
+        linewidth=0.9,
+        zorder=5,
+    )
+
+
+def choose_scale_length(width_m: float) -> float:
+    candidates = np.array([2000, 5000, 10000, 15000, 20000, 25000, 50000], dtype=float)
+    target = max(width_m * 0.16, 2000.0)
+    idx = int(np.argmin(np.abs(candidates - target)))
+    return float(candidates[idx])
+
+
+def derive_focus_extent(
+    gdf: gpd.GeoDataFrame,
+    *,
+    area_quantile: float = 0.60,
+    pad_fraction: float = 0.055,
+) -> tuple[float, float, float, float] | None:
+    if gdf.empty or gdf.crs is None or not bool(getattr(gdf.crs, "is_projected", False)):
+        return None
+    areas = pd.Series(gdf.geometry.area)
+    threshold = float(areas.quantile(area_quantile))
+    subset = gdf.loc[areas.le(threshold)].copy()
+    if subset.empty:
+        return None
+    centroids = subset.geometry.centroid
+    x_low, x_high = centroids.x.quantile([0.05, 0.95]).tolist()
+    y_low, y_high = centroids.y.quantile([0.08, 0.94]).tolist()
+    core_mask = centroids.x.between(x_low, x_high) & centroids.y.between(y_low, y_high)
+    core = subset.loc[core_mask].copy()
+    if core.empty:
+        core = subset
+    minx, miny, maxx, maxy = core.total_bounds
+    width = maxx - minx
+    height = maxy - miny
+    if not np.isfinite(width) or width <= 0 or not np.isfinite(height) or height <= 0:
+        return None
+    xpad = pad_fraction * width
+    ypad = pad_fraction * height
+    return (minx - xpad, miny - ypad, maxx + xpad, maxy + ypad)
+
+
+def draw_focus_box(ax: Any, focus_extent: tuple[float, float, float, float]) -> None:
+    minx, miny, maxx, maxy = focus_extent
+    rect = Rectangle(
+        (minx, miny),
+        maxx - minx,
+        maxy - miny,
+        fill=False,
+        linewidth=1.0,
+        linestyle=(0, (3, 2)),
+        edgecolor=MAP_OUTLINE,
+        zorder=6,
+    )
+    ax.add_patch(rect)
+
+
+def add_scale_bar(ax: Any, gdf: gpd.GeoDataFrame) -> None:
+    if gdf.empty or gdf.crs is None or not bool(getattr(gdf.crs, "is_projected", False)):
+        return
+    minx, miny, maxx, maxy = gdf.total_bounds
+    width = maxx - minx
+    height = maxy - miny
+    if not np.isfinite(width) or width <= 0 or not np.isfinite(height) or height <= 0:
+        return
+
+    length_m = choose_scale_length(width)
+    x0 = minx + 0.5 * width - 0.5 * length_m
+    y0 = miny + 0.055 * height
+    tick_h = 0.012 * height
+    label_y = y0 + 0.018 * height
+
+    # White underlay keeps the scale bar legible over light polygons.
+    for color, lw, z in [("white", 4.6, 8), (MAP_SCALE, 2.1, 9)]:
+        ax.plot([x0, x0 + length_m], [y0, y0], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
+        ax.plot([x0, x0], [y0 - tick_h, y0 + tick_h], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
+        ax.plot([x0 + length_m, x0 + length_m], [y0 - tick_h, y0 + tick_h], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
+    ax.text(
+        x0 + 0.5 * length_m,
+        label_y,
+        f"{int(round(length_m / 1000.0))} km",
+        ha="center",
+        va="bottom",
+        fontsize=7.9,
+        color=MAP_SCALE,
+        bbox={"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
+        zorder=10,
+    )
+
+
+def add_focus_inset(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    column: str,
+    cmap: Any,
+    focus_extent: tuple[float, float, float, float],
+    *,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    norm: Any | None = None,
+    linewidth: float = 0.35,
+    edgecolor: str = MAP_EDGE,
+    zero_fill: str | None = None,
+    zero_tol: float = 1e-9,
+) -> None:
+    inset_ax = ax.inset_axes([0.62, 0.14, 0.28, 0.36], transform=ax.transAxes)
+    plot_map_values(
+        inset_ax,
+        gdf,
+        column,
+        cmap,
+        vmin=vmin,
+        vmax=vmax,
+        norm=norm,
+        linewidth=linewidth,
+        edgecolor=edgecolor,
+        zero_fill=zero_fill,
+        zero_tol=zero_tol,
+    )
+    draw_map_outline(inset_ax, gdf)
+    minx, miny, maxx, maxy = focus_extent
+    inset_ax.set_xlim(minx, maxx)
+    inset_ax.set_ylim(miny, maxy)
+    inset_ax.set_xticks([])
+    inset_ax.set_yticks([])
+    inset_ax.set_facecolor("white")
+    inset_ax.margins(0.0)
+    for spine in inset_ax.spines.values():
+        spine.set_edgecolor(MAP_OUTLINE)
+        spine.set_linewidth(0.9)
+    inset_ax.text(
+        0.03,
+        0.97,
+        "Urban focus",
+        transform=inset_ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=7.1,
+        color=MAP_SCALE,
+        bbox={"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.88},
+    )
 
 
 def load_optional_growth_long(paths: ProjectPaths) -> pd.DataFrame | None:
@@ -1779,6 +2048,7 @@ def export_figures(
     if utam_map.crs is None:
         utam_map = utam_map.set_crs(4326)
     utam_map = horizontalize_bogota(utam_map)
+    focus_extent = derive_focus_extent(utam_map)
     gdf_priority = utam_map.merge(df_inputs[["UTAM", "priority_norm", "vulnerability_index"]], on="UTAM", how="left")
     protected_df = pd.DataFrame({"UTAM": df_inputs["UTAM"], "protected_s3": protected_mask_s3.astype(int)})
     gdf_protected = utam_map.merge(protected_df, on="UTAM", how="left")
@@ -1793,13 +2063,31 @@ def export_figures(
     )
 
     fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
-    plot_map_panel(ax, gdf_priority, "priority_norm", "Learned priority surface across Bogota", SEQUENTIAL_CMAP, norm=priority_norm)
+    plot_map_panel(
+        ax,
+        gdf_priority,
+        "priority_norm",
+        "Learned priority surface across Bogota",
+        SEQUENTIAL_CMAP,
+        norm=priority_norm,
+        show_scale_bar=True,
+        focus_extent=focus_extent,
+        show_focus_inset=True,
+    )
     add_horizontal_colorbar(fig, ax, SEQUENTIAL_CMAP, priority_norm, "Normalized priority")
     fig.savefig(paths.figures_dir / "fig_priority_map.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
-    plot_binary_map_panel(ax, gdf_protected, "protected_s3", "Protected S3 geography for the soft-floor policy")
+    plot_binary_map_panel(
+        ax,
+        gdf_protected,
+        "protected_s3",
+        "Protected S3 geography for the soft-floor policy",
+        show_scale_bar=True,
+        focus_extent=focus_extent,
+        show_focus_box=True,
+    )
     ax.legend(
         handles=[
             Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected UTAM"),
@@ -1814,19 +2102,58 @@ def export_figures(
     fig.savefig(paths.figures_dir / "fig_S3_protected_set.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
-    fig, axes = plt.subplots(1, 3, figsize=(17.2, 5.2), constrained_layout=True)
-    plot_map_panel(axes[0], gdf_priority, "priority_norm", "a. Learned priority", SEQUENTIAL_CMAP, norm=priority_norm)
-    plot_map_panel(axes[1], gdf_priority, "vulnerability_index", "b. Social vulnerability", SEQUENTIAL_CMAP, norm=vulnerability_norm)
-    plot_binary_map_panel(axes[2], gdf_protected, "protected_s3", "c. Protected geography")
-    add_horizontal_colorbar(fig, axes[0], SEQUENTIAL_CMAP, priority_norm, "Priority", fraction=0.05, pad=0.03)
-    add_horizontal_colorbar(fig, axes[1], SEQUENTIAL_CMAP, vulnerability_norm, "Vulnerability", fraction=0.05, pad=0.03)
-    axes[2].legend(
+    fig = plt.figure(figsize=(17.2, 5.8), constrained_layout=True)
+    grid = fig.add_gridspec(2, 3, height_ratios=[1.0, 0.08])
+    map_axes = [fig.add_subplot(grid[0, idx]) for idx in range(3)]
+    cbar_axes = [fig.add_subplot(grid[1, idx]) for idx in range(2)]
+    legend_ax = fig.add_subplot(grid[1, 2])
+
+    plot_map_panel(
+        map_axes[0],
+        gdf_priority,
+        "priority_norm",
+        "a. Learned priority",
+        SEQUENTIAL_CMAP,
+        norm=priority_norm,
+        show_scale_bar=True,
+        focus_extent=focus_extent,
+        show_focus_box=True,
+    )
+    plot_map_panel(
+        map_axes[1],
+        gdf_priority,
+        "vulnerability_index",
+        "b. Social vulnerability",
+        SEQUENTIAL_CMAP,
+        norm=vulnerability_norm,
+        focus_extent=focus_extent,
+        show_focus_box=True,
+    )
+    plot_binary_map_panel(
+        map_axes[2],
+        gdf_protected,
+        "protected_s3",
+        "c. Protected geography",
+        focus_extent=focus_extent,
+        show_focus_box=True,
+    )
+
+    reference_xlim = map_axes[0].get_xlim()
+    reference_ylim = map_axes[0].get_ylim()
+    for axis in map_axes[1:]:
+        axis.set_xlim(reference_xlim)
+        axis.set_ylim(reference_ylim)
+
+    add_horizontal_colorbar(fig, map_axes[0], SEQUENTIAL_CMAP, priority_norm, "Priority", cax=cbar_axes[0])
+    add_horizontal_colorbar(fig, map_axes[1], SEQUENTIAL_CMAP, vulnerability_norm, "Vulnerability", cax=cbar_axes[1])
+
+    legend_ax.axis("off")
+    legend_ax.legend(
         handles=[
             Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected"),
             Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Other UTAM"),
         ],
-        loc="lower center",
-        bbox_to_anchor=(0.5, -0.02),
+        loc="center",
         ncol=2,
         frameon=False,
         fontsize=8.8,
@@ -1920,19 +2247,48 @@ def export_figures(
     for scenario_name in ordered_scenarios:
         gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total", "accessibility"]], on="UTAM", how="left")
         fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
-        plot_map_panel(ax, gdf, "ports_total", f"{scenario_name} total port allocation", SEQUENTIAL_CMAP, norm=ports_norm)
+        plot_map_panel(
+            ax,
+            gdf,
+            "ports_total",
+            f"{scenario_name} total port allocation",
+            SEQUENTIAL_CMAP,
+            norm=ports_norm,
+            show_scale_bar=True,
+            focus_extent=focus_extent,
+            show_focus_box=True,
+        )
         add_horizontal_colorbar(fig, ax, SEQUENTIAL_CMAP, ports_norm, "Charging ports")
         fig.savefig(paths.figures_dir / f"fig_allocation_{scenario_name}.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
     if ordered_scenarios:
-        fig, axes = plt.subplots(1, len(ordered_scenarios), figsize=(4.25 * len(ordered_scenarios), 5.0), constrained_layout=True)
-        if len(ordered_scenarios) == 1:
-            axes = [axes]
-        for axis, scenario_name in zip(axes, ordered_scenarios):
+        ncols = 2
+        nrows = int(np.ceil(len(ordered_scenarios) / ncols))
+        fig = plt.figure(figsize=(10.8, 2.95 * nrows + 0.65), constrained_layout=True)
+        grid = fig.add_gridspec(nrows + 1, ncols, height_ratios=[1.0] * nrows + [0.08])
+        axes = [fig.add_subplot(grid[row, col]) for row in range(nrows) for col in range(ncols)]
+        cbar_ax = fig.add_subplot(grid[nrows, :])
+        visible_axes = []
+        for idx, axis in enumerate(axes):
+            if idx >= len(ordered_scenarios):
+                axis.axis("off")
+                continue
+            scenario_name = ordered_scenarios[idx]
             gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
-            plot_map_panel(axis, gdf, "ports_total", f"{scenario_name}", SEQUENTIAL_CMAP, norm=ports_norm)
-        add_horizontal_colorbar(fig, list(axes), SEQUENTIAL_CMAP, ports_norm, "Charging ports", fraction=0.05, pad=0.04)
+            plot_map_panel(
+                axis,
+                gdf,
+                "ports_total",
+                f"{chr(97 + idx)}. {scenario_name}",
+                SEQUENTIAL_CMAP,
+                norm=ports_norm,
+                show_scale_bar=(idx == 0),
+                focus_extent=focus_extent,
+                show_focus_box=True,
+            )
+            visible_axes.append(axis)
+        add_horizontal_colorbar(fig, visible_axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports", cax=cbar_ax)
         fig.savefig(paths.figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
@@ -2008,18 +2364,45 @@ def export_figures(
             if label not in label_to_path:
                 continue
             fig, ax = plt.subplots(1, 1, figsize=(10.8, 4.8), constrained_layout=True)
-            plot_map_panel(ax, gdf_delta, column, f"Net reallocation in ports: {label}", DIVERGING_CMAP, norm=delta_norm)
+            plot_map_panel(
+                ax,
+                gdf_delta,
+                column,
+                f"Net reallocation in ports: {label}",
+                DIVERGING_CMAP,
+                norm=delta_norm,
+                linewidth=0.45,
+                edgecolor=MAP_DELTA_EDGE,
+                zero_fill=MAP_DELTA_ZERO,
+                show_scale_bar=True,
+                focus_extent=focus_extent,
+                show_focus_inset=True,
+            )
             add_horizontal_colorbar(fig, ax, DIVERGING_CMAP, delta_norm, "Net change in ports")
             fig.savefig(label_to_path[label], dpi=300, bbox_inches="tight", facecolor="white")
             plt.close(fig)
 
-        fig, axes = plt.subplots(1, len(growth_maps), figsize=(4.2 * len(growth_maps), 5.0), constrained_layout=True)
-        if len(growth_maps) == 1:
-            axes = [axes]
-        for axis, (gdf_delta, label, column) in zip(axes, filtered_growth_maps):
-            plot_map_panel(axis, gdf_delta, column, label, DIVERGING_CMAP, norm=delta_norm)
+        fig = plt.figure(figsize=(4.45 * len(growth_maps), 5.5), constrained_layout=True)
+        grid = fig.add_gridspec(2, len(growth_maps), height_ratios=[1.0, 0.08])
+        axes = [fig.add_subplot(grid[0, idx]) for idx in range(len(growth_maps))]
+        cbar_ax = fig.add_subplot(grid[1, :])
+        for idx, (axis, (gdf_delta, label, column)) in enumerate(zip(axes, filtered_growth_maps)):
+            plot_map_panel(
+                axis,
+                gdf_delta,
+                column,
+                f"{chr(97 + idx)}. {label}",
+                DIVERGING_CMAP,
+                norm=delta_norm,
+                linewidth=0.45,
+                edgecolor=MAP_DELTA_EDGE,
+                zero_fill=MAP_DELTA_ZERO,
+                show_scale_bar=(idx == 0),
+                focus_extent=focus_extent,
+                show_focus_box=True,
+            )
         figure_name = "fig_growth_over_time.png" if growth_long is not None else "fig_growth_progression.png"
-        add_horizontal_colorbar(fig, list(axes), DIVERGING_CMAP, delta_norm, "Net change in ports", fraction=0.05, pad=0.04)
+        add_horizontal_colorbar(fig, list(axes), DIVERGING_CMAP, delta_norm, "Net change in ports", cax=cbar_ax)
         fig.savefig(paths.figures_dir / figure_name, dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
@@ -2134,85 +2517,431 @@ def export_figures(
     tradeoff_path = paths.tables_dir / "table_policy_tradeoff.csv"
     if tradeoff_path.exists():
         tradeoff_df = pd.read_csv(tradeoff_path)
-        tradeoff_df["relative_fidelity_loss_vs_S0_pct"] = pd.to_numeric(
-            tradeoff_df["relative_fidelity_loss_vs_S0_pct"], errors="coerce"
-        ).fillna(0.0)
-        tradeoff_df["vulnerable_coverage_pct"] = pd.to_numeric(
-            tradeoff_df["vulnerable_coverage_pct"], errors="coerce"
-        )
+        for column in [
+            "relative_fidelity_loss_vs_S0_pct",
+            "vulnerable_coverage_pct",
+            "vulnerable_coverage_gain_pp_vs_S0",
+            "weighted_gini_improvement_vs_S0_bp",
+            "high_vulnerability_access_delta_vs_S0",
+        ]:
+            if column in tradeoff_df.columns:
+                tradeoff_df[column] = pd.to_numeric(tradeoff_df[column], errors="coerce")
+        tradeoff_df["relative_fidelity_loss_vs_S0_pct"] = tradeoff_df["relative_fidelity_loss_vs_S0_pct"].fillna(0.0)
         tradeoff_df = tradeoff_df.dropna(subset=["vulnerable_coverage_pct"]).sort_values("relative_fidelity_loss_vs_S0_pct")
         if len(tradeoff_df):
-            fig, ax = plt.subplots(1, 1, figsize=(8.4, 4.8), constrained_layout=True)
-            ax.plot(
-                tradeoff_df["relative_fidelity_loss_vs_S0_pct"],
-                tradeoff_df["vulnerable_coverage_pct"],
-                color="#b8aea4",
-                linewidth=1.7,
-                zorder=1,
+            equity_metrics_path = paths.tables_dir / "table_equity_metrics_final.csv"
+            s3_summary: pd.Series | None = None
+            if equity_metrics_path.exists():
+                equity_metrics_df = pd.read_csv(equity_metrics_path)
+                if "scenario" in equity_metrics_df.columns and equity_metrics_df["scenario"].astype(str).eq("S3").any():
+                    s3_summary = equity_metrics_df.loc[equity_metrics_df["scenario"].astype(str).eq("S3")].iloc[0]
+
+            scenario_order = [name for name in ["S0", "S1", "S2", "S3"] if name in tradeoff_df["scenario"].astype(str).tolist()]
+            frontier_df = tradeoff_df.copy()
+            frontier_df["scenario"] = pd.Categorical(frontier_df["scenario"], categories=scenario_order, ordered=True)
+            frontier_df = frontier_df.sort_values("scenario").reset_index(drop=True)
+
+            fig = plt.figure(figsize=(14.8, 9.1), constrained_layout=True)
+            grid = fig.add_gridspec(4, 2, width_ratios=[1.48, 1.12], height_ratios=[1.02, 0.30, 0.94, 0.92])
+            ax_frontier = fig.add_subplot(grid[:, 0])
+            ax_robust = fig.add_subplot(grid[0, 1])
+            robust_meta_grid = grid[1, 1].subgridspec(1, 2, width_ratios=[1.28, 0.92], wspace=0.08)
+            ax_robust_text = fig.add_subplot(robust_meta_grid[0, 0])
+            ax_robust_legend = fig.add_subplot(robust_meta_grid[0, 1])
+            gain_grid = grid[2, 1].subgridspec(1, 2, width_ratios=[0.70, 0.54], wspace=0.04)
+            ax_gain = fig.add_subplot(gain_grid[0, 0])
+            ax_gain_meta = fig.add_subplot(gain_grid[0, 1], sharey=ax_gain)
+            ax_floor = fig.add_subplot(grid[3, 1])
+
+            configure_line_axis(
+                ax_frontier,
+                "a. Coverage-fidelity frontier",
+                "Relative fidelity loss vs S0 (%)",
+                "High-vulnerability UTAMs within 15 min (%)",
             )
-            grouped = (
-                tradeoff_df.groupby(
-                    ["relative_fidelity_loss_vs_S0_pct", "vulnerable_coverage_pct"],
-                    dropna=False,
-                    sort=False,
-                )["scenario"]
-                .agg(list)
-                .reset_index()
+            ax_frontier.grid(axis="x", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+            x_vals = frontier_df["relative_fidelity_loss_vs_S0_pct"].to_numpy(dtype=float)
+            y_vals = frontier_df["vulnerable_coverage_pct"].to_numpy(dtype=float)
+            ax_frontier.plot(x_vals, y_vals, color="#b8aea4", linewidth=2.2, zorder=1)
+            for idx in range(len(frontier_df) - 1):
+                ax_frontier.annotate(
+                    "",
+                    xy=(x_vals[idx + 1], y_vals[idx + 1]),
+                    xytext=(x_vals[idx], y_vals[idx]),
+                    arrowprops=dict(arrowstyle="-|>", color="#b8aea4", lw=2.0, shrinkA=11, shrinkB=11),
+                )
+
+            annotation_specs: dict[str, tuple[str, tuple[int, int]]] = {
+                "S0": ("S0", (12, 10)),
+                "S1": ("S1", (10, 10)),
+                "S2": ("S2", (12, 18)),
+                "S3": ("S3", (12, -18)),
+            }
+            plot_order = [name for name in ["S0", "S1", "S2", "S3"] if name in frontier_df["scenario"].astype(str).tolist()]
+            s2_row = frontier_df.loc[frontier_df["scenario"].astype(str).eq("S2")]
+            s3_row = frontier_df.loc[frontier_df["scenario"].astype(str).eq("S3")]
+            s2_s3_overlap = (
+                not s2_row.empty
+                and not s3_row.empty
+                and np.isclose(float(s2_row.iloc[0]["relative_fidelity_loss_vs_S0_pct"]), float(s3_row.iloc[0]["relative_fidelity_loss_vs_S0_pct"]))
+                and np.isclose(float(s2_row.iloc[0]["vulnerable_coverage_pct"]), float(s3_row.iloc[0]["vulnerable_coverage_pct"]))
             )
-            for _, row in grouped.iterrows():
-                scenario_list = [str(item) for item in row["scenario"]]
-                label = " / ".join(scenario_list)
-                color = SCENARIO_COLORS.get(scenario_list[-1], "#6d655e") if len(scenario_list) == 1 else "#7b3f7a"
-                ax.scatter(
-                    row["relative_fidelity_loss_vs_S0_pct"],
-                    row["vulnerable_coverage_pct"],
-                    s=110 if len(scenario_list) > 1 else 88,
-                    color=color,
+            for scenario_name in plot_order:
+                if scenario_name == "S3" and s2_s3_overlap:
+                    continue
+                row = frontier_df.loc[frontier_df["scenario"].astype(str).eq(scenario_name)].iloc[0]
+                x_val = float(row["relative_fidelity_loss_vs_S0_pct"])
+                y_val = float(row["vulnerable_coverage_pct"])
+                ax_frontier.scatter(
+                    x_val,
+                    y_val,
+                    s=140,
+                    marker="o",
+                    color=SCENARIO_COLORS.get(scenario_name, "#444444"),
+                    edgecolor="white",
+                    linewidth=1.35,
+                    zorder=4 if scenario_name == "S2" else 3,
+                    alpha=0.98,
+                )
+                if scenario_name == "S2" and s2_s3_overlap:
+                    ax_frontier.scatter(
+                        x_val,
+                        y_val,
+                        s=160,
+                        marker="D",
+                        facecolor="none",
+                        edgecolor=SCENARIO_COLORS.get("S3", "#444444"),
+                        linewidth=1.4,
+                        zorder=5,
+                    )
+                label_text, offset = annotation_specs.get(scenario_name, (scenario_name, (12, 12)))
+                if scenario_name == "S2" and s2_s3_overlap:
+                    label_text = "S2 = S3"
+                ax_frontier.annotate(
+                    label_text,
+                    xy=(x_val, y_val),
+                    xytext=offset,
+                    textcoords="offset points",
+                    fontsize=8.4,
+                    color=PAPER_TEXT,
+                    ha="left",
+                    va="center",
+                    bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
+                    arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 1.0},
+                )
+            x_pad = max(0.6, 0.08 * max(float(np.nanmax(x_vals)) - float(np.nanmin(x_vals)), 1.0))
+            y_pad = max(0.8, 0.10 * max(float(np.nanmax(y_vals)) - float(np.nanmin(y_vals)), 1.0))
+            ax_frontier.set_xlim(float(np.nanmin(x_vals)) - x_pad, float(np.nanmax(x_vals)) + 1.35 * x_pad)
+            ax_frontier.set_ylim(float(np.nanmin(y_vals)) - y_pad, float(np.nanmax(y_vals)) + 1.2 * y_pad)
+
+            robust_panel = robust_df.copy()
+            robust_panel["alternative_specification"] = robust_panel["alternative_specification"].astype(str)
+            robust_panel["display_label"] = robust_panel["alternative_specification"].map(shorten_robustness_label)
+            robust_panel["delta_weighted_gini_bp"] = 10000.0 * pd.to_numeric(robust_panel["delta_weighted_gini"], errors="coerce")
+            robust_panel["delta_vulnerable_coverage_pp"] = 100.0 * pd.to_numeric(robust_panel["delta_vulnerable_coverage"], errors="coerce")
+            robust_panel["rank_stability"] = pd.to_numeric(robust_panel["rank_stability"], errors="coerce")
+            robust_panel["interpretation"] = robust_panel["interpretation"].astype(str)
+            robust_panel = robust_panel.dropna(subset=["delta_weighted_gini_bp", "delta_vulnerable_coverage_pp"])
+
+            def robustness_family(text: str) -> str:
+                lower = text.lower()
+                if "decay" in lower:
+                    return "Decay"
+                if "weighting construction" in lower:
+                    return "Vulnerability index"
+                if "trade-off sensitivity" in lower or "epsilon" in lower:
+                    return "Epsilon"
+                if "social-weight intensity" in lower or "kappa" in lower:
+                    return "Kappa"
+                if "minimum-service" in lower or "soft floor" in lower:
+                    return "Soft floor"
+                return "Other"
+
+            family_colors = {
+                "Decay": "#c95a49",
+                "Vulnerability index": "#7b3f7a",
+                "Epsilon": "#6f86b1",
+                "Kappa": "#2e3f68",
+                "Soft floor": "#f1c57b",
+                "Other": "#8a8178",
+            }
+            robust_panel["robust_family"] = robust_panel["interpretation"].map(robustness_family)
+
+            configure_line_axis(
+                ax_robust,
+                "b. Robustness around S2",
+                "Delta vulnerable coverage vs S2 (pp)",
+                "Delta weighted Gini vs S2 (bp)",
+            )
+            ax_robust.grid(axis="x", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+            ax_robust.axhline(0.0, linestyle="--", color="#8a8178", linewidth=1.3, zorder=0)
+            ax_robust.axvline(0.0, linestyle="--", color="#8a8178", linewidth=1.3, zorder=0)
+            ax_robust_text.axis("off")
+            ax_robust_legend.axis("off")
+            if len(robust_panel):
+                for family_name in ["Decay", "Vulnerability index", "Epsilon", "Kappa", "Soft floor", "Other"]:
+                    subset = robust_panel.loc[robust_panel["robust_family"].eq(family_name)]
+                    if subset.empty:
+                        continue
+                    ax_robust.scatter(
+                        subset["delta_vulnerable_coverage_pp"],
+                        subset["delta_weighted_gini_bp"],
+                        s=68,
+                        color=family_colors.get(family_name, "#8a8178"),
+                        edgecolor="white",
+                        linewidth=1.1,
+                        alpha=0.95,
+                        label=family_name,
+                        zorder=3,
+                    )
+                ax_robust.scatter(0.0, 0.0, s=52, marker="x", color=PAPER_TEXT, linewidth=1.3, zorder=4)
+
+                label_candidates = robust_panel.loc[
+                    robust_panel["delta_vulnerable_coverage_pp"].abs().gt(1.5)
+                    | robust_panel["delta_weighted_gini_bp"].abs().gt(80.0)
+                ].copy()
+                for _, row in label_candidates.iterrows():
+                    short_label = shorten_robustness_label(str(row["alternative_specification"]))
+                    x_val = float(row["delta_vulnerable_coverage_pp"])
+                    y_val = float(row["delta_weighted_gini_bp"])
+                    offset_x = 10 if x_val >= 0 else -48
+                    offset_y = 8 if y_val >= 0 else -10
+                    ax_robust.annotate(
+                        short_label,
+                        xy=(x_val, y_val),
+                        xytext=(offset_x, offset_y),
+                        textcoords="offset points",
+                        ha="left" if x_val >= 0 else "right",
+                        va="bottom" if y_val >= 0 else "top",
+                        fontsize=7.4,
+                        color=PAPER_TEXT,
+                        bbox={"boxstyle": "round,pad=0.18", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
+                        arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.9},
+                    )
+
+                x_span = max(float(np.nanmax(np.abs(robust_panel["delta_vulnerable_coverage_pp"]))), 0.5)
+                y_span = max(float(np.nanmax(np.abs(robust_panel["delta_weighted_gini_bp"]))), 10.0)
+                ax_robust.set_xlim(-1.18 * x_span, 1.18 * x_span)
+                ax_robust.set_ylim(-1.22 * y_span, 1.22 * y_span)
+
+                handles, labels = ax_robust.get_legend_handles_labels()
+                ax_robust_legend.legend(
+                    handles,
+                    labels,
+                    loc="upper left",
+                    frameon=False,
+                    fontsize=7.0,
+                    ncol=2,
+                    handletextpad=0.4,
+                    columnspacing=0.9,
+                )
+                min_rank = float(np.nanmin(robust_panel["rank_stability"])) if robust_panel["rank_stability"].notna().any() else float("nan")
+                ax_robust_text.text(
+                    0.0,
+                    0.92,
+                    (
+                        "Reference point: S2. Preferred direction is rightward coverage gain and downward Gini reduction.\n"
+                        f"Worst-case coverage shift: {float(np.nanmin(robust_panel['delta_vulnerable_coverage_pp'])):+.1f} to "
+                        f"{float(np.nanmax(robust_panel['delta_vulnerable_coverage_pp'])):+.1f} pp\n"
+                        f"Worst-case weighted-Gini shift: {float(np.nanmin(robust_panel['delta_weighted_gini_bp'])):+.1f} to "
+                        f"{float(np.nanmax(robust_panel['delta_weighted_gini_bp'])):+.1f} bp\n"
+                        f"Minimum rank stability: {min_rank:.3f}"
+                    ),
+                    transform=ax_robust_text.transAxes,
+                    ha="left",
+                    va="top",
+                    fontsize=7.3,
+                    color="#6d655e",
+                )
+            else:
+                ax_robust_text.text(
+                    0.0,
+                    0.85,
+                    "Robustness battery was not available for this run.",
+                    transform=ax_robust_text.transAxes,
+                    ha="left",
+                    va="top",
+                    fontsize=8.0,
+                    color="#6d655e",
+                )
+
+            gain_df = frontier_df.loc[frontier_df["scenario"].astype(str).ne("S0")].copy()
+            gain_df["scenario"] = pd.Categorical(gain_df["scenario"], categories=["S1", "S2", "S3"], ordered=True)
+            gain_df = gain_df.sort_values("scenario").reset_index(drop=True)
+
+            configure_line_axis(
+                ax_gain,
+                "c. Distributional gain relative to S0",
+                "Improvement in weighted Gini (basis points)",
+                "",
+            )
+            ax_gain_meta.axis("off")
+            ax_gain_meta.tick_params(axis="y", left=False, labelleft=False)
+            ax_gain.grid(axis="x", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+            ax_gain.grid(axis="y", visible=False)
+            y_pos = np.arange(len(gain_df))
+            ax_gain.axvline(0.0, linestyle="--", color="#8a8178", linewidth=1.4)
+            ax_gain.hlines(y_pos, 0.0, gain_df["weighted_gini_improvement_vs_S0_bp"], color="#c9bfb4", linewidth=2.2)
+            for idx, row in gain_df.iterrows():
+                scenario_name = str(row["scenario"])
+                x_val = float(row["weighted_gini_improvement_vs_S0_bp"])
+                ax_gain.scatter(
+                    x_val,
+                    idx,
+                    s=92,
+                    color=SCENARIO_COLORS.get(scenario_name, "#444444"),
                     edgecolor="white",
                     linewidth=1.2,
                     zorder=3,
                 )
-                ax.text(
-                    row["relative_fidelity_loss_vs_S0_pct"] + 0.22,
-                    row["vulnerable_coverage_pct"] + 0.12,
-                    label,
-                    fontsize=9,
-                    color=PAPER_TEXT,
+                ax_gain.text(
+                    x_val + 0.08,
+                    idx,
+                    f"{x_val:.2f} bp",
                     ha="left",
-                    va="bottom",
+                    va="center",
+                    fontsize=8.3,
+                    color=PAPER_TEXT,
                 )
-            configure_line_axis(
-                ax,
-                "Policy trade-off frontier",
-                "Relative fidelity loss vs S0 (%)",
-                "High-vulnerability UTAMs within 15 min (%)",
-            )
-            x_vals = tradeoff_df["relative_fidelity_loss_vs_S0_pct"].to_numpy(dtype=float)
-            y_vals = tradeoff_df["vulnerable_coverage_pct"].to_numpy(dtype=float)
-            x_pad = max(0.5, 0.08 * max(float(np.nanmax(x_vals)) - float(np.nanmin(x_vals)), 1.0))
-            y_pad = max(0.4, 0.08 * max(float(np.nanmax(y_vals)) - float(np.nanmin(y_vals)), 1.0))
-            ax.set_xlim(float(np.nanmin(x_vals)) - x_pad, float(np.nanmax(x_vals)) + 2.2 * x_pad)
-            ax.set_ylim(float(np.nanmin(y_vals)) - y_pad, float(np.nanmax(y_vals)) + 1.5 * y_pad)
+                ax_gain_meta.text(
+                    0.0,
+                    idx,
+                    (
+                        f"cov {float(row['vulnerable_coverage_gain_pp_vs_S0']):+.1f} pp\n"
+                        f"mean {float(row['high_vulnerability_access_delta_vs_S0']):+.2f}"
+                    ),
+                    transform=ax_gain_meta.get_yaxis_transform(),
+                    ha="left",
+                    va="center",
+                    fontsize=7.4,
+                    color="#6d655e",
+                )
+            ax_gain.set_yticks(y_pos)
+            ax_gain.set_yticklabels(gain_df["scenario"].astype(str).tolist(), fontsize=8.8)
+            ax_gain.invert_yaxis()
+            ax_gain.set_xlim(0.0, max(float(np.nanmax(gain_df["weighted_gini_improvement_vs_S0_bp"])) + 1.3, 5.0))
+
+            if s3_summary is not None and np.isfinite(pd.to_numeric(s3_summary.get("s3_floor_value"), errors="coerce")):
+                floor_value = float(pd.to_numeric(s3_summary["s3_floor_value"], errors="coerce"))
+                protected_min = float(pd.to_numeric(s3_summary["s3_protected_min_access"], errors="coerce"))
+                protected_p10 = float(pd.to_numeric(s3_summary["s3_protected_p10_access"], errors="coerce"))
+                protected_p25 = float(pd.to_numeric(s3_summary["s3_protected_p25_access"], errors="coerce"))
+                protected_mean = float(pd.to_numeric(s3_summary["s3_protected_mean_access"], errors="coerce"))
+                protected_share = 100.0 * float(pd.to_numeric(s3_summary["s3_protected_share_meeting_floor"], errors="coerce"))
+
+                configure_line_axis(
+                    ax_floor,
+                    "d. S3 protected-set safeguard",
+                    "Protected-set accessibility",
+                    "",
+                )
+                ax_floor.grid(axis="x", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+                ax_floor.grid(axis="y", visible=False)
+                ax_floor.tick_params(axis="y", left=False, labelleft=False)
+                ax_floor.spines["left"].set_visible(False)
+                ax_floor.hlines(0.0, protected_min, protected_mean, color="#c9bfb4", linewidth=3.0, zorder=1)
+                ax_floor.axvline(floor_value, linestyle="--", color="#8a8178", linewidth=1.5, zorder=0)
+
+                marker_specs = [
+                    ("Min", protected_min, SCENARIO_COLORS["S0"], (-16, -24)),
+                    ("P10", protected_p10, SCENARIO_COLORS["S1"], (0, 22)),
+                    ("P25", protected_p25, SCENARIO_COLORS["S2"], (0, -24)),
+                    ("Mean", protected_mean, SCENARIO_COLORS["S3"], (0, 22)),
+                ]
+                for label, value_, color, offset in marker_specs:
+                    ax_floor.scatter(
+                        value_,
+                        0.0,
+                        s=88,
+                        color=color,
+                        edgecolor="white",
+                        linewidth=1.2,
+                        zorder=3,
+                    )
+                    ax_floor.annotate(
+                        f"{label}\n{value_:.1f}",
+                        xy=(value_, 0.0),
+                        xytext=offset,
+                        textcoords="offset points",
+                        ha="center",
+                        va="bottom" if offset[1] > 0 else "top",
+                        fontsize=7.6,
+                        color=PAPER_TEXT,
+                        bbox={"boxstyle": "round,pad=0.16", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
+                        arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.8},
+                    )
+                ax_floor.annotate(
+                    f"Soft floor\n{floor_value:.1f}",
+                    xy=(floor_value, 0.0),
+                    xytext=(0, 28),
+                    textcoords="offset points",
+                    ha="center",
+                    va="bottom",
+                    fontsize=7.7,
+                    color="#6d655e",
+                    bbox={"boxstyle": "round,pad=0.16", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
+                    arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.8},
+                )
+                ax_floor.text(
+                    0.98,
+                    0.94,
+                    f"{protected_share:.1f}% of protected UTAMs meet the floor",
+                    transform=ax_floor.transAxes,
+                    ha="right",
+                    va="top",
+                    fontsize=8.0,
+                    color="#6d655e",
+                )
+                x_span = max(protected_mean - protected_min, 1.0)
+                x_pad = max(8.0, 0.10 * x_span)
+                ax_floor.set_xlim(min(protected_min, floor_value) - x_pad, protected_mean + x_pad)
+                ax_floor.set_ylim(-0.55, 0.58)
+            else:
+                ax_floor.axis("off")
+                ax_floor.text(
+                    0.0,
+                    1.0,
+                    "d. S3 protected-set safeguard",
+                    transform=ax_floor.transAxes,
+                    ha="left",
+                    va="top",
+                    fontsize=12,
+                    fontweight="semibold",
+                    color=PAPER_TEXT,
+                )
+                ax_floor.text(
+                    0.0,
+                    0.78,
+                    "Protected-set summary was not available for this run.",
+                    transform=ax_floor.transAxes,
+                    ha="left",
+                    va="top",
+                    fontsize=9,
+                    color="#6d655e",
+                )
             fig.savefig(paths.figures_dir / "fig_policy_tradeoff.png", dpi=300, bbox_inches="tight", facecolor="white")
             plt.close(fig)
 
     if len(robust_df):
         robust_plot = robust_df.copy()
         robust_plot["alternative_specification"] = robust_plot["alternative_specification"].astype(str)
+        robust_plot["display_label"] = robust_plot["alternative_specification"].map(shorten_robustness_label)
+        robust_plot["delta_weighted_gini_bp"] = 10000.0 * pd.to_numeric(robust_plot["delta_weighted_gini"], errors="coerce")
         robust_plot = robust_plot.sort_values("delta_weighted_gini", ascending=True).reset_index(drop=True)
         y_pos = np.arange(len(robust_plot))
-        fig, axes = plt.subplots(1, 2, figsize=(13, max(4.6, 0.33 * len(robust_plot) + 2.2)), constrained_layout=True)
-        for axis, metric, color, title, baseline in [
-            (axes[0], "delta_weighted_gini", SCENARIO_COLORS["S2"], "a. Delta weighted Gini relative to S2", 0.0),
-            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability relative to S2", 1.0),
+        fig, axes = plt.subplots(1, 2, figsize=(11.8, max(4.8, 0.31 * len(robust_plot) + 2.4)), constrained_layout=True)
+        for axis, metric, color, title, baseline, xlabel in [
+            (axes[0], "delta_weighted_gini_bp", SCENARIO_COLORS["S2"], "a. Weighted-Gini shift relative to S2", 0.0, "Delta weighted Gini vs S2 (bp)"),
+            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability relative to S2", 1.0, "Rank stability"),
         ]:
             values = pd.to_numeric(robust_plot[metric], errors="coerce").to_numpy(dtype=float)
             axis.hlines(y_pos, baseline, values, color=color, linewidth=2.0, alpha=0.75)
             axis.scatter(values, y_pos, color=color, s=36, zorder=3)
             axis.axvline(baseline, linestyle="--", color="#8a8178", linewidth=1.4)
-            configure_line_axis(axis, title, metric.replace("_", " "), "")
+            configure_line_axis(axis, title, xlabel, "")
             axis.set_yticks(y_pos)
-            axis.set_yticklabels(robust_plot["alternative_specification"], fontsize=8.5)
+            axis.set_yticklabels(robust_plot["display_label"], fontsize=8.4)
+            axis.tick_params(axis="y", pad=4)
         fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 

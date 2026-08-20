@@ -1,0 +1,20 @@
+Required submission files for Journal of Transport Geography
+
+main.tex
+main.pdf
+elsarticle.cls
+elsarticle-harv.bst
+data_additional/references_parta.bib
+data_additional/title_page_author_details.tex
+data_additional/highlights_parta.txt
+supplementary_appendix.tex
+supplementary_appendix.pdf
+figures/fig_official_ev_growth.png
+figures/fig_social_context_panels.png
+figures/fig_attention_profile.png
+figures/fig_allocation_composite.png
+figures/fig_net_change_S2_minus_S1.png
+figures/fig_lorenz_curves.png
+figures/fig_policy_tradeoff.png
+figures/fig_growth_progression.png
+figures/fig_robustness.png
