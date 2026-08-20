@@ -23,6 +23,15 @@ Su `README.md` incluye el mapeo figura↔archivo, las cifras clave y las sumas d
 - Corrida de escenarios S0–S3: 2026-04-15 (Pyomo + NEOS/CPLEX)
 - Fuente LaTeX: incluido en `submission/jtg_2026-04/00_latex_fuente/` (exportado de Overleaf)
 
+## Revisión en curso
+
+El 2026-08-20 la revista devolvió el artículo con **revisión mayor** y plazo hasta el
+**2026-10-11**. Los tres informes de los revisores, la nota del editor y una copia de trabajo
+del fuente LaTeX están en `revision/r1_2026-08/`.
+
+Esa carpeta **no se versiona**: los informes son confidenciales y el repositorio es público.
+Ver `revision/LEEME_CONFIDENCIAL.md`.
+
 El material intermedio y las copias superadas quedaron en
 `outputs/social_equity_followup_outputs/paper_v6_experiments/_archivo_superado/`
 (fuera del control de versiones).
