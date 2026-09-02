@@ -5,16 +5,19 @@
       "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/utam_shapefile.zip"
     },
     "priority_utam_scores.csv": {
-      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/priority_utam_scores.csv",
-      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/priority_utam_scores.csv"
+      "source": "scripts/retrain_stgnn.py (local retraining, variant --peso-viajes fexp_miles, seed 42) on the EM-2023 modules with canonical zone codes, numeric expansion weights and trips weighted by fexp_vj/1000",
+      "generated_on": "2026-09-02",
+      "staged_to": "data/inputs/priority_utam_scores.csv"
     },
     "temporal_attention_by_utam.csv": {
-      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/temporal_attention_by_utam.csv",
-      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/temporal_attention_by_utam.csv"
+      "source": "scripts/retrain_stgnn.py (local retraining, variant --peso-viajes fexp_miles, seed 42) on the EM-2023 modules with canonical zone codes, numeric expansion weights and trips weighted by fexp_vj/1000",
+      "generated_on": "2026-09-02",
+      "staged_to": "data/inputs/temporal_attention_by_utam.csv"
     },
     "learning_loss_history.csv": {
-      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/learning_loss_history.csv",
-      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv"
+      "source": "scripts/retrain_stgnn.py (local retraining, variant --peso-viajes fexp_miles, seed 42) on the EM-2023 modules with canonical zone codes, numeric expansion weights and trips weighted by fexp_vj/1000",
+      "generated_on": "2026-09-02",
+      "staged_to": "data/inputs/learning_loss_history.csv"
     },
     "utam_social_vulnerability.csv": {
       "source": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/utam_social_vulnerability.csv",
@@ -32,5 +35,28 @@
   "reference_dir": {
     "source": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/parta_outputs/social_equity_followup_outputs/paper_v6_experiments",
     "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/reference/paper_v6_experiments"
-  }
+  },
+  "superseded": {
+    "priority_utam_scores.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/priority_utam_scores.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/priority_utam_scores.csv",
+      "superseded_on": "2026-09-02",
+      "reason": "zone-code matching error in the original notebook (UTAM043 vs UTAM43) left the training label at zero in 98 of 142 zones; see revision audit"
+    },
+    "temporal_attention_by_utam.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/temporal_attention_by_utam.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/temporal_attention_by_utam.csv",
+      "superseded_on": "2026-09-02",
+      "reason": "zone-code matching error in the original notebook (UTAM043 vs UTAM43) left the training label at zero in 98 of 142 zones; see revision audit"
+    },
+    "learning_loss_history.csv": {
+      "source": "/Users/jorgeiv500/Downloads/priority_utam_outputs_enriched (1)/learning_loss_history.csv",
+      "staged_to": "/Users/jorgeiv500/Documents/social-eq/data/inputs/learning_loss_history.csv",
+      "superseded_on": "2026-09-02",
+      "reason": "zone-code matching error in the original notebook (UTAM043 vs UTAM43) left the training label at zero in 98 of 142 zones; see revision audit"
+    }
+  },
+  "notes": [
+    "2026-09-02: learning-stage inputs regenerated after the zone-code matching error was found during the JTG revision; the optimisation inputs (vulnerability index, travel-time matrix, quotas) are unchanged."
+  ]
 }
