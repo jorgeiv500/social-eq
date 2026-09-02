@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.cm import ScalarMappable
+from matplotlib.ticker import FuncFormatter
 from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap, Normalize, TwoSlopeNorm
 from matplotlib.patches import Patch, Rectangle
 from pyomo.environ import (
@@ -1665,13 +1666,15 @@ def add_time_window_bands(ax: Any) -> None:
         ax.axvspan(start, end, color=color, alpha=0.9, zorder=0)
         ax.text(
             (start + end) / 2,
-            0.97,
+            0.975,
             label,
             transform=ax.get_xaxis_transform(),
             ha="center",
             va="top",
-            fontsize=8.5,
+            fontsize=8.0,
             color="#5a544e",
+            bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.85},
+            zorder=4,
         )
 
 
@@ -1864,9 +1867,20 @@ def label_box(
     """
     minx, miny, maxx, maxy = bounds
     fig_w, fig_h = ax.figure.get_size_inches()
-    # Fraccion util del lienzo que ocupa el area de dibujo, aproximada.
-    dato_por_pulgada_x = (maxx - minx) / max(fig_w * 0.92, 1e-6)
-    dato_por_pulgada_y = (maxy - miny) / max(fig_h * 0.78, 1e-6)
+    # Tamano real del eje: se fuerza un dibujado (una vez por eje) para que
+    # constrained_layout y el aspecto igual fijen su posicion. Antes se usaba
+    # una fraccion fija del lienzo, que en las figuras de tres paneles apilados
+    # subestimaba las cajas unas tres veces y dejaba pasar colisiones
+    # (revision editorial 2026-09-02, Figuras 4 y 6).
+    if not getattr(ax, "_social_eq_layout_done", False):
+        ax.figure.canvas.draw()
+        ax._social_eq_layout_done = True
+    pos = ax.get_position()
+    ax_w = max(pos.width * fig_w, 1e-6)
+    ax_h = max(pos.height * fig_h, 1e-6)
+    escala = max((maxx - minx) / ax_w, (maxy - miny) / ax_h)
+    dato_por_pulgada_x = escala
+    dato_por_pulgada_y = escala
     semiancho = 0.5 * len(text) * 0.52 * (fontsize / 72.0) * dato_por_pulgada_x
     semialto = 0.5 * 1.2 * (fontsize / 72.0) * dato_por_pulgada_y
     cx = x if ha == "center" else (x + semiancho if ha == "left" else x - semiancho)
@@ -2887,8 +2901,12 @@ def export_figures(
         if trip_profile is not None:
             axes[0].plot(hours, trip_profile, color=SCENARIO_COLORS["S0"], linewidth=2.2, linestyle="--", label="Observed trip pressure")
         configure_line_axis(axes[0], "a. Daily schedule signature", "Hour", "Relative intensity")
-        axes[0].set_xticks(hours)
+        # Marcas mayores cada 3 h (las 24 etiquetas se solapaban al tamano de
+        # impresion) y techo en y para que los rotulos de franja no pisen la curva.
+        axes[0].set_xticks(np.arange(0, 24, 3))
+        axes[0].set_xticks(hours, minor=True)
         axes[0].set_xlim(-0.4, 23.4)
+        axes[0].set_ylim(-0.04, 1.2)
         axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
 
         attention_vuln = attention.merge(df_inputs[["UTAM", "vulnerability_index"]], on="UTAM", how="left")
@@ -2904,9 +2922,11 @@ def export_figures(
         axes[1].plot(hours, pd.Series(low_profile).rolling(window=3, center=True, min_periods=1).mean(), color=SCENARIO_COLORS["S0"], linewidth=2.8, label="Low vulnerability")
         axes[1].scatter(hours, high_profile, color=SCENARIO_COLORS["S2"], s=16, zorder=3)
         axes[1].scatter(hours, low_profile, color=SCENARIO_COLORS["S0"], s=16, zorder=3)
-        configure_line_axis(axes[1], "b. Attention split by social vulnerability", "Hour", "Relative intensity")
-        axes[1].set_xticks(hours)
+        configure_line_axis(axes[1], "b. Attention by social vulnerability", "Hour", "Relative intensity")
+        axes[1].set_xticks(np.arange(0, 24, 3))
+        axes[1].set_xticks(hours, minor=True)
         axes[1].set_xlim(-0.4, 23.4)
+        axes[1].set_ylim(-0.04, 1.2)
         axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
     fig.savefig(paths.figures_dir / "fig_attention_profile.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -3065,17 +3085,25 @@ def export_figures(
         additions = official_growth["annual_addition"].to_numpy(dtype=float)
         growth_pct = official_growth["annual_growth_pct"].to_numpy(dtype=float)
         tick_labels = official_growth["checkpoint_label"].astype(str).tolist()
+        # Figura 3 (2026-09-02, tercera version). Dos paneles en fila al ancho
+        # de impresion (7.05 in): la version apilada desperdiciaba el ancho de
+        # dos columnas para cinco puntos y el rotulo de la barra mas alta
+        # chocaba con el borde superior. Aqui el panel a es mas ancho que el b,
+        # las rejillas van detras de las barras, el porcentaje de crecimiento
+        # va dentro de la barra y el eje y lleva separador de miles.
         fig, axes = plt.subplots(
-            2,
             1,
-            figsize=(7.05, 4.35),
-            gridspec_kw={"height_ratios": [1.15, 1.0]},
+            2,
+            figsize=(7.05, 3.15),
+            gridspec_kw={"width_ratios": [1.35, 1.0]},
             constrained_layout=True,
         )
-        axes[0].fill_between(years, counts, 0.0, color="#f1c57b", alpha=0.28)
-        axes[0].plot(years, counts, color=SCENARIO_COLORS["S2"], linewidth=2.8)
-        axes[0].scatter(years, counts, s=58, color=SCENARIO_COLORS["S2"], edgecolor="white", linewidth=1.2, zorder=3)
-        label_offset = 0.03 * max(float(np.nanmax(counts)), 1.0)
+        miles = FuncFormatter(lambda v, _pos: f"{int(round(v)):,}")
+        axes[0].set_axisbelow(True)
+        axes[0].fill_between(years, counts, 0.0, color="#f1c57b", alpha=0.22, zorder=1)
+        axes[0].plot(years, counts, color=SCENARIO_COLORS["S2"], linewidth=2.4, zorder=2)
+        axes[0].scatter(years, counts, s=46, color=SCENARIO_COLORS["S2"], edgecolor="white", linewidth=1.1, zorder=3)
+        label_offset = 0.035 * max(float(np.nanmax(counts)), 1.0)
         for x_val, y_val in zip(years, counts):
             axes[0].text(
                 x_val,
@@ -3083,8 +3111,9 @@ def export_figures(
                 f"{int(round(y_val)):,}",
                 ha="center",
                 va="bottom",
-                fontsize=9,
+                fontsize=8.2,
                 color=PAPER_TEXT,
+                zorder=4,
             )
         configure_line_axis(
             axes[0],
@@ -3093,46 +3122,69 @@ def export_figures(
             "Registered electric vehicles",
         )
         axes[0].set_xticks(years)
-        axes[0].set_xticklabels(tick_labels, fontsize=8.8)
-        axes[0].set_ylim(0.0, max(float(np.nanmax(counts)) * 1.18, 1.0))
+        axes[0].set_xticklabels(tick_labels, fontsize=8.2)
+        axes[0].set_xlim(float(years[0]) - 0.35, float(years[-1]) + 0.35)
+        axes[0].set_ylim(0.0, max(float(np.nanmax(counts)) * 1.2, 1.0))
+        axes[0].yaxis.set_major_formatter(miles)
 
         delta_years = years[1:]
         delta_values = additions[1:]
         delta_labels = tick_labels[1:]
-        bars = axes[1].bar(delta_years, delta_values, width=0.56, color=SCENARIO_COLORS["S3"], alpha=0.92)
+        ymax_b = max(float(np.nanmax(delta_values)) * 1.34, 1.0)
+        axes[1].set_axisbelow(True)
+        axes[1].bar(delta_years, delta_values, width=0.58, color=SCENARIO_COLORS["S3"], alpha=0.92, zorder=2)
         mean_delta = float(np.nanmean(delta_values)) if len(delta_values) else 0.0
-        axes[1].axhline(mean_delta, linestyle="--", color="#8a8178", linewidth=1.4)
-        delta_offset = 0.04 * max(float(np.nanmax(delta_values)), 1.0)
+        axes[1].axhline(mean_delta, linestyle="--", color="#8a8178", linewidth=1.2, zorder=3)
         for x_val, y_val, pct_val in zip(delta_years, delta_values, growth_pct[1:]):
             axes[1].text(
                 x_val,
-                y_val + delta_offset,
-                f"+{int(round(y_val)):,}\n({pct_val:.1f}%)",
+                y_val + 0.025 * ymax_b,
+                f"+{int(round(y_val)):,}",
                 ha="center",
                 va="bottom",
-                fontsize=8.6,
+                fontsize=8.2,
                 color=PAPER_TEXT,
+                zorder=4,
+            )
+            # Crecimiento relativo en la base de la barra (la mas baja, 787,
+            # mide ~0.5 in en el lienzo): a altura fija no choca con la linea
+            # de la media, que cruza la barra de 2023 justo bajo su tope.
+            axes[1].text(
+                x_val,
+                0.035 * ymax_b,
+                f"{pct_val:.1f}%",
+                ha="center",
+                va="bottom",
+                fontsize=7.4,
+                color="white",
+                zorder=4,
             )
         configure_line_axis(
             axes[1],
-            "b. Year-to-year growth",
+            "b. Year-to-year additions",
             "Checkpoint reached",
-            "Additional electric vehicles",
+            "Added electric vehicles",
         )
         axes[1].set_xticks(delta_years)
-        axes[1].set_xticklabels(delta_labels, fontsize=8.8)
-        axes[1].set_ylim(0.0, max(float(np.nanmax(delta_values)) * 1.22, 1.0))
-        # A la izquierda: a la derecha choca con el rotulo de la ultima barra.
+        axes[1].set_xticklabels(delta_labels, fontsize=8.2)
+        axes[1].set_xlim(float(delta_years[0]) - 0.55, float(delta_years[-1]) + 0.55)
+        axes[1].set_ylim(0.0, ymax_b)
+        axes[1].yaxis.set_major_formatter(miles)
+        # Arriba a la izquierda: a la derecha choca con el rotulo de la ultima barra.
         axes[1].text(
-            0.02,
-            0.96,
+            0.03,
+            0.965,
             f"Mean annual addition: {int(round(mean_delta)):,}",
             transform=axes[1].transAxes,
             ha="left",
             va="top",
-            fontsize=8.3,
+            fontsize=7.8,
             color="#6d655e",
         )
+        for axis in axes:
+            axis.tick_params(axis="y", labelsize=8.4)
+            axis.xaxis.label.set_fontsize(9)
+            axis.yaxis.label.set_fontsize(9)
         fig.savefig(paths.figures_dir / "fig_official_ev_growth.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
@@ -3343,19 +3395,27 @@ def export_figures(
                     robust_panel["delta_vulnerable_coverage_pp"].abs().gt(1.5)
                     | robust_panel["delta_weighted_gini_bp"].abs().gt(80.0)
                 ].copy()
+                y_span_ref = max(float(np.nanmax(np.abs(robust_panel["delta_weighted_gini_bp"]))), 10.0)
                 for _, row in label_candidates.iterrows():
                     short_label = shorten_robustness_label(str(row["alternative_specification"]))
                     x_val = float(row["delta_vulnerable_coverage_pp"])
                     y_val = float(row["delta_weighted_gini_bp"])
-                    offset_x = 10 if x_val >= 0 else -48
-                    offset_y = 8 if y_val >= 0 else -10
+                    # Siempre a la derecha del punto y hacia el centro del eje:
+                    # hacia fuera, "High decay" caia sobre el rotulo del eje y y
+                    # "Low decay" sobre el titulo (revision editorial 2026-09-02).
+                    # Debajo del punto salvo para los claramente negativos: con
+                    # el signo como criterio, un punto casi nulo (kappa = 6.0)
+                    # recibia el rotulo arriba, encima del de "Low decay".
+                    abajo = y_val >= -0.15 * y_span_ref
+                    offset_x = 9
+                    offset_y = -9 if abajo else 9
                     ax_robust.annotate(
                         short_label,
                         xy=(x_val, y_val),
                         xytext=(offset_x, offset_y),
                         textcoords="offset points",
-                        ha="left" if x_val >= 0 else "right",
-                        va="bottom" if y_val >= 0 else "top",
+                        ha="left",
+                        va="top" if abajo else "bottom",
                         fontsize=7.4,
                         color=PAPER_TEXT,
                         bbox={"boxstyle": "round,pad=0.18", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
@@ -3386,16 +3446,16 @@ def export_figures(
                         # La frase explicativa ("reference point S2, direccion preferida")
                         # vive en el caption del manuscrito: dentro de la figura fijaba un
                         # ancho de ~4.8 in que obligaba a imprimirla reducida (R2.m2).
-                        f"Coverage shift: {float(np.nanmin(robust_panel['delta_vulnerable_coverage_pp'])):+.1f} to "
+                        f"Coverage: {float(np.nanmin(robust_panel['delta_vulnerable_coverage_pp'])):+.1f} to "
                         f"{float(np.nanmax(robust_panel['delta_vulnerable_coverage_pp'])):+.1f} pp\n"
-                        f"Gini shift: {float(np.nanmin(robust_panel['delta_weighted_gini_bp'])):+.1f} to "
+                        f"Gini: {float(np.nanmin(robust_panel['delta_weighted_gini_bp'])):+.1f} to "
                         f"{float(np.nanmax(robust_panel['delta_weighted_gini_bp'])):+.1f} bp\n"
                         f"Min rank stability: {min_rank:.3f}"
                     ),
                     transform=ax_robust_text.transAxes,
                     ha="left",
                     va="top",
-                    fontsize=7.3,
+                    fontsize=7.0,
                     color="#6d655e",
                 )
             else:
@@ -3439,10 +3499,11 @@ def export_figures(
                     linewidth=1.2,
                     zorder=3,
                 )
-                ax_gain.text(
-                    x_val + 0.08,
-                    idx,
+                ax_gain.annotate(
                     f"{x_val:.2f} bp",
+                    xy=(x_val, idx),
+                    xytext=(13, 0),
+                    textcoords="offset points",
                     ha="left",
                     va="center",
                     fontsize=8.3,
@@ -3464,7 +3525,7 @@ def export_figures(
             ax_gain.set_yticks(y_pos)
             ax_gain.set_yticklabels(gain_df["scenario"].astype(str).tolist(), fontsize=8.8)
             ax_gain.invert_yaxis()
-            ax_gain.set_xlim(0.0, max(float(np.nanmax(gain_df["weighted_gini_improvement_vs_S0_bp"])) + 1.3, 5.0))
+            ax_gain.set_xlim(0.0, max(float(np.nanmax(gain_df["weighted_gini_improvement_vs_S0_bp"])) + 2.4, 6.0))
 
             if s3_summary is not None and np.isfinite(pd.to_numeric(s3_summary.get("s3_floor_value"), errors="coerce")):
                 floor_value = float(pd.to_numeric(s3_summary["s3_floor_value"], errors="coerce"))
@@ -3528,7 +3589,7 @@ def export_figures(
                     arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.8},
                 )
                 x_span = max(protected_mean - protected_min, 1.0)
-                x_pad = max(8.0, 0.10 * x_span)
+                x_pad = max(12.0, 0.16 * x_span)
                 ax_floor.set_xlim(min(protected_min, floor_value) - x_pad, protected_mean + x_pad)
                 ax_floor.set_ylim(-0.55, 0.58)
             else:
