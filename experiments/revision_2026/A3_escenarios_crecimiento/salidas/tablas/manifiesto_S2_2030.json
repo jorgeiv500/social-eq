@@ -1,0 +1,29 @@
+{
+  "horizonte": 2030,
+  "escenario": "S2",
+  "cuota_residential": 15853,
+  "cuota_workplace": 5906,
+  "cuota_public": 1680,
+  "termination": "optimal",
+  "objective_abs_dev": 115.21306425704563,
+  "gini_no_ponderado_6d": 0.170141,
+  "gini_ponderado_6d": 0.16484,
+  "cobertura_15min_vulnerables": 1.0,
+  "rho_prioridad_puertos": 0.9255559604115812,
+  "spearman_vs_S2_paper": 0.9998344258478997,
+  "u_star_horizonte": 106.67876320096815,
+  "perdida_fidelidad_pct": 8.000000000000028,
+  "epsilon": 0.08,
+  "time_limit_s": 3600,
+  "mip_gap": 0.01,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.9255559604115812,
+    "rho_priority_access": -0.16778816029640126,
+    "objective_abs_dev": 115.21306425704563,
+    "accessibility_gini": 0.1701412693731561,
+    "accessibility_weighted_gini": 0.16483959770935303,
+    "share_access_most_vulnerable_quartile": 0.2799866431846119,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 992.7547033858144
+  }
+}

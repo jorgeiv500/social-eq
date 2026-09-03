@@ -1,0 +1,35 @@
+{
+  "corrida": "benchmark_ponderado_k4",
+  "variante": "ponderado_k4",
+  "formulacion": "min sum_p w_p*|A_i - A_j| s.a. cuotas (sin lex, sin target, sin eps)",
+  "pesos_pares": "w_p = 1 + 4.0*(nu_i+nu_j)/2 (nu = vulnerability_index, como S2)",
+  "caps": "None (config.max_ports_matrix, como el pipeline publicado)",
+  "dominio_n": "enteros no negativos (mismo dominio que el modelo publicado)",
+  "u_star": 108.83370014026023,
+  "fuente_u_star": "/Users/jorgeiv500/Documents/social-eq/outputs/social_equity_followup_outputs/paper_v6_experiments/tables/table_priority_summary.csv",
+  "time_limit_s": 3600,
+  "mip_gap": 0.01,
+  "termination": "optimal",
+  "objetivo_L1_pares": 692904.6388169235,
+  "fidelidad_expost_abs_dev": 18064.011925603114,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.04170594098834245,
+    "rho_priority_access": -0.2382253646862577,
+    "objective_abs_dev": 18064.011925603114,
+    "accessibility_gini": 0.054388409403054415,
+    "accessibility_weighted_gini": 0.05261838986760041,
+    "share_access_most_vulnerable_quartile": 0.25682124155083996,
+    "coverage_within_threshold_vulnerable": 0.9722222222222222,
+    "mean_access_high_vulnerability": 226.98529796998193
+  },
+  "comparacion_vs_S1": {
+    "zonas_cambiadas_total": 141,
+    "zonas_cambiadas_sede": 142,
+    "puertos_movidos": 7856.0
+  },
+  "comparacion_vs_S2": {
+    "zonas_cambiadas_total": 141,
+    "zonas_cambiadas_sede": 142,
+    "puertos_movidos": 7853.0
+  }
+}

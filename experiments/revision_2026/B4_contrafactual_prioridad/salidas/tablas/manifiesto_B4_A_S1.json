@@ -1,0 +1,32 @@
+{
+  "corrida": "S1_A",
+  "modelo": "A",
+  "nombre": "etiqueta_directa",
+  "escenario_referencia": "S1",
+  "construccion": "df_inputs oficial con priority_norm sustituida por normalize01(max(pred, 0)) del modelo; omega aprendida sin cambios; targets recomputados con make_targets",
+  "fuente_prioridad": "revision/r1_2026-08/experimentos/B1_baselines/resultados/b1_predicciones_oof.csv",
+  "u_star_modelo": 110.3232331521857,
+  "u_star_paper_solo_contexto": 108.83370014026023,
+  "parametros": {
+    "etapa": "solve_equity",
+    "epsilon": 0.03,
+    "nu": null
+  },
+  "termination": "optimal",
+  "duracion_s": 114.24504399299622,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.935387535976891,
+    "rho_priority_access": -0.24098157966428468,
+    "objective_abs_dev": 113.6329301467512,
+    "accessibility_gini": 0.1657015263850087,
+    "accessibility_weighted_gini": 0.1610474460174419,
+    "share_access_most_vulnerable_quartile": 0.27879431041458397,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 449.0639641274899
+  },
+  "comparacion_vs_paper": {
+    "zonas_cambiadas_total": 136,
+    "zonas_cambiadas_sede": 137,
+    "puertos_movidos": 1365.0
+  }
+}

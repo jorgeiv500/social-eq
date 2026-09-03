@@ -1,0 +1,57 @@
+{
+  "experimento": "E6_lambdas",
+  "fecha_utc": "2026-09-03T00:22:26+00:00",
+  "insumo": "/Users/jorgeiv500/Library/CloudStorage/GoogleDrive-jorgeiv500@gmail.com/Mi unidad/0. archivos para colab_sdewes/d. Modulo viajes.csv",
+  "insumo_md5": "454361c9cdb0568f99f9de19248b4462",
+  "n_viajes_bruto": 100174,
+  "n_viajes_tras_filtros_base": 78910,
+  "filtros_base": "nom_mun_des == 'Bogotá' & duracion_min > 0 & fexp_vj > 0",
+  "filtros_modo": {
+    "auto": [
+      "AUTO"
+    ],
+    "motorizado_privado": [
+      "AUTO",
+      "MOTO",
+      "TAXI OCUPADO"
+    ],
+    "todos_los_modos": "todos"
+  },
+  "mapeo_grupos": {
+    "workplace": [
+      "A trabajar"
+    ],
+    "residential": [
+      "A regresar al hogar"
+    ],
+    "public_nucleo": [
+      "A realizar algún trámite personal",
+      "A realizar compras",
+      "A asuntos médicos personales"
+    ],
+    "public_extendido": [
+      "A realizar algún trámite personal",
+      "A realizar compras",
+      "A asuntos médicos personales",
+      "A realizar actividades recreativas y culturales",
+      "A realizar actividades físicas y/o deportivas",
+      "A asistir actividad de tipo religioso y/o culto"
+    ]
+  },
+  "motivos_excluidos": [
+    "A Estudiar",
+    "A acompañar a alguien con remuneración",
+    "A acompañar a alguien sin remuneración",
+    "A buscar trabajo",
+    "A llevar y/o dejar algo",
+    "A visitar a alguien",
+    "Conduzco vehículo como forma de trabajo",
+    "NS/NR"
+  ],
+  "lambdas_paper_min": {
+    "workplace": 25.0,
+    "residential": 15.0,
+    "public": 10.0
+  },
+  "nota": "duracion_min es puerta a puerta autorreportada; la comparación con lambda_v es de orden y magnitud, no una estimación de deterrencia."
+}

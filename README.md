@@ -36,12 +36,43 @@ El material intermedio y las copias superadas quedaron en
 `outputs/social_equity_followup_outputs/paper_v6_experiments/_archivo_superado/`
 (fuera del control de versiones).
 
+## Corrección y paquete de replicación (septiembre de 2026)
+
+Durante la revisión se detectó que el cuaderno con el que se entrenó el ST-GNN para el envío
+de abril emparejaba códigos de zona con ceros a la izquierda (`UTAM043`) contra códigos sin
+ellos (`UTAM43`): la etiqueta de entrenamiento quedó en cero en 98 de las 142 zonas. El modelo
+se reentrenó con el emparejamiento corregido y **todos** los resultados se recalcularon
+(41 corridas NEOS/CPLEX, todas óptimas). Los insumos superados se conservan en
+`data/inputs/superseded_2026-04/`.
+
+- `REPRODUCIBILITY.md` (en inglés): mapa de cada tabla y figura del manuscrito al archivo que
+  contiene sus valores y al comando que lo regenera, por niveles (sin solver, con NEOS, con
+  reentrenamiento).
+- `scripts/reproduce_all.sh [NIVEL]`: ejecuta los niveles en orden; los niveles con NEOS o con
+  microdatos no arrancan sin `NEOS_EMAIL` o `EM2023_DIR`.
+- `experiments/revision_2026/`: los doce experimentos de la revisión (barrido de tolerancia,
+  benchmark de equidad directa, crecimiento 2028/2030, topes de subestación, baselines
+  estáticos, ablación de pesos, tenencia, contrafactual de prioridad, pisos vinculantes,
+  mapas, duraciones, figuras de impresión), cada uno con README, código, insumos pequeños y
+  salidas. Los archivos crudos que no se redistribuyen (EM-2021, EM-2023) se documentan con su
+  fuente.
+- `scripts/hoja_de_cifras.py`: extrae todos los números que cita el manuscrito con su archivo
+  de origen (`outputs/.../hoja_de_cifras.md`).
+- `requirements-lock.txt`: entorno exacto (Python 3.9.6).
+
 ## Repository layout
 
 - `data/inputs`: versioned inputs required for reproduction.
 - `data/reference`: optional reference outputs for comparison.
 - `scripts/stage_inputs.py`: stages local inputs from known `Downloads` and synchronized Google Drive paths.
-- `scripts/reproduce_followup.py`: runs the full reproduction pipeline.
+- `scripts/reproduce_followup.py`: runs the full reproduction pipeline. **It has no command-line
+  options and submits the NEOS runs as soon as it starts**; prefer `scripts/run_pipeline_resiliente.py`
+  (socket timeout and retries) for a deliberate re-solve.
+- `scripts/retrain_stgnn.py`: retrains the ST-GNN from the EM-2023 microdata (`EM2023_DIR`).
+- `scripts/make_vulnerable_quartile_table.py`, `scripts/hoja_de_cifras.py`: supplementary Table E1 and the sheet of cited numbers.
+- `scripts/reproduce_all.sh`: level-based driver (see `REPRODUCIBILITY.md`).
+- `experiments/revision_2026/`: revision experiments A1–A4, B1–B4, C1, E3, E6, E7 (shared helpers in `comun.py`).
+- `outputs/stgnn_retraining/peso_fexp_miles/`: archived retraining outputs and run protocol.
 - `src/social_eq/followup.py`: model logic, figures, tables, cleanup, and paper-package export.
 - `docs/jtg_figure_style_notes.md`: visual rules transferred from the reference article.
 - `docs/paper_submission_recommendations.md`: recommended main-text vs supplementary figure/table plan.
@@ -85,20 +116,21 @@ export NEOS_EMAIL="your_email@domain.com"
 Los artefactos se exportan a `outputs/social_equity_followup_outputs/paper_v6_experiments/`
 y se consolidan en `submission/jtg_2026-04/`.
 
-Figuras del texto principal (7 de las 8; la figura 2 es un diagrama TikZ dentro del LaTeX):
+Figuras del texto principal del manuscrito revisado (la Fig. 1 es un diagrama TikZ dentro del
+LaTeX y la Fig. 2, el área de estudio, la genera `experiments/revision_2026/E3_mapas/`):
 
-- `fig_official_ev_growth.png` (Fig. 1)
-- `fig_social_context_panels.png` (Fig. 3)
-- `fig_attention_profile.png` (Fig. 4)
-- `fig_allocation_composite.png` (Fig. 5)
-- `fig_net_change_S2_minus_S1.png` (Fig. 6)
-- `fig_lorenz_curves.png` (Fig. 7)
-- `fig_policy_tradeoff.png` (Fig. 8, cuatro paneles)
+- `fig_official_ev_growth.png` (Fig. 3)
+- `fig_social_context_panels.png` (Fig. 4)
+- `fig_attention_profile.png` (Fig. 5)
+- `fig_allocation_composite.png` (Fig. 6)
+- `fig_net_change_S2_minus_S1.png` (Fig. 7)
+- `fig_lorenz_curves.png` (Fig. 8)
+- `fig_policy_tradeoff.png` (Fig. 9, cuatro paneles; superpone el barrido A1 y el benchmark A2)
 
 Figuras del suplemento:
 
-- `fig_growth_progression.png` (Fig. S1)
-- `fig_robustness.png` (Fig. S2)
+- `fig_growth_progression.png` (Fig. C1)
+- `fig_robustness.png` (Fig. C2)
 
 Figuras generadas como respaldo, no incluidas en el envío:
 
@@ -107,10 +139,14 @@ Figuras generadas como respaldo, no incluidas en el envío:
 
 Tablas del texto principal:
 
-- `table_scenario_design.csv` (Tabla 2)
-- `table_equity_metrics_final.csv` (Tabla 3)
-- `table_policy_tradeoff.csv` (Tabla 4)
-- `table_official_ev_growth.csv` (respaldo de la Fig. 1)
+- `table_scenario_design.csv` (Tabla 3)
+- `table_equity_metrics_final.csv` (Tabla 4, con las filas per cápita de `hoja_de_cifras.json`)
+- `table_policy_tradeoff.csv` (Tabla 5)
+- `table_vulnerable_quartile_provision.csv` (Tabla E1 del suplemento)
+- `table_official_ev_growth.csv` (respaldo de la Fig. 3)
+
+Las Tablas 6, 7 y 8 salen de los experimentos A1/A2, B1 y A3 en `experiments/revision_2026/`;
+el mapa completo está en `REPRODUCIBILITY.md`.
 
 ## Important result note
 

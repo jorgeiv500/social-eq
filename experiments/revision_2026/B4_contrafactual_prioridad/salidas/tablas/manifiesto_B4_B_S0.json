@@ -1,0 +1,30 @@
+{
+  "corrida": "S0_B",
+  "modelo": "B",
+  "nombre": "ols_estatica_estricta",
+  "escenario_referencia": "S0",
+  "construccion": "df_inputs oficial con priority_norm sustituida por normalize01(max(pred, 0)) del modelo; omega aprendida sin cambios; targets recomputados con make_targets",
+  "fuente_prioridad": "revision/r1_2026-08/experimentos/B1_baselines/resultados/b1_predicciones_oof.csv",
+  "u_star_modelo": 102.59417111017265,
+  "u_star_paper_solo_contexto": 108.83370014026023,
+  "parametros": {
+    "etapa": "solve_s0"
+  },
+  "termination": "optimal",
+  "duracion_s": 9.662957906723022,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.8943934325929791,
+    "rho_priority_access": -0.0710470008327693,
+    "objective_abs_dev": 102.59417111017262,
+    "accessibility_gini": 0.1721945872547542,
+    "accessibility_weighted_gini": 0.16711722201228257,
+    "share_access_most_vulnerable_quartile": 0.2775757073646805,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 460.18769576767835
+  },
+  "comparacion_vs_paper": {
+    "zonas_cambiadas_total": 139,
+    "zonas_cambiadas_sede": 141,
+    "puertos_movidos": 1730.0
+  }
+}

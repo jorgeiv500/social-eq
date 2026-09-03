@@ -1,0 +1,4 @@
+etiqueta,floor_quantile,floor_gamma,base_floor,floor_value,protegidas_total,protegidas_bajo_piso_en_S2,pct_protegidas_bajo_piso_en_S2
+S3_oficial,0.1,0.95,384.4359757576522,365.2141769697696,22,2,9.090909090909092
+C1a_piso_mediana,0.5,1.0,466.1882141880763,466.1882141880763,22,11,50.0
+C1b_piso_p75,0.75,1.0,498.6614585237926,498.6614585237926,22,16,72.72727272727273

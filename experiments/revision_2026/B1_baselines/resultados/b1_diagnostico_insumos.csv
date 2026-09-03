@@ -1,0 +1,10 @@
+item,valor
+n_utam,142.0
+y_media,9.730289915250674
+y_sd,7.061196241330908
+y_max,41.36785079166666
+n_utam_y_cero,2.0
+n_features_estaticas,47.0
+n_features_constantes_descartadas,5.0
+n_features_informativas,42.0
+spearman_y_vs_priority_score,0.904045658914494

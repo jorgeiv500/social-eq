@@ -1,0 +1,5 @@
+fuente,variante,termination,gini_no_ponderado_6d,gini_ponderado_6d,cobertura_15min_vulnerables,objective_abs_dev,perdida_fidelidad_vs_S0_pct,floor_quantile,floor_gamma,floor_value,protegidas_bajo_piso_pre_S2,protegidas_bajo_piso_post,deficit_total,deficit_max,rho_prioridad_puertos,zonas_cambiadas_total_vs_S1,puertos_movidos_vs_S1,zonas_cambiadas_total_vs_S2,puertos_movidos_vs_S2,duracion_s
+archivo_paper_S2,S2,archivada,0.169942,0.164653,1.0,117.540396151481,7.9999999999999565,,,,,,,,,,,,,
+archivo_paper_S3,S3,archivada,0.169941,0.164654,1.0,117.5403961514811,8.000000000000046,,,,,,,,,,,,,
+corrida_nueva,C1a_piso_mediana,optimal,0.169937,0.164645,1.0,117.54039615148106,8.000000000000009,0.5,1.0,466.1882141880763,11.0,11.0,587.020394516849,124.5142662646921,0.9259742888497502,16.0,8.0,8.0,4.0,103.2
+corrida_nueva,C1b_piso_p75,optimal,0.169921,0.164636,1.0,117.54039615148119,8.000000000000126,0.75,1.0,498.6614585237926,16.0,16.0,1037.4501803435762,157.4966139350029,0.9260685998038817,18.0,9.0,8.0,4.0,126.4

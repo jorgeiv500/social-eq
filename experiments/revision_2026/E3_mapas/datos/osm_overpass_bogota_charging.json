@@ -1,0 +1,521 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-01T16:55:25Z",
+    "timestamp_areas_base": "2026-09-01T01:22:02Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 6876702735,
+  "lat": 4.6739285,
+  "lon": -74.0883747,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:membership_card": "yes",
+    "authentication:nfc": "yes",
+    "capacity": "1",
+    "name": "EDS Terpel - Cruz Roja",
+    "opening_hours": "24/7",
+    "operator": "Terpel",
+    "socket:type1": "1"
+  }
+},
+{
+  "type": "node",
+  "id": 6876710563,
+  "lat": 4.7026605,
+  "lon": -74.0421981,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:none": "yes",
+    "bicycle": "yes",
+    "brand": "EVX",
+    "capacity": "2",
+    "fee": "no",
+    "motorcar": "yes",
+    "name": "Estación de carga de Unicentro",
+    "opening_hours": "24/7",
+    "operator": "Codensa",
+    "scooter": "yes",
+    "socket:chademo": "1",
+    "socket:nema_5_15": "4",
+    "socket:type1": "1",
+    "socket:type1_combo": "1",
+    "socket:type2": "2"
+  }
+},
+{
+  "type": "node",
+  "id": 6876729187,
+  "lat": 4.7041608,
+  "lon": -74.0291324,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:none": "yes",
+    "capacity": "2",
+    "fee": "no",
+    "motorcar": "yes",
+    "name": "Autogermana 128",
+    "opening_hours": "Mo-Fr 09:00-19:00; Sa 10:00-18:00; Su 11:00-15:00",
+    "operator": "Autogermana",
+    "socket:type1": "2"
+  }
+},
+{
+  "type": "node",
+  "id": 6876751154,
+  "lat": 4.6659334,
+  "lon": -74.0541601,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:none": "yes",
+    "fee": "no",
+    "motorcar": "yes",
+    "name": "Estación de carga El Retiro",
+    "opening_hours": "Mo-Th 10:00-20:00; Fr,Sa 10:00-21:00; Su 12:00-19:00; PH off",
+    "socket:type1": "2",
+    "socket:type2": "1",
+    "socket:typee": "1"
+  }
+},
+{
+  "type": "node",
+  "id": 6876751240,
+  "lat": 4.6972245,
+  "lon": -74.0497546,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:nfc": "yes",
+    "name": "Estación de carga Aparcar 114",
+    "operator": "Codensa",
+    "socket:gb-t20234": "4",
+    "socket:type2": "1"
+  }
+},
+{
+  "type": "node",
+  "id": 6876755454,
+  "lat": 4.6641950,
+  "lon": -74.0596073,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:nfc": "yes",
+    "brand": "Voltop",
+    "motorcar": "yes",
+    "name": "Punto de carga Aparcar Calle 77",
+    "operator": "Codensa",
+    "socket:gb-t20234": "4",
+    "socket:type2": "1"
+  }
+},
+{
+  "type": "node",
+  "id": 6876762284,
+  "lat": 4.6676296,
+  "lon": -74.0969481,
+  "tags": {
+    "amenity": "charging_station",
+    "operator": "Codensa",
+    "socket:gb-t20234": "12"
+  }
+},
+{
+  "type": "node",
+  "id": 6876765986,
+  "lat": 4.5962124,
+  "lon": -74.0827122,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Estación de carga Tercer Milenio",
+    "operator": "Codensa"
+  }
+},
+{
+  "type": "node",
+  "id": 6876777150,
+  "lat": 4.6136680,
+  "lon": -74.0709682,
+  "tags": {
+    "amenity": "charging_station",
+    "authentication:none": "yes",
+    "fee": "no",
+    "motorcar": "yes",
+    "name": "Estación de carga Centro Internacional",
+    "operator": "Hotel Tequendama",
+    "socket:nema_5_15": "5"
+  }
+},
+{
+  "type": "node",
+  "id": 6876783132,
+  "lat": 4.6044764,
+  "lon": -74.0656976,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Estación de carga Uniandes - Santo Domingo",
+    "operator": "Universiad de Los Andes"
+  }
+},
+{
+  "type": "node",
+  "id": 6876784306,
+  "lat": 4.6873009,
+  "lon": -74.0511265,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Estación de carga Carulla 102",
+    "operator": "Car-B",
+    "socket:type1": "2"
+  }
+},
+{
+  "type": "node",
+  "id": 6900649800,
+  "lat": 4.6467369,
+  "lon": -74.0955052,
+  "tags": {
+    "amenity": "charging_station",
+    "motorcar": "yes",
+    "name": "Ministerio de Minas y Energía",
+    "socket:type1": "1",
+    "socket:type2": "1"
+  }
+},
+{
+  "type": "node",
+  "id": 9414815176,
+  "lat": 4.7311372,
+  "lon": -74.0243184,
+  "tags": {
+    "amenity": "charging_station",
+    "description": "Recarga de vehículos eléctricos",
+    "name": "Estación de carga Voltex EDS La Juana"
+  }
+},
+{
+  "type": "node",
+  "id": 11371338669,
+  "lat": 4.6202020,
+  "lon": -74.0815754,
+  "tags": {
+    "amenity": "charging_station"
+  }
+},
+{
+  "type": "node",
+  "id": 11371341369,
+  "lat": 4.6195983,
+  "lon": -74.0807165,
+  "tags": {
+    "amenity": "charging_station"
+  }
+},
+{
+  "type": "node",
+  "id": 11371343170,
+  "lat": 4.6177741,
+  "lon": -74.0793336,
+  "tags": {
+    "amenity": "charging_station"
+  }
+},
+{
+  "type": "node",
+  "id": 13009406831,
+  "lat": 4.5806448,
+  "lon": -74.1548099,
+  "tags": {
+    "access": "yes",
+    "amenity": "charging_station",
+    "brand": "Terpel",
+    "name": "Voltex Las Vegas",
+    "operator": "Terpel"
+  }
+},
+{
+  "type": "node",
+  "id": 13009418551,
+  "lat": 4.6944168,
+  "lon": -74.0908722,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Voltex Avenida Boyacá"
+  }
+},
+{
+  "type": "node",
+  "id": 13009673810,
+  "lat": 4.6808160,
+  "lon": -74.0449746,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Enel Olímpica Chicó Reservado Calle 97 con 11"
+  }
+},
+{
+  "type": "node",
+  "id": 13009676655,
+  "lat": 4.6989313,
+  "lon": -74.0576278,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "EVX",
+    "name": "Punto de carga Carulla La Alhambra"
+  }
+},
+{
+  "type": "node",
+  "id": 13009696528,
+  "lat": 4.6493972,
+  "lon": -74.0826187,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "EVX",
+    "name": "Punto de carga Clínica Nicolás de Federmán"
+  }
+},
+{
+  "type": "node",
+  "id": 13009697994,
+  "lat": 4.6653087,
+  "lon": -74.1202235,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "EVX",
+    "name": "Punto de carga Éxito de Modelia"
+  }
+},
+{
+  "type": "node",
+  "id": 13009700956,
+  "lat": 4.6147642,
+  "lon": -74.1026477,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "EVX",
+    "name": "Punto de carga San Andresito Carrera 38"
+  }
+},
+{
+  "type": "node",
+  "id": 13009702030,
+  "lat": 4.6538763,
+  "lon": -74.1155898,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "EVX",
+    "name": "Punto de carga Terminal de Transportes Salitre"
+  }
+},
+{
+  "type": "node",
+  "id": 13009908337,
+  "lat": 4.5946734,
+  "lon": -74.1467671,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Chevrolet Autogrande"
+  }
+},
+{
+  "type": "node",
+  "id": 13009943281,
+  "lat": 4.7212465,
+  "lon": -74.0461238,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Centro Comercial Sorpresas"
+  }
+},
+{
+  "type": "node",
+  "id": 13009961999,
+  "lat": 4.6957757,
+  "lon": -74.0330609,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Fundación Santafé"
+  }
+},
+{
+  "type": "node",
+  "id": 13009962720,
+  "lat": 4.5986903,
+  "lon": -74.1077224,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Chevrolet San Jorge Carrera 30"
+  }
+},
+{
+  "type": "node",
+  "id": 13009973825,
+  "lat": 4.7346309,
+  "lon": -74.0664140,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "MUBON",
+    "name": "Punto de carga Éxito Colina"
+  }
+},
+{
+  "type": "node",
+  "id": 13009988556,
+  "lat": 4.7252638,
+  "lon": -74.0562263,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Taller Autos Bencar"
+  }
+},
+{
+  "type": "node",
+  "id": 13010000994,
+  "lat": 4.6631245,
+  "lon": -74.0550994,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Universidad EAN (Bogotá)"
+  }
+},
+{
+  "type": "node",
+  "id": 13010002963,
+  "lat": 4.6226702,
+  "lon": -74.1244501,
+  "tags": {
+    "amenity": "charging_station",
+    "brand": "Terpel",
+    "name": "Voltex Trinidad"
+  }
+},
+{
+  "type": "node",
+  "id": 13010025702,
+  "lat": 4.6660870,
+  "lon": -74.0559846,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Centro Comercial Atlantis Plaza"
+  }
+},
+{
+  "type": "node",
+  "id": 13010029817,
+  "lat": 4.6070654,
+  "lon": -74.0728274,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Centro Comercial Carrera"
+  }
+},
+{
+  "type": "node",
+  "id": 13010043978,
+  "lat": 4.6227779,
+  "lon": -74.0678119,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Concesionario Marcali (Bogotá)"
+  }
+},
+{
+  "type": "node",
+  "id": 13010048854,
+  "lat": 4.6149539,
+  "lon": -74.1008983,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Parque Los Ejidos"
+  }
+},
+{
+  "type": "node",
+  "id": 13015491671,
+  "lat": 4.6599674,
+  "lon": -74.0996480,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Compensar Avenida 68"
+  }
+},
+{
+  "type": "node",
+  "id": 13017542768,
+  "lat": 4.7006429,
+  "lon": -74.0411920,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Unicentro"
+  }
+},
+{
+  "type": "node",
+  "id": 13017555397,
+  "lat": 4.6603329,
+  "lon": -74.1190539,
+  "tags": {
+    "amenity": "charging_station",
+    "name": "Punto de carga Éxito de Modelia"
+  }
+},
+{
+  "type": "node",
+  "id": 13995048783,
+  "lat": 4.6670626,
+  "lon": -74.0531746,
+  "tags": {
+    "access": "customers",
+    "amenity": "charging_station",
+    "brand": "Tesla Supercharger",
+    "brand:wikidata": "Q17089620",
+    "capacity": "4",
+    "charge": "1300 COP",
+    "contact:website": "https://www.tesla.com/es_CO",
+    "covered": "yes",
+    "fee": "yes",
+    "level": "-1",
+    "name": "Tesla Supercharger",
+    "opening_hours": "Mo-We 07:00-23:59; Th-Fr 07:00-00:59; Sa 08:00-00:59; Su,PH 10:00-23:59",
+    "operator": "Tesla",
+    "operator:wikidata": "Q478214",
+    "payment:app": "yes",
+    "socket:tesla_supercharger_ccs": "4",
+    "socket:tesla_supercharger_ccs:output": "325 kW"
+  }
+},
+{
+  "type": "way",
+  "id": 24587409,
+  "center": {
+    "lat": 4.6599620,
+    "lon": -74.0997097
+  },
+  "tags": {
+    "addr:street": "Avenida Carrera 68",
+    "amenity": "charging_station",
+    "area": "yes",
+    "name": "Compensar",
+    "source": "Kaart Ground Survey 2017"
+  }
+},
+{
+  "type": "way",
+  "id": 58069884,
+  "center": {
+    "lat": 4.6622847,
+    "lon": -74.1000082
+  },
+  "tags": {
+    "amenity": "charging_station",
+    "area": "yes",
+    "name": "Bolera Compensar"
+  }
+}
+
+  ]
+}

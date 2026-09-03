@@ -1,0 +1,5 @@
+fuente,variante,termination,objetivo_L1_pares,objective_abs_dev,perdida_fidelidad_vs_S0_pct,gini_no_ponderado_6d,gini_ponderado_6d,cobertura_15min_vulnerables,rho_prioridad_puertos,zonas_cambiadas_total_vs_S1,zonas_cambiadas_sede_vs_S1,puertos_movidos_vs_S1,zonas_cambiadas_total_vs_S2,puertos_movidos_vs_S2
+archivo_paper_S1,S1,archivada,,112.09871114446796,2.9999999999999214,0.170141,0.164848,1.0,0.9258069739922627,0,0,0.0,16,8.0
+archivo_paper_S2,S2,archivada,,117.540396151481,7.9999999999999565,0.169942,0.164653,1.0,0.9259667211002384,16,16,8.0,0,0.0
+corrida_nueva,no_ponderado,optimal,243890.2695315946,18177.362608556825,16601.961419239273,0.053881,0.053195,0.9444444444444444,0.04990334163490979,142,142,7851.0,142,7848.0
+corrida_nueva,ponderado_k4,optimal,692904.6388169235,18064.011925603114,16497.811066170667,0.054388,0.052618,0.9722222222222222,0.04170594098834245,141,142,7856.0,141,7853.0

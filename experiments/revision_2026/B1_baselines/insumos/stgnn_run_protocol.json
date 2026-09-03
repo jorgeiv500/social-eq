@@ -1,0 +1,44 @@
+{
+  "random_seed": 42,
+  "epochs_max": 1200,
+  "early_stopping_patience": 120,
+  "min_delta": 1e-05,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "knn_k": 6,
+  "grafo": "contiguidad",
+  "aristas_dirigidas": 724,
+  "train_split": 0.7,
+  "val_split": 0.15,
+  "test_split": 0.15,
+  "train_n": 99,
+  "val_n": 21,
+  "test_n": 22,
+  "stability_seeds": [
+    42,
+    52,
+    62
+  ],
+  "stability_epochs": 400,
+  "n_utam": 142,
+  "best_epoch": 119,
+  "best_val_mae": 2.7548184394836426,
+  "zonas_y_positiva": 140,
+  "n_features_estaticas": 42,
+  "celdas_imputadas_mediana": {
+    "avg_stratum": 26
+  },
+  "correcciones": [
+    "codigos canonicos (UTAM043->UTAM43, UPR0002->UPR2) en los cuatro modulos y en origen/destino de viajes",
+    "pesos con coma decimal parseados como numero (fexp_hg, fexp_per>5anos, fexp_eta)",
+    "peso de cada viaje en el tensor: fexp_miles (el notebook uso peso 1 al no encontrar fexp_vj)"
+  ],
+  "comparacion_con_publicado": {
+    "spearman_prioridad_nueva_vs_publicada": -0.18959494206722255,
+    "spearman_prioridad_nueva_vs_y_corregida": 0.904045658914494,
+    "spearman_prioridad_publicada_vs_y_corregida": -0.17754963688515701,
+    "top20_overlap_nueva_vs_publicada": 0.13793103448275862,
+    "zonas_prioridad_norm_mayor_0_05_nueva": 127,
+    "zonas_prioridad_norm_mayor_0_05_publicada": 47
+  }
+}

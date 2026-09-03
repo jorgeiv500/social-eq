@@ -1,0 +1,30 @@
+{
+  "corrida": "S0_C",
+  "modelo": "C",
+  "nombre": "rf_estatica_estricta",
+  "escenario_referencia": "S0",
+  "construccion": "df_inputs oficial con priority_norm sustituida por normalize01(max(pred, 0)) del modelo; omega aprendida sin cambios; targets recomputados con make_targets",
+  "fuente_prioridad": "revision/r1_2026-08/experimentos/B1_baselines/resultados/b1_predicciones_oof.csv",
+  "u_star_modelo": 105.79682184433159,
+  "u_star_paper_solo_contexto": 108.83370014026023,
+  "parametros": {
+    "etapa": "solve_s0"
+  },
+  "termination": "optimal",
+  "duracion_s": 23.01187825202942,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.9153834344368218,
+    "rho_priority_access": -0.04752185183710507,
+    "objective_abs_dev": 105.79682184433165,
+    "accessibility_gini": 0.17410666967253124,
+    "accessibility_weighted_gini": 0.1688235754019776,
+    "share_access_most_vulnerable_quartile": 0.2811862729510599,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 463.4234108783897
+  },
+  "comparacion_vs_paper": {
+    "zonas_cambiadas_total": 139,
+    "zonas_cambiadas_sede": 142,
+    "puertos_movidos": 1838.0
+  }
+}

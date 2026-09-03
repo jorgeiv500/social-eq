@@ -1,0 +1,34 @@
+{
+  "corrida": "S2_C",
+  "modelo": "C",
+  "nombre": "rf_estatica_estricta",
+  "escenario_referencia": "S2",
+  "construccion": "df_inputs oficial con priority_norm sustituida por normalize01(max(pred, 0)) del modelo; omega aprendida sin cambios; targets recomputados con make_targets",
+  "fuente_prioridad": "revision/r1_2026-08/experimentos/B1_baselines/resultados/b1_predicciones_oof.csv",
+  "u_star_modelo": 105.79682184433159,
+  "u_star_paper_solo_contexto": 108.83370014026023,
+  "parametros": {
+    "etapa": "solve_equity_refined",
+    "epsilon": 0.08,
+    "kappa": 4.0,
+    "time_limit_s": 3600,
+    "mip_gap": 0.01
+  },
+  "termination": "optimal",
+  "duracion_s": 70.09088397026062,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.9158108977006246,
+    "rho_priority_access": -0.049047446410347216,
+    "objective_abs_dev": 114.26056759187819,
+    "accessibility_gini": 0.17359765698222868,
+    "accessibility_weighted_gini": 0.1683200542964798,
+    "share_access_most_vulnerable_quartile": 0.28096821558635027,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 462.20506608713015
+  },
+  "comparacion_vs_paper": {
+    "zonas_cambiadas_total": 139,
+    "zonas_cambiadas_sede": 142,
+    "puertos_movidos": 1836.0
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "corrida": "S1u",
+  "escenario_referencia": "S1",
+  "construccion_omega_uniforme": "df_inputs oficial con columnas de sede fijadas a 1/3; targets y coeficientes recomputados con make_targets/build_access_coeffs",
+  "u_star_unif": 104.98475110159066,
+  "u_star_paper_solo_contexto": 108.83370014026023,
+  "parametros": {
+    "etapa": "solve_equity",
+    "epsilon": 0.03,
+    "nu": null
+  },
+  "termination": "optimal",
+  "duracion_s": 113.55703616142273,
+  "metricas_precision_completa_metrica_propia": {
+    "rho_priority_ports": 0.999853298826105,
+    "rho_priority_access": 0.02524565635143999,
+    "objective_abs_dev": 108.13429363463831,
+    "accessibility_gini": 0.17686764785418432,
+    "accessibility_weighted_gini": 0.17242654174413075,
+    "share_access_most_vulnerable_quartile": 0.2925647346630169,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 403.4704499059579
+  },
+  "metricas_precision_completa_metrica_aprendida": {
+    "rho_priority_ports": 0.999853298826105,
+    "rho_priority_access": -0.14043223782510567,
+    "objective_abs_dev": 108.13429363463831,
+    "accessibility_gini": 0.1693419858862705,
+    "accessibility_weighted_gini": 0.16407495867335237,
+    "share_access_most_vulnerable_quartile": 0.28100693771568397,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 457.76114108848765
+  },
+  "comparacion_vs_paper": {
+    "zonas_cambiadas_total": 137,
+    "zonas_cambiadas_sede": 139,
+    "puertos_movidos": 1119.0
+  },
+  "rho_spearman_vs_paper": {
+    "rho_ports_total": 0.9256050414001886,
+    "rho_ports_residential": 0.7973977880174166,
+    "rho_ports_workplace": 0.9909805794378951,
+    "rho_ports_public": 0.9609598061549071
+  }
+}

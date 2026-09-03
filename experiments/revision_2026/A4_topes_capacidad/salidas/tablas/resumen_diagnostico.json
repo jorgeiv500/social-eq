@@ -1,0 +1,51 @@
+{
+  "AC7.4": {
+    "kw_por_puerto": 7.4,
+    "utam_con_tope": 100,
+    "utam_donde_muerde_vs_target": 0,
+    "utam_donde_muerde_vs_S2": 0,
+    "deficit_forzado_D_vs_target": 0.0,
+    "deficit_max_zona": 0.0,
+    "cota_inferior_2D": 0.0,
+    "presupuesto_fidelidad_u_star_1_08": 117.54039615148106,
+    "infactible_a_eps_0_08_demostrable": false,
+    "capacidad_total_topada_puertos": 115900.87465406595
+  },
+  "AC22": {
+    "kw_por_puerto": 22.0,
+    "utam_con_tope": 100,
+    "utam_donde_muerde_vs_target": 0,
+    "utam_donde_muerde_vs_S2": 0,
+    "deficit_forzado_D_vs_target": 0.0,
+    "deficit_max_zona": 0.0,
+    "cota_inferior_2D": 0.0,
+    "presupuesto_fidelidad_u_star_1_08": 117.54039615148106,
+    "infactible_a_eps_0_08_demostrable": false,
+    "capacidad_total_topada_puertos": 38984.839656367636
+  },
+  "DC50": {
+    "kw_por_puerto": 50.0,
+    "utam_con_tope": 100,
+    "utam_donde_muerde_vs_target": 15,
+    "utam_donde_muerde_vs_S2": 15,
+    "deficit_forzado_D_vs_target": 485.5405844376194,
+    "deficit_max_zona": 90.32341320439173,
+    "cota_inferior_2D": 971.0811688752387,
+    "presupuesto_fidelidad_u_star_1_08": 117.54039615148106,
+    "infactible_a_eps_0_08_demostrable": true,
+    "capacidad_total_topada_puertos": 17153.329448801756
+  },
+  "_meta": {
+    "fecha": "2026-09-01",
+    "u_star": 108.83370014026023,
+    "umbral_cobertura": 0.5,
+    "epsilon": 0.08,
+    "cuotas": {
+      "residential": 7352,
+      "workplace": 2739,
+      "public": 779
+    },
+    "fuente_capacidad": "salidas/tablas/capacidad_utam.csv (POT 555, SDP, CC BY 4.0)",
+    "sin_neos": true
+  }
+}

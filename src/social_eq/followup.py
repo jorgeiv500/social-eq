@@ -108,10 +108,10 @@ SCENARIO_PANEL_TITLES = {
     "S3": "Soft-floor protection",
 }
 SCENARIO_COLORS = {
-    "S0": "#2e3f68",
-    "S1": "#6f86b1",
+    "S0": "#2457a6",
+    "S1": "#2a9d8f",
     "S2": "#c95a49",
-    "S3": "#7b3f7a",
+    "S3": "#8e4a8b",
 }
 PROTECTED_COLORS = {0: "#e8dfd2", 1: "#c95a49"}
 TIME_WINDOWS = [
@@ -1651,11 +1651,9 @@ def configure_line_axis(ax: Any, title: str, xlabel: str, ylabel: str) -> None:
     ax.set_xlabel(xlabel, color=PAPER_TEXT)
     ax.set_ylabel(ylabel, color=PAPER_TEXT)
     ax.set_facecolor("white")
-    ax.grid(axis="y", linestyle="--", linewidth=0.8, color=PAPER_GRID)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, color=PAPER_GRID)
     ax.grid(axis="x", visible=False)
-    ax.spines["top"].set_visible(True)
-    ax.spines["top"].set_color(PAPER_TEXT)
-    ax.spines["top"].set_linewidth(1.2)
+    ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_color("#6d655e")
     ax.spines["bottom"].set_color("#6d655e")
@@ -2819,8 +2817,8 @@ def fig_policy_tradeoff(
     salvaguarda del conjunto protegido de S3.
     """
     fam_colores = {
-        "Decay": "#c95a49", "Vulnerability index": "#7b3f7a", "Epsilon": "#6f86b1",
-        "Kappa": "#2e3f68", "Soft floor": "#f1c57b", "Other": "#8a8178",
+        "Decay": "#c95a49", "Vulnerability index": "#8e4a8b", "Epsilon": "#2a9d8f",
+        "Kappa": "#2457a6", "Soft floor": "#d08a2a", "Other": "#8a8178",
     }
     fig = plt.figure(figsize=(7.05, 5.60), constrained_layout=True)
     grid = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], width_ratios=[1.06, 0.94])
@@ -2848,12 +2846,12 @@ def fig_policy_tradeoff(
         for _, r in sweep_df.sort_values("epsilon").iterrows():
             familia.append((f"eps = {float(r['epsilon']):.2f}", float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"])))
     estilo(ax_a, "a. The price of equity", "Relative fidelity loss vs S0 (%, symlog scale)", "Vulnerability-weighted Gini")
-    ax_a.grid(axis="x", linestyle="--", linewidth=0.7, color=PAPER_GRID)
+    ax_a.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
     ax_a.set_xscale("symlog", linthresh=1.0)
     xs = [f[1] for f in familia]; ys = [f[2] for f in familia]
     ax_a.plot(xs, ys, color="#b8aea4", linewidth=1.8, zorder=1)
     for name, x, y in familia:
-        color = SCENARIO_COLORS.get(name, "#6f86b1")
+        color = SCENARIO_COLORS.get(name, "#2a9d8f")
         ax_a.scatter(x, y, s=46 if name.startswith("S") else 26, color=color, edgecolor="white", linewidth=0.9, zorder=3)
     etiquetas_a = {"S0": (6, 6), "S1": (-4, 7), "S2": (12, 7)}
     for name, x, y in familia:
@@ -2862,7 +2860,7 @@ def fig_policy_tradeoff(
             ax_a.annotate(txt, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=7.6, color=PAPER_TEXT)
     if benchmark_df is not None and len(benchmark_df):
         for _, r in benchmark_df.iterrows():
-            ax_a.scatter(float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"]), s=52, marker="D", color="#7b3f7a", edgecolor="white", linewidth=0.9, zorder=3)
+            ax_a.scatter(float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"]), s=52, marker="D", color="#8e4a8b", edgecolor="white", linewidth=0.9, zorder=3)
         rb = benchmark_df.iloc[0]
         ax_a.annotate(
             "direct-equity benchmark\n(no priority target)",
@@ -2877,7 +2875,7 @@ def fig_policy_tradeoff(
         ins = ax_a.inset_axes([0.50, 0.30, 0.46, 0.40])
         ins.plot(xs, ys, color="#b8aea4", linewidth=1.4, zorder=1)
         for name, x, y in familia:
-            ins.scatter(x, y, s=22, color=SCENARIO_COLORS.get(name, "#6f86b1"), edgecolor="white", linewidth=0.7, zorder=3)
+            ins.scatter(x, y, s=22, color=SCENARIO_COLORS.get(name, "#2a9d8f"), edgecolor="white", linewidth=0.7, zorder=3)
         ins.set_xlim(-1.5, max(xs) + 2.0)
         yp = 0.15 * (max(ys) - min(ys) or 1e-4)
         ins.set_ylim(min(ys) - yp, max(ys) + yp)
@@ -2911,7 +2909,7 @@ def fig_policy_tradeoff(
     # ---------------- (c) robustez del Gini ----------------
     estilo(ax_c, "c. Robustness of the weighted Gini", "Change in weighted Gini vs S2 (basis points)", "")
     ax_c.grid(axis="y", visible=False)
-    ax_c.grid(axis="x", linestyle="--", linewidth=0.7, color=PAPER_GRID)
+    ax_c.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
     rb_df = robust_df.copy()
     rb_df = rb_df.loc[pd.to_numeric(rb_df["delta_weighted_gini"], errors="coerce").notna()].copy()
     if len(rb_df):
@@ -2937,7 +2935,7 @@ def fig_policy_tradeoff(
         p_25 = float(pd.to_numeric(s3_summary["s3_protected_p25_access"], errors="coerce"))
         p_mean = float(pd.to_numeric(s3_summary["s3_protected_mean_access"], errors="coerce"))
         estilo(ax_d, "d. S3 protected-set safeguard", "Protected-set accessibility", "")
-        ax_d.grid(axis="x", linestyle="--", linewidth=0.7, color=PAPER_GRID)
+        ax_d.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
         ax_d.grid(axis="y", visible=False)
         ax_d.tick_params(axis="y", left=False, labelleft=False)
         ax_d.spines["left"].set_visible(False)
@@ -3284,7 +3282,7 @@ def export_figures(
         )
         miles = FuncFormatter(lambda v, _pos: f"{int(round(v)):,}")
         axes[0].set_axisbelow(True)
-        axes[0].fill_between(years, counts, 0.0, color="#f1c57b", alpha=0.22, zorder=1)
+        axes[0].fill_between(years, counts, 0.0, color="#d08a2a", alpha=0.12, zorder=1)
         axes[0].plot(years, counts, color=SCENARIO_COLORS["S2"], linewidth=2.4, zorder=2)
         axes[0].scatter(years, counts, s=46, color=SCENARIO_COLORS["S2"], edgecolor="white", linewidth=1.1, zorder=3)
         label_offset = 0.035 * max(float(np.nanmax(counts)), 1.0)
@@ -3378,18 +3376,31 @@ def export_figures(
         ["a. Unweighted Lorenz curves", "b. Vulnerability-weighted Lorenz curves"],
         [lorenz_curve, weighted_lorenz],
     ):
-        axis.plot([0, 1], [0, 1], linestyle="--", color="#9c7acb", linewidth=2.0)
+        axis.plot([0, 1], [0, 1], linestyle="--", color="#8a8178", linewidth=1.4)
+        curves: dict[str, tuple[np.ndarray, np.ndarray]] = {}
         for scenario_name in ordered_scenarios:
             df_scenario = scenario_outputs[scenario_name]
             if curve_fn is weighted_lorenz:
                 x, y = curve_fn(df_scenario["accessibility"], 1.0 + df_scenario["vulnerability_index"])
             else:
                 x, y = curve_fn(df_scenario["accessibility"])
+            curves[scenario_name] = (np.asarray(x, dtype=float), np.asarray(y, dtype=float))
             axis.plot(x, y, color=SCENARIO_COLORS.get(scenario_name, "#444444"), linewidth=2.4, label=scenario_name)
         configure_line_axis(axis, title, "Population share", "Accessibility share")
         axis.set_xlim(0, 1)
         axis.set_ylim(0, 1.02)
         axis.legend(loc="upper left", frameon=False, fontsize=9)
+        # Las curvas de los cuatro escenarios se superponen: la figura lo declara con la
+        # brecha vertical máxima entre la primera y la última, calculada de los datos.
+        if len(curves) >= 2:
+            (x_first, y_first), (x_last, y_last) = curves[ordered_scenarios[0]], curves[ordered_scenarios[-1]]
+            gap = float(np.max(np.abs(np.interp(x_first, x_last, y_last) - y_first)))
+            gap_text = f"largest vertical gap {gap:.4f}" if gap >= 0.00005 else "largest vertical gap < 0.0001"
+            axis.text(
+                0.97, 0.05,
+                f"{ordered_scenarios[0]}\u2013{ordered_scenarios[-1]} curves coincide\n({gap_text})",
+                transform=axis.transAxes, ha="right", va="bottom", fontsize=7.8, color="#6d655e",
+            )
     fig.savefig(paths.figures_dir / "fig_lorenz_curves.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -3418,6 +3429,9 @@ def export_figures(
         robust_plot["alternative_specification"] = robust_plot["alternative_specification"].astype(str)
         robust_plot["display_label"] = robust_plot["alternative_specification"].map(shorten_robustness_label)
         robust_plot["delta_weighted_gini_bp"] = 10000.0 * pd.to_numeric(robust_plot["delta_weighted_gini"], errors="coerce")
+        # Las especificaciones sin corrida (p. ej., la matriz de tiempos alternativa cuando no
+        # esta disponible) no se dibujan como filas vacias; quedan en la tabla CSV.
+        robust_plot = robust_plot.loc[robust_plot["delta_weighted_gini_bp"].notna()]
         robust_plot = robust_plot.sort_values("delta_weighted_gini", ascending=True).reset_index(drop=True)
         y_pos = np.arange(len(robust_plot))
         # Suplemento, Figura C2 (2026-09-02): al ancho de impresion (7.0 in),
@@ -3433,7 +3447,7 @@ def export_figures(
         )
         for axis, metric, color, title, baseline, xlabel in [
             (axes[0], "delta_weighted_gini_bp", SCENARIO_COLORS["S2"], "a. Weighted-Gini shift", 0.0, "Delta weighted Gini vs S2 (bp)"),
-            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability", 1.0, "Rank stability vs S2"),
+            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability", 1.0, "Spearman rank correlation with S2"),
         ]:
             values = pd.to_numeric(robust_plot[metric], errors="coerce").to_numpy(dtype=float)
             axis.hlines(y_pos, baseline, values, color=color, linewidth=2.0, alpha=0.75)
@@ -3443,6 +3457,16 @@ def export_figures(
             axis.set_yticks(y_pos)
             axis.set_yticklabels(robust_plot["display_label"], fontsize=8.4)
             axis.tick_params(axis="y", pad=4, labelleft=axis is axes[0])
+            if metric == "rank_stability":
+                # Valores entre 0.99997 y 1: cuatro marcas fijas con cinco decimales, giradas para
+                # que no se solapen, en lugar del desplazamiento "1e-5+9.999e-1" de matplotlib.
+                finite = values[np.isfinite(values)]
+                lo = float(np.floor(finite.min() * 1e5) / 1e5) if len(finite) else 0.99997
+                axis.set_xticks([t for t in np.arange(lo, 1.0 + 1e-9, 1e-5) if t <= 1.0 + 1e-9])
+                axis.xaxis.set_major_formatter(FuncFormatter(lambda v, _pos: f"{v:.5f}"))
+                axis.tick_params(axis="x", labelsize=7.4, labelrotation=30)
+                for label in axis.get_xticklabels():
+                    label.set_ha("right")
         fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 

@@ -1,0 +1,13 @@
+filtro_modo,grupo,lambda_paper_min,n_muestral,suma_pesos,media_ponderada_min,p25_ponderado_min,mediana_ponderada_min,p75_ponderado_min
+auto,workplace,25.0,2187,352222.5,55.82502111591395,30.0,50.0,70.0
+auto,residential,15.0,4782,773487.8999999999,53.2504196122525,28.0,43.0,65.0
+auto,public_nucleo,10.0,1770,286612.9,46.979449285081024,22.0,35.0,60.0
+auto,public_extendido,10.0,2133,340746.0,45.40303980090742,20.0,30.0,60.0
+motorizado_privado,workplace,25.0,4505,747259.5,54.67349481672699,30.0,50.0,69.0
+motorizado_privado,residential,15.0,8506,1422164.4000000001,51.65196087034663,26.0,41.0,63.0
+motorizado_privado,public_nucleo,10.0,2835,472809.20000000007,45.263963349274924,20.0,35.0,60.0
+motorizado_privado,public_extendido,10.0,3328,548500.2,44.01751302916572,20.0,30.0,60.0
+todos_los_modos,workplace,25.0,16531,2821188.3,62.62457092991632,30.0,60.0,90.0
+todos_los_modos,residential,15.0,36971,6479597.0,50.11725339399966,20.0,39.0,70.0
+todos_los_modos,public_nucleo,10.0,11059,1903652.7,44.91708077844241,15.0,30.0,60.0
+todos_los_modos,public_extendido,10.0,13111,2262730.8,42.47833516032927,15.0,30.0,60.0

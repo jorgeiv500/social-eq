@@ -1,0 +1,7 @@
+fuente,escenario,omega,termination,u_star_variante,objective_abs_dev,perdida_fidelidad_vs_S0_pct,gini_no_ponderado_6d_metrica_aprendida,gini_ponderado_6d_metrica_aprendida,cobertura_15min_vulnerables,rho_prioridad_puertos,gini_no_ponderado_6d_metrica_propia,gini_ponderado_6d_metrica_propia,rho_asignacion_total_vs_paper,zonas_cambiadas_total_vs_paper,zonas_cambiadas_sede_vs_paper,puertos_movidos_vs_paper,duracion_s
+archivo_paper_S0,S0,aprendida,archivada,108.83370014026023,108.83370014026023,0.0,0.170368,0.165051,1.0,0.9256292604642076,,,,,,,
+archivo_paper_S1,S1,aprendida,archivada,108.83370014026023,112.09871114446796,2.9999999999999214,0.170141,0.164848,1.0,0.9258069739922627,,,,,,,
+archivo_paper_S2,S2,aprendida,archivada,108.83370014026023,117.540396151481,7.9999999999999565,0.169942,0.164653,1.0,0.9259667211002384,,,,,,,
+corrida_nueva,S0,uniforme,optimal,104.98475110159066,104.98475110159063,-2.7072226330184994e-14,0.169577,0.164296,1.0,0.9999015020928418,0.177108,0.172652,0.9260788551632224,138.0,139.0,1123.0,3.5
+corrida_nueva,S1,uniforme,optimal,104.98475110159066,108.13429363463831,2.9999999999999343,0.169342,0.164075,1.0,0.999853298826105,0.176868,0.172427,0.9256050414001886,137.0,139.0,1119.0,113.6
+corrida_nueva,S2,uniforme,optimal,104.98475110159066,113.38353118971787,7.99999999999996,0.169217,0.163946,1.0,0.9998354842179379,0.176714,0.172269,0.9256386555326391,137.0,139.0,1114.0,84.7
