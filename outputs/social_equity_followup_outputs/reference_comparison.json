@@ -9,7 +9,7 @@
         3,
         3
       ],
-      "max_abs_diff": 0.0
+      "max_abs_diff": 7.5780558586120605
     },
     "table_priority_summary.csv": {
       "produced_shape": [
@@ -20,7 +20,7 @@
         4,
         4
       ],
-      "max_abs_diff": 0.019604792807233706
+      "max_abs_diff": 49.6856831245742
     },
     "table_allocation_changes_S2_vs_S1.csv": {
       "produced_shape": [
@@ -31,7 +31,7 @@
         10,
         7
       ],
-      "max_abs_diff": 212.0
+      "max_abs_diff": 213.0
     },
     "table_equity_metrics.csv": {
       "produced_shape": [
@@ -42,7 +42,7 @@
         4,
         6
       ],
-      "max_abs_diff": 410.87450920192043
+      "max_abs_diff": 361.3622580689545
     },
     "table_equity_metrics_final.csv": {
       "produced_shape": [
@@ -52,16 +52,6 @@
       "reference_shape": [
         4,
         9
-      ]
-    },
-    "table_robustness_fast.csv": {
-      "produced_shape": [
-        13,
-        5
-      ],
-      "reference_shape": [
-        8,
-        5
       ]
     }
   }
