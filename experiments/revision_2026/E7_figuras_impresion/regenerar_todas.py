@@ -126,8 +126,8 @@ def main() -> int:
     # Barras de la frontera de tolerancia (A1 ampliado): provision per capita a eps = 10 y 100
     pc_eps = pd.read_csv(EXP / "A1_barrido_epsilon" / "salidas" / "tablas" / "percapita_por_epsilon.csv")
     frontera = [
-        (f"eps =\n{float(r['epsilon']):g}", (float(r["puertos_10k_cuartil_vulnerable"]), float(r["puertos_10k_resto"])))
-        for _, r in pc_eps.iterrows() if float(r["epsilon"]) in (10.0, 100.0)
+        (f"eps\n{float(r['epsilon']):g}", (float(r["puertos_10k_cuartil_vulnerable"]), float(r["puertos_10k_resto"])))
+        for _, r in pc_eps.iterrows() if float(r["epsilon"]) in (100.0,)
     ]
     fig_policy_tradeoff(SALIDAS, tradeoff, robust_df, s3, percapita, sweep_df=sweep, benchmark_df=bench, benchmark_percapita=bench_pc, frontier_percapita=frontera)
     print("Figura 9 con barrido y benchmark; puertos por 10k (vulnerable, resto):", {k: tuple(round(x, 2) for x in v) for k, v in percapita.items()}, "| benchmark k4:", tuple(round(x, 2) for x in bench_pc))

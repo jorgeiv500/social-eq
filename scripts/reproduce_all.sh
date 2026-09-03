@@ -52,5 +52,7 @@ echo "== Nivel 0: figuras y tablas derivadas"
 "$PY" "$EXP/E7_figuras_impresion/regenerar_todas.py"
 "$PY" "$EXP/E3_mapas/regenerar_figuras.py"
 "$PY" scripts/make_vulnerable_quartile_table.py
+"$PY" scripts/intervention_size.py
+"$PY" scripts/coverage_thresholds.py
 "$PY" scripts/hoja_de_cifras.py
 echo "Listo. Figuras: $EXP/E7_figuras_impresion/salidas y $EXP/E3_mapas/salidas"

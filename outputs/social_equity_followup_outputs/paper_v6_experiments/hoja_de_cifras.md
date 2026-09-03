@@ -7,6 +7,15 @@
 | S2 | 8.0 | 0.169942 | 0.164653 | 1.0000 (36/36) | 0.279822 | 459.832070 | 0.925967 | 141 |
 | S3 | 8.0 | 0.169941 | 0.164654 | 1.0000 (36/36) | 0.279813 | 459.776792 | 0.925777 | 141 |
 
+| Escenario | puertos/10k cuartil | puertos/10k resto | media ciudad | Gini per capita | +puertos a la media (% cuota) | +puertos a paridad (% cuota) |
+|---|---|---|---|---|---|---|
+| S0 | 10.43 | 15.61 | 13.01 | 0.2952 | 942 (8.7%) | 1891 (17.4%) |
+| S1 | 10.42 | 15.62 | 13.01 | 0.2957 | 946 (8.7%) | 1900 (17.5%) |
+| S2 | 10.42 | 15.62 | 13.01 | 0.2958 | 947 (8.7%) | 1902 (17.5%) |
+| S3 | 10.42 | 15.62 | 13.01 | 0.2960 | 946 (8.7%) | 1899 (17.5%) |
+
+- cobertura del cuartil vulnerable por umbral (min): 5 min S0=1.0000/S1=1.0000/S2=1.0000/S3=1.0000, 10 min S0=1.0000/S1=1.0000/S2=1.0000/S3=1.0000, 15 min S0=1.0000/S1=1.0000/S2=1.0000/S3=1.0000, 20 min S0=1.0000/S1=1.0000/S2=1.0000/S3=1.0000, 30 min S0=1.0000/S1=1.0000/S2=1.0000/S3=1.0000
+
 u* = 108.833700
 - S1_vs_S0: 21 zonas cambian, 11 puertos movidos, máx |Δ| 2; ganan ['UTAM101', 'UTAM15', 'UTAM16', 'UTAM109', 'UTAM64', 'UTAM65', 'UTAM20', 'UTAM97', 'UTAM98', 'UTAM590', 'UTAM620']; pierden ['UTAM45', 'UTAM49', 'UTAM23', 'UTAM60', 'UTAM61', 'UTAM25', 'UTAM28', 'UTAM580', 'UTAM660', 'UTAM710']
 - S2_vs_S1: 16 zonas cambian, 8 puertos movidos, máx |Δ| 1; ganan ['UTAM27', 'UTAM64', 'UTAM13', 'UTAM25', 'UTAM97', 'UTAM40', 'UPR2', 'UTAM571']; pierden ['UTAM114', 'UTAM104', 'UTAM10', 'UTAM48', 'UTAM57', 'UTAM84', 'UTAM87', 'UTAM640']

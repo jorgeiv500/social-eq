@@ -6446,6 +6446,548 @@
       }
     }
   },
+  "intensidad_provision": [
+    {
+      "scenario": "S0",
+      "zones_with_population": 120,
+      "vulnerable_zones": 36,
+      "vulnerable_population": 3652765,
+      "vulnerable_ports": 3810,
+      "remaining_population": 3624730,
+      "remaining_ports": 5657,
+      "ports_per_10k_vulnerable": 10.430455,
+      "ports_per_10k_remaining": 15.60668,
+      "ports_per_10k_city": 13.008597,
+      "gini_ports_per_capita_population_weighted": 0.295237,
+      "extra_ports_to_city_mean": 941.734801,
+      "extra_ports_to_city_mean_pct_quota": 8.663614,
+      "extra_ports_to_parity": 1890.753326,
+      "extra_ports_to_parity_pct_quota": 17.394235,
+      "quota_total": 10870
+    },
+    {
+      "scenario": "S1",
+      "zones_with_population": 120,
+      "vulnerable_zones": 36,
+      "vulnerable_population": 3652765,
+      "vulnerable_ports": 3806,
+      "remaining_population": 3624730,
+      "remaining_ports": 5662,
+      "ports_per_10k_vulnerable": 10.419504,
+      "ports_per_10k_remaining": 15.620474,
+      "ports_per_10k_city": 13.009971,
+      "gini_ports_per_capita_population_weighted": 0.295695,
+      "extra_ports_to_city_mean": 946.236727,
+      "extra_ports_to_city_mean_pct_quota": 8.70503,
+      "extra_ports_to_parity": 1899.791998,
+      "extra_ports_to_parity_pct_quota": 17.477387,
+      "quota_total": 10870
+    },
+    {
+      "scenario": "S2",
+      "zones_with_population": 120,
+      "vulnerable_zones": 36,
+      "vulnerable_population": 3652765,
+      "vulnerable_ports": 3805,
+      "remaining_population": 3624730,
+      "remaining_ports": 5663,
+      "ports_per_10k_vulnerable": 10.416766,
+      "ports_per_10k_remaining": 15.623233,
+      "ports_per_10k_city": 13.009971,
+      "gini_ports_per_capita_population_weighted": 0.295816,
+      "extra_ports_to_city_mean": 947.236727,
+      "extra_ports_to_city_mean_pct_quota": 8.714229,
+      "extra_ports_to_parity": 1901.799733,
+      "extra_ports_to_parity_pct_quota": 17.495858,
+      "quota_total": 10870
+    },
+    {
+      "scenario": "S3",
+      "zones_with_population": 120,
+      "vulnerable_zones": 36,
+      "vulnerable_population": 3652765,
+      "vulnerable_ports": 3806,
+      "remaining_population": 3624730,
+      "remaining_ports": 5661,
+      "ports_per_10k_vulnerable": 10.419504,
+      "ports_per_10k_remaining": 15.617715,
+      "ports_per_10k_city": 13.008597,
+      "gini_ports_per_capita_population_weighted": 0.296045,
+      "extra_ports_to_city_mean": 945.734801,
+      "extra_ports_to_city_mean_pct_quota": 8.700412,
+      "extra_ports_to_parity": 1898.784264,
+      "extra_ports_to_parity_pct_quota": 17.468117,
+      "quota_total": 10870
+    }
+  ],
+  "cobertura_por_umbral": [
+    {
+      "scenario": "S0",
+      "threshold_min": 5.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S0",
+      "threshold_min": 10.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S0",
+      "threshold_min": 15.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S0",
+      "threshold_min": 20.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S0",
+      "threshold_min": 30.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S1",
+      "threshold_min": 5.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S1",
+      "threshold_min": 10.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S1",
+      "threshold_min": 15.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S1",
+      "threshold_min": 20.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S1",
+      "threshold_min": 30.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S2",
+      "threshold_min": 5.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S2",
+      "threshold_min": 10.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S2",
+      "threshold_min": 15.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S2",
+      "threshold_min": 20.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S2",
+      "threshold_min": 30.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S3",
+      "threshold_min": 5.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S3",
+      "threshold_min": 10.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S3",
+      "threshold_min": 15.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S3",
+      "threshold_min": 20.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    },
+    {
+      "scenario": "S3",
+      "threshold_min": 30.0,
+      "coverage_vulnerable": 1.0,
+      "zones_covered": 36,
+      "zones_total": 36
+    }
+  ],
+  "cuartil_vulnerable_por_zona": [
+    {
+      "UTAM": "UTAM11",
+      "locality": "Usaquen",
+      "dane_population": 66116.0,
+      "ports_S0": 30,
+      "ports_S2": 30,
+      "ports_per_10k_S2": 4.5375,
+      "vulnerability_index": 0.6268
+    },
+    {
+      "UTAM": "UTAM50",
+      "locality": "San Cristobal",
+      "dane_population": 89694.0,
+      "ports_S0": 60,
+      "ports_S2": 60,
+      "ports_per_10k_S2": 6.6894,
+      "vulnerability_index": 0.6885
+    },
+    {
+      "UTAM": "UTAM75",
+      "locality": "Fontibon",
+      "dane_population": 127247.0,
+      "ports_S0": 88,
+      "ports_S2": 88,
+      "ports_per_10k_S2": 6.9157,
+      "vulnerability_index": 0.6263
+    },
+    {
+      "UTAM": "UTAM54",
+      "locality": "Rafael Uribe Uribe",
+      "dane_population": 98203.0,
+      "ports_S0": 68,
+      "ports_S2": 68,
+      "ports_per_10k_S2": 6.9244,
+      "vulnerability_index": 0.6897
+    },
+    {
+      "UTAM": "UTAM53",
+      "locality": "Rafael Uribe Uribe",
+      "dane_population": 53165.0,
+      "ports_S0": 40,
+      "ports_S2": 40,
+      "ports_per_10k_S2": 7.5237,
+      "vulnerability_index": 0.6741
+    },
+    {
+      "UTAM": "UTAM30",
+      "locality": "Engativa",
+      "dane_population": 122005.0,
+      "ports_S0": 93,
+      "ports_S2": 93,
+      "ports_per_10k_S2": 7.6226,
+      "vulnerability_index": 0.6613
+    },
+    {
+      "UTAM": "UTAM79",
+      "locality": "Kennedy",
+      "dane_population": 116440.0,
+      "ports_S0": 97,
+      "ports_S2": 97,
+      "ports_per_10k_S2": 8.3305,
+      "vulnerability_index": 0.7657
+    },
+    {
+      "UTAM": "UTAM28",
+      "locality": "Suba",
+      "dane_population": 266221.0,
+      "ports_S0": 225,
+      "ports_S2": 224,
+      "ports_per_10k_S2": 8.4141,
+      "vulnerability_index": 0.7602
+    },
+    {
+      "UTAM": "UTAM51",
+      "locality": "San Cristobal",
+      "dane_population": 71649.0,
+      "ports_S0": 62,
+      "ports_S2": 62,
+      "ports_per_10k_S2": 8.6533,
+      "vulnerability_index": 0.6165
+    },
+    {
+      "UTAM": "UTAM69",
+      "locality": "Ciudad Bolivar",
+      "dane_population": 150749.0,
+      "ports_S0": 131,
+      "ports_S2": 131,
+      "ports_per_10k_S2": 8.6899,
+      "vulnerability_index": 0.6483
+    },
+    {
+      "UTAM": "UTAM34",
+      "locality": "San Cristobal",
+      "dane_population": 82236.0,
+      "ports_S0": 72,
+      "ports_S2": 72,
+      "ports_per_10k_S2": 8.7553,
+      "vulnerability_index": 0.7691
+    },
+    {
+      "UTAM": "UTAM71",
+      "locality": "Suba",
+      "dane_population": 261419.0,
+      "ports_S0": 242,
+      "ports_S2": 242,
+      "ports_per_10k_S2": 9.2572,
+      "vulnerability_index": 0.7114
+    },
+    {
+      "UTAM": "UTAM59",
+      "locality": "Usme",
+      "dane_population": 47507.0,
+      "ports_S0": 46,
+      "ports_S2": 46,
+      "ports_per_10k_S2": 9.6828,
+      "vulnerability_index": 0.72
+    },
+    {
+      "UTAM": "UTAM81",
+      "locality": "Kennedy",
+      "dane_population": 65847.0,
+      "ports_S0": 64,
+      "ports_S2": 64,
+      "ports_per_10k_S2": 9.7195,
+      "vulnerability_index": 0.8564
+    },
+    {
+      "UTAM": "UTAM32",
+      "locality": "San Cristobal",
+      "dane_population": 91065.0,
+      "ports_S0": 92,
+      "ports_S2": 92,
+      "ports_per_10k_S2": 10.1027,
+      "vulnerability_index": 0.616
+    },
+    {
+      "UTAM": "UTAM48",
+      "locality": "Kennedy",
+      "dane_population": 137552.0,
+      "ports_S0": 141,
+      "ports_S2": 140,
+      "ports_per_10k_S2": 10.178,
+      "vulnerability_index": 0.7617
+    },
+    {
+      "UTAM": "UTAM40",
+      "locality": "Puente Aranda",
+      "dane_population": 95948.0,
+      "ports_S0": 97,
+      "ports_S2": 98,
+      "ports_per_10k_S2": 10.2139,
+      "vulnerability_index": 0.6196
+    },
+    {
+      "UTAM": "UTAM66",
+      "locality": "Ciudad Bolivar",
+      "dane_population": 67506.0,
+      "ports_S0": 69,
+      "ports_S2": 69,
+      "ports_per_10k_S2": 10.2213,
+      "vulnerability_index": 0.6545
+    },
+    {
+      "UTAM": "UTAM36",
+      "locality": "Rafael Uribe Uribe",
+      "dane_population": 45568.0,
+      "ports_S0": 47,
+      "ports_S2": 47,
+      "ports_per_10k_S2": 10.3143,
+      "vulnerability_index": 0.6211
+    },
+    {
+      "UTAM": "UTAM70",
+      "locality": "Ciudad Bolivar",
+      "dane_population": 92569.0,
+      "ports_S0": 96,
+      "ports_S2": 96,
+      "ports_per_10k_S2": 10.3706,
+      "vulnerability_index": 0.7023
+    },
+    {
+      "UTAM": "UTAM86",
+      "locality": "Bosa",
+      "dane_population": 128194.0,
+      "ports_S0": 134,
+      "ports_S2": 134,
+      "ports_per_10k_S2": 10.4529,
+      "vulnerability_index": 0.733
+    },
+    {
+      "UTAM": "UTAM29",
+      "locality": "Engativa",
+      "dane_population": 106448.0,
+      "ports_S0": 121,
+      "ports_S2": 121,
+      "ports_per_10k_S2": 11.3671,
+      "vulnerability_index": 0.6255
+    },
+    {
+      "UTAM": "UTAM96",
+      "locality": "Santa Fe",
+      "dane_population": 44375.0,
+      "ports_S0": 52,
+      "ports_S2": 52,
+      "ports_per_10k_S2": 11.7183,
+      "vulnerability_index": 0.6148
+    },
+    {
+      "UTAM": "UTAM47",
+      "locality": "Kennedy",
+      "dane_population": 91612.0,
+      "ports_S0": 108,
+      "ports_S2": 108,
+      "ports_per_10k_S2": 11.7888,
+      "vulnerability_index": 0.6841
+    },
+    {
+      "UTAM": "UTAM82",
+      "locality": "Kennedy",
+      "dane_population": 139138.0,
+      "ports_S0": 165,
+      "ports_S2": 165,
+      "ports_per_10k_S2": 11.8587,
+      "vulnerability_index": 0.8817
+    },
+    {
+      "UTAM": "UTAM43",
+      "locality": "Puente Aranda",
+      "dane_population": 69366.0,
+      "ports_S0": 86,
+      "ports_S2": 86,
+      "ports_per_10k_S2": 12.398,
+      "vulnerability_index": 0.6521
+    },
+    {
+      "UTAM": "UTAM46",
+      "locality": "Kennedy",
+      "dane_population": 134339.0,
+      "ports_S0": 169,
+      "ports_S2": 169,
+      "ports_per_10k_S2": 12.5801,
+      "vulnerability_index": 0.6262
+    },
+    {
+      "UTAM": "UTAM39",
+      "locality": "Rafael Uribe Uribe",
+      "dane_population": 85753.0,
+      "ports_S0": 108,
+      "ports_S2": 108,
+      "ports_per_10k_S2": 12.5943,
+      "vulnerability_index": 0.6025
+    },
+    {
+      "UTAM": "UTAM41",
+      "locality": "Puente Aranda",
+      "dane_population": 56338.0,
+      "ports_S0": 71,
+      "ports_S2": 71,
+      "ports_per_10k_S2": 12.6025,
+      "vulnerability_index": 0.7146
+    },
+    {
+      "UTAM": "UTAM84",
+      "locality": "Bosa",
+      "dane_population": 191698.0,
+      "ports_S0": 246,
+      "ports_S2": 245,
+      "ports_per_10k_S2": 12.7805,
+      "vulnerability_index": 1.0
+    },
+    {
+      "UTAM": "UTAM45",
+      "locality": "Kennedy",
+      "dane_population": 87680.0,
+      "ports_S0": 116,
+      "ports_S2": 114,
+      "ports_per_10k_S2": 13.0018,
+      "vulnerability_index": 0.6281
+    },
+    {
+      "UTAM": "UTAM80",
+      "locality": "Kennedy",
+      "dane_population": 55262.0,
+      "ports_S0": 76,
+      "ports_S2": 76,
+      "ports_per_10k_S2": 13.7527,
+      "vulnerability_index": 0.7795
+    },
+    {
+      "UTAM": "UTAM35",
+      "locality": "Antonio Narino",
+      "dane_population": 23927.0,
+      "ports_S0": 35,
+      "ports_S2": 35,
+      "ports_per_10k_S2": 14.6278,
+      "vulnerability_index": 0.6117
+    },
+    {
+      "UTAM": "UTAM49",
+      "locality": "Bosa",
+      "dane_population": 35586.0,
+      "ports_S0": 56,
+      "ports_S2": 55,
+      "ports_per_10k_S2": 15.4555,
+      "vulnerability_index": 0.611
+    },
+    {
+      "UTAM": "UTAM85",
+      "locality": "Bosa",
+      "dane_population": 224921.0,
+      "ports_S0": 354,
+      "ports_S2": 354,
+      "ports_per_10k_S2": 15.7389,
+      "vulnerability_index": 0.8229
+    },
+    {
+      "UTAM": "UTAM83",
+      "locality": "Kennedy",
+      "dane_population": 29422.0,
+      "ports_S0": 53,
+      "ports_S2": 53,
+      "ports_per_10k_S2": 18.0137,
+      "vulnerability_index": 0.6459
+    }
+  ],
   "stgnn_protocolo": {
     "random_seed": 42,
     "epochs_max": 1200,

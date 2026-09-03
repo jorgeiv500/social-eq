@@ -76,6 +76,17 @@ def main() -> int:
         "B4_contrafactual": leer("B4_contrafactual_prioridad/salidas/tablas/resumen_contrafactual.csv"),
         "C1_piso": leer("C1_piso_vinculante/salidas/tablas/resumen_piso_vinculante.csv"),
     }
+    # Intensidad de provision y tamano de la intervencion (scripts/intervention_size.py) y
+    # cobertura por umbral (scripts/coverage_thresholds.py): las cifras per capita del §5.3.
+    pi = T / "table_provision_intensity.csv"
+    if pi.exists():
+        H["intensidad_provision"] = pd.read_csv(pi).round(6).to_dict("records")
+    ct = T / "table_coverage_thresholds.csv"
+    if ct.exists():
+        H["cobertura_por_umbral"] = pd.read_csv(ct).to_dict("records")
+    vq = T / "table_vulnerable_quartile_provision.csv"
+    if vq.exists():
+        H["cuartil_vulnerable_por_zona"] = pd.read_csv(vq).round(4).to_dict("records")
     a4 = EXP / "A4_topes_capacidad/salidas/tablas/resumen_diagnostico.json"
     if a4.exists(): H["experimentos"]["A4_resumen"] = json.loads(a4.read_text())
     stg = RAIZ / "data/inputs/priority_utam_scores.csv"
@@ -90,6 +101,23 @@ def main() -> int:
     lines.append("|---|---|---|---|---|---|---|---|---|")
     for s, r in H["escenarios"].items():
         lines.append(f"| {s} | {r['perdida_fidelidad_pct']:.1f} | {r['gini']:.6f} | {r['gini_ponderado']:.6f} | {r['cobertura_vulnerable']} | {r['share_cuartil_vulnerable']:.6f} | {r['media_acceso_VH']:.6f} | {r['rho_prioridad_puertos']:.6f} | {r['zonas_con_puertos']} |")
+    if "intensidad_provision" in H:
+        lines.append("")
+        lines.append("| Escenario | puertos/10k cuartil | puertos/10k resto | media ciudad | Gini per capita | +puertos a la media (% cuota) | +puertos a paridad (% cuota) |")
+        lines.append("|---|---|---|---|---|---|---|")
+        for r in H["intensidad_provision"]:
+            lines.append(
+                f"| {r['scenario']} | {r['ports_per_10k_vulnerable']:.2f} | {r['ports_per_10k_remaining']:.2f} | "
+                f"{r['ports_per_10k_city']:.2f} | {r['gini_ports_per_capita_population_weighted']:.4f} | "
+                f"{r['extra_ports_to_city_mean']:.0f} ({r['extra_ports_to_city_mean_pct_quota']:.1f}%) | "
+                f"{r['extra_ports_to_parity']:.0f} ({r['extra_ports_to_parity_pct_quota']:.1f}%) |"
+            )
+    if "cobertura_por_umbral" in H:
+        um = sorted({r["threshold_min"] for r in H["cobertura_por_umbral"]})
+        lines.append("")
+        lines.append("- cobertura del cuartil vulnerable por umbral (min): " + ", ".join(
+            f"{u:.0f} min " + "/".join(f"{r['scenario']}={r['coverage_vulnerable']:.4f}" for r in H["cobertura_por_umbral"] if r["threshold_min"] == u)
+            for u in um))
     lines.append(""); lines.append(f"u* = {u_star:.6f}")
     for k, v in H["cambios"].items():
         lines.append(f"- {k}: {v['zonas_cambiadas']} zonas cambian, {v['puertos_movidos']:.0f} puertos movidos, máx |Δ| {v['max_abs_cambio']}; ganan {v['ganan'][:12]}; pierden {v['pierden'][:12]}")

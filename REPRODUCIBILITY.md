@@ -77,7 +77,7 @@ relative to `experiments/revision_2026/`.
 | Fig. 8 (Lorenz curves) | `outputs/tables/scenario_S0.csv` to `scenario_S3.csv` | E7 |
 | Fig. 9 (policy trade-off synthesis) | `outputs/tables/table_policy_tradeoff.csv`, `table_robustness.csv`, `table_equity_metrics_final.csv`; overlays from `experiments/A1_barrido_epsilon/salidas/tablas/resumen_barrido_epsilon.csv` and `experiments/A2_benchmark_equidad/salidas/tablas/resumen_benchmark.csv` | E7 |
 | Table 3 (scenario design) | `outputs/tables/table_scenario_design.csv` | pipeline |
-| Table 4 (accessibility and equity metrics; ports per 10,000 residents) | `outputs/tables/table_equity_metrics_final.csv`; per-capita rows in `outputs/hoja_de_cifras.json` (`ports_per_capita_by_quartile` in `src/social_eq/followup.py`) | pipeline, `scripts/hoja_de_cifras.py` |
+| Table 4 (accessibility and equity metrics; ports per 10,000 residents) | `outputs/tables/table_equity_metrics_final.csv`; per-capita rows in `outputs/tables/table_provision_intensity.csv`; coverage at 5, 10, 15, 20 and 30 minutes in `outputs/tables/table_coverage_thresholds.csv` | pipeline, `scripts/intervention_size.py`, `scripts/coverage_thresholds.py` |
 | Table 5 (compact trade-off) | `outputs/tables/table_policy_tradeoff.csv` | pipeline |
 | Table 6 (tolerance sweep, frontier runs and direct-equity benchmark) | `experiments/A1_barrido_epsilon/salidas/tablas/resumen_barrido_epsilon.csv` (ε = 0.15–100), `percapita_por_epsilon.csv` (provision per capita along the frontier, cited in Section 5.5 and Fig. 9b), `experiments/A2_benchmark_equidad/salidas/tablas/resumen_benchmark.csv` | `run_a1.py --lanzar` (published sweep) and `run_a1.py --lanzar --epsilons 1.00,3.00,10.00,30.00,100.00` (frontier), `run_a2.py --lanzar` |
 | Table 7 (static baselines vs the ST-GNN) | `experiments/B1_baselines/resultados/b1_metricas_cv.csv`, `b1_spearman_prioridad.csv`, `b1_diagnostico_insumos.csv` | `run_baselines.py` |
@@ -87,7 +87,7 @@ relative to `experiments/revision_2026/`.
 | Rental tenure (text) | `experiments/B3_tenencia/salidas/tabla_correlaciones.csv` | `codigo/analisis_tenencia.py` |
 | Priority counterfactual (text) | `experiments/B4_contrafactual_prioridad/salidas/tablas/resumen_contrafactual.csv` | `run_b4.py --lanzar` |
 | Binding minimum-service floors (text) | `experiments/C1_piso_vinculante/salidas/tablas/resumen_piso_vinculante.csv` | `run_c1.py --lanzar` |
-| Size of the intervention (Section 5.3: 947 and 1,902 ports) | `outputs/hoja_de_cifras.json` and `outputs/tables/table_vulnerable_quartile_provision.csv` | `scripts/hoja_de_cifras.py`, `scripts/make_vulnerable_quartile_table.py` |
+| Size of the intervention (Section 5.3: 947 and 1,902 ports, 8.7\% and 17.5\% of the quota) | `outputs/tables/table_provision_intensity.csv` (one row per scenario) and `outputs/tables/table_vulnerable_quartile_provision.csv` (zone by zone) | `scripts/intervention_size.py`, `scripts/make_vulnerable_quartile_table.py` |
 
 Tables 1 and 2 are narrative (literature streams and dataset roles) and have no computed
 values.
@@ -109,6 +109,8 @@ Level 0, figures and derived tables (no solver):
 .venv/bin/python experiments/revision_2026/E7_figuras_impresion/regenerar_todas.py
 .venv/bin/python experiments/revision_2026/E3_mapas/regenerar_figuras.py
 .venv/bin/python scripts/make_vulnerable_quartile_table.py
+.venv/bin/python scripts/intervention_size.py
+.venv/bin/python scripts/coverage_thresholds.py
 .venv/bin/python scripts/hoja_de_cifras.py
 ```
 
@@ -157,8 +159,10 @@ After retraining, copy `priority_utam_scores.csv`, `temporal_attention_by_utam.c
 
 ## 7. Checking that a reproduction matches the manuscript
 
-1. Run `scripts/hoja_de_cifras.py` and compare `outputs/.../hoja_de_cifras.md` with the values
-   in the text; the JSON keeps full precision and names the source file of each entry.
+1. Run `scripts/intervention_size.py`, `scripts/coverage_thresholds.py` and
+   `scripts/hoja_de_cifras.py` in that order, then compare `outputs/.../hoja_de_cifras.md`
+   with the values in the text; the JSON keeps full precision and names the source of each
+   entry, including the per-capita block and the coverage thresholds.
 2. Compare `outputs/.../tables/table_equity_metrics_final.csv` with the archived copy in git
    history; allocations from NEOS/CPLEX are deterministic at the reported MIP gap (0.01), but a
    different CPLEX version can return an alternative optimum with the same objective. The

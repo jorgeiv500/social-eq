@@ -2395,7 +2395,7 @@ def add_focus_inset(
         transform=inset_ax.transAxes,
         ha="left",
         va="top",
-        fontsize=7.1,
+        fontsize=7.8,
         color=MAP_SCALE,
         bbox={"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.88},
     )
@@ -2570,7 +2570,7 @@ def fig_social_context_panels(
         loc="upper left",
         ncol=2,
         frameon=False,
-        fontsize=7.6,
+        fontsize=8.0,
         handletextpad=0.5,
         columnspacing=1.0,
     )
@@ -2677,7 +2677,7 @@ def fig_allocation_composite(
     cbar = add_horizontal_colorbar(fig, axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports per UTAM, (a)-(c)" if intensity_panel else "Charging ports per UTAM (class breaks)", cax=cbar_ax, spacing="uniform")
     label_open_top_class(cbar, ports_norm)
     legend_ax.axis("off")
-    legend_ax.legend(handles=handles, loc="center left", ncol=1, frameon=False, fontsize=7.4)
+    legend_ax.legend(handles=handles, loc="center left", ncol=1, frameon=False, fontsize=8.0)
     fig.savefig(figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -2759,7 +2759,7 @@ def fig_net_change_S2_minus_S1(
                 texto,
                 ha=ha,
                 va="center",
-                fontsize=7.6,
+                fontsize=8.0,
                 fontweight="semibold",
                 color=label_color,
                 path_effects=label_halo(2.4),
@@ -2777,7 +2777,7 @@ def fig_net_change_S2_minus_S1(
             nota,
             ha="left",
             va="bottom",
-            fontsize=6.8,
+            fontsize=8.0,
             color="#6d655e",
             bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
             zorder=8,
@@ -2790,7 +2790,7 @@ def fig_net_change_S2_minus_S1(
         gdf,
         locality_names=("SUBA", "ENGATIVA", "FONTIBON", "BOSA", "USME", "USAQUEN", "SAN CRISTOBAL", "KENNEDY", "CIUDAD BOLIVAR"),
         municipality_names=("SOACHA", "COTA", "CHIA", "MOSQUERA", "LA CALERA"),
-        fontsize=6.6,
+        fontsize=8.0,
         color="#847c71",
         extent=crop,
         reserved=reservado_nc,
@@ -2897,7 +2897,7 @@ def fig_policy_tradeoff(
         "Kappa": "#2457a6", "Soft floor": "#d08a2a", "Other": "#8a8178",
     }
     fig = plt.figure(figsize=(7.05, 5.60), constrained_layout=True)
-    grid = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], width_ratios=[1.06, 0.94])
+    grid = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], width_ratios=[0.96, 1.04])
     ax_a = fig.add_subplot(grid[0, 0])
     ax_b = fig.add_subplot(grid[0, 1])
     ax_c = fig.add_subplot(grid[1, 0])
@@ -2932,19 +2932,15 @@ def fig_policy_tradeoff(
     etiquetas_a = {"S0": (6, 6), "S1": (-4, 7), "S2": (12, 7)}
     for name, x, y in familia:
         if name in etiquetas_a:
-            ax_a.annotate(name, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=7.6, color=PAPER_TEXT)
+            ax_a.annotate(name, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=8.0, color=PAPER_TEXT)
         elif name.startswith("eps = ") and float(name.split("=")[1]) in (1.0, 10.0, 100.0):
             # Los puntos de la frontera (concesiones de 100 % a 10.000 %) se rotulan con su tolerancia
-            ax_a.annotate(f"eps = {float(name.split('=')[1]):g}", xy=(x, y), xytext=(5, 5), textcoords="offset points", fontsize=6.8, color="#6d655e")
+            ax_a.annotate(f"eps = {float(name.split('=')[1]):g}", xy=(x, y), xytext=(5, 5), textcoords="offset points", fontsize=8.0, color="#6d655e")
     if benchmark_df is not None and len(benchmark_df):
         for _, r in benchmark_df.iterrows():
             ax_a.scatter(float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"]), s=52, marker="D", color="#8e4a8b", edgecolor="white", linewidth=0.9, zorder=3)
-        rb = benchmark_df.iloc[0]
-        ax_a.annotate(
-            "direct-equity benchmark\n(no priority target)",
-            xy=(float(rb["perdida_fidelidad_vs_S0_pct"]), float(rb["gini_ponderado_6d"])),
-            xytext=(-10, 4), textcoords="offset points", fontsize=7.0, color="#6d655e", ha="right", va="bottom",
-        )
+        # El rombo del benchmark se identifica en la leyenda de la figura: una anotación dentro
+        # del panel choca con las marcas del eje y con el recuadro de zoom.
     if familia:
         y_all = ys + ([float(v) for v in benchmark_df["gini_ponderado_6d"]] if benchmark_df is not None and len(benchmark_df) else [])
         pad = 0.06 * (max(y_all) - min(y_all) or 0.01)
@@ -2953,18 +2949,18 @@ def fig_policy_tradeoff(
         # ve a escala completa. Los puntos de la frontera (eps >= 1) quedan fuera del recuadro.
         publicada = [f for f in familia if not f[0].startswith("eps = ") or float(f[0].split("=")[1]) <= 0.30]
         xz = [f[1] for f in publicada]; yz = [f[2] for f in publicada]
-        ins = ax_a.inset_axes([0.10, 0.17, 0.40, 0.34])
+        ins = ax_a.inset_axes([0.40, 0.13, 0.40, 0.30])
         ins.plot(xz, yz, color="#b8aea4", linewidth=1.4, zorder=1)
         for name, x, y in publicada:
             ins.scatter(x, y, s=22, color=SCENARIO_COLORS.get(name, "#2a9d8f"), edgecolor="white", linewidth=0.7, zorder=3)
         ins.set_xlim(-1.5, max(xz) + 2.0)
         yp = 0.15 * (max(yz) - min(yz) or 1e-4)
         ins.set_ylim(min(yz) - yp, max(yz) + yp)
-        ins.tick_params(labelsize=6.5)
+        ins.tick_params(labelsize=7.6)
         ins.set_facecolor("white")
         for spine in ins.spines.values():
             spine.set_edgecolor("#8a8178")
-        ins.set_title("zoom: published sweep, eps <= 0.30", fontsize=6.6, color="#6d655e", pad=2, loc="left")
+        ins.set_title("zoom: eps <= 0.30", fontsize=8.0, color="#6d655e", pad=2, loc="left")
         ins.yaxis.set_major_locator(plt.MaxNLocator(3))
         ins.xaxis.set_major_locator(plt.MaxNLocator(4))
 
@@ -2975,19 +2971,19 @@ def fig_policy_tradeoff(
     for etiqueta, valores in (frontier_percapita or []):
         cats.append((etiqueta, valores))
     if benchmark_percapita is not None:
-        cats.append(("Direct-\nequity\nbenchmark" if frontier_percapita else "Direct-equity\nbenchmark", benchmark_percapita))
+        cats.append(("Direct\nequity" if frontier_percapita else "Direct-equity\nbenchmark", benchmark_percapita))
     if cats:
         xpos = np.arange(len(cats)); w = 0.36
         vuln = [c[1][0] for c in cats]; resto = [c[1][1] for c in cats]
         ax_b.bar(xpos - w / 2, vuln, width=w, color=GAIN_FILL, label="Most vulnerable quartile (36 zones)", zorder=2)
         ax_b.bar(xpos + w / 2, resto, width=w, color="#c9bfb4", label="Remaining zones", zorder=2)
         for i, (v, r) in enumerate(zip(vuln, resto)):
-            ax_b.text(i - w / 2, v + 0.25, f"{v:.1f}", ha="center", va="bottom", fontsize=7.4, color=PAPER_TEXT)
-            ax_b.text(i + w / 2, r + 0.25, f"{r:.1f}", ha="center", va="bottom", fontsize=7.4, color=PAPER_TEXT)
+            ax_b.text(i - w / 2, v + 0.30, f"{v:.2f}", ha="center", va="bottom", fontsize=7.8, color=PAPER_TEXT)
+            ax_b.text(i + w / 2, r + 0.30, f"{r:.1f}", ha="center", va="bottom", fontsize=7.8, color="#6d655e")
         ax_b.set_xticks(xpos)
-        ax_b.set_xticklabels([c[0] for c in cats], fontsize=7.0 if len(cats) > 4 else 8)
-        ax_b.set_ylim(0, max(vuln + resto) * 1.28)
-        ax_b.legend(loc="upper left", frameon=False, fontsize=7.2)
+        ax_b.set_xticklabels([c[0] for c in cats], fontsize=7.8 if len(cats) > 4 else 8.4)
+        ax_b.set_ylim(0, max(vuln + resto) * 1.34)
+        ax_b.legend(loc="upper left", frameon=False, fontsize=7.8)
 
     # ---------------- (c) robustez del Gini ----------------
     estilo(ax_c, "c. Robustness of the weighted Gini", "Change in weighted Gini vs S2 (basis points)", "")
@@ -3005,10 +3001,10 @@ def fig_policy_tradeoff(
         ax_c.hlines(ypos, 0.0, rb_df["bp"], color="#c9bfb4", linewidth=1.6, zorder=2)
         ax_c.scatter(rb_df["bp"], ypos, s=30, color=[fam_colores.get(f, "#8a8178") for f in rb_df["fam"]], edgecolor="white", linewidth=0.7, zorder=3)
         ax_c.set_yticks(ypos)
-        ax_c.set_yticklabels(rb_df["label"], fontsize=7.0)
+        ax_c.set_yticklabels(rb_df["label"], fontsize=7.8)
         ax_c.tick_params(axis="y", pad=3)
         handles = [Patch(facecolor=fam_colores[f], edgecolor="none", label=f) for f in ("Decay", "Epsilon", "Kappa", "Vulnerability index", "Soft floor") if f in set(rb_df["fam"])]
-        ax_c.legend(handles=handles, loc="lower right", frameon=False, fontsize=6.6, handlelength=1.0)
+        ax_c.legend(handles=handles, loc="lower right", frameon=False, fontsize=8.0, handlelength=1.0)
 
     # ---------------- (d) salvaguarda de S3 ----------------
     if s3_summary is not None and np.isfinite(pd.to_numeric(s3_summary.get("s3_floor_value"), errors="coerce")):
@@ -3024,19 +3020,22 @@ def fig_policy_tradeoff(
         ax_d.spines["left"].set_visible(False)
         ax_d.hlines(0.0, p_min, p_mean, color="#c9bfb4", linewidth=3.0, zorder=1)
         ax_d.axvline(floor_value, linestyle="--", color="#8a8178", linewidth=1.4, zorder=0)
+        # Los cuantiles del conjunto protegido no son escenarios: se dibujan en un solo tono
+        # ordenado, para no reutilizar los colores de S0-S3 con otro significado.
+        cuantil_tono = ("#9fc2d8", "#6ba3c6", "#3d7fa8", "#1a5a82")
         for label, value_, color, offset in (
-            ("Min", p_min, SCENARIO_COLORS["S0"], (-14, -22)),
-            ("P10", p_10, SCENARIO_COLORS["S1"], (18, 18)),
-            ("P25", p_25, SCENARIO_COLORS["S2"], (0, -22)),
-            ("Mean", p_mean, SCENARIO_COLORS["S3"], (0, 20)),
+            ("Min", p_min, cuantil_tono[0], (-14, -22)),
+            ("P10", p_10, cuantil_tono[1], (18, 18)),
+            ("P25", p_25, cuantil_tono[2], (0, -22)),
+            ("Mean", p_mean, cuantil_tono[3], (0, 20)),
         ):
             ax_d.scatter(value_, 0.0, s=70, color=color, edgecolor="white", linewidth=1.1, zorder=3)
             ax_d.annotate(f"{label}\n{value_:.1f}", xy=(value_, 0.0), xytext=offset, textcoords="offset points", ha="center",
-                          va="bottom" if offset[1] > 0 else "top", fontsize=7.2, color=PAPER_TEXT,
+                          va="bottom" if offset[1] > 0 else "top", fontsize=7.8, color=PAPER_TEXT,
                           bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
                           arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.7})
         ax_d.annotate(f"Soft floor\n{floor_value:.1f}", xy=(floor_value, 0.0), xytext=(-18, 18), textcoords="offset points", ha="center", va="bottom",
-                      fontsize=7.2, color="#6d655e", bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
+                      fontsize=7.8, color="#6d655e", bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
                       arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.7})
         x_span = max(p_mean - p_min, 1.0)
         x_pad = max(12.0, 0.16 * x_span)
@@ -3422,7 +3421,7 @@ def export_figures(
                 f"{pct_val:.1f}%",
                 ha="center",
                 va="bottom",
-                fontsize=7.4,
+                fontsize=8.0,
                 color="white",
                 zorder=4,
             )
@@ -3471,7 +3470,8 @@ def export_figures(
                 x, y = curve_fn(df_scenario["accessibility"])
             curves[scenario_name] = (np.asarray(x, dtype=float), np.asarray(y, dtype=float))
             axis.plot(x, y, color=SCENARIO_COLORS.get(scenario_name, "#444444"), linewidth=2.4, label=scenario_name)
-        configure_line_axis(axis, title, "Population share", "Accessibility share")
+        eje_x = "Cumulative share of zones" if curve_fn is lorenz_curve else "Cumulative share of vulnerability weight"
+        configure_line_axis(axis, title, eje_x, "Cumulative share of accessibility")
         axis.set_xlim(0, 1)
         axis.set_ylim(0, 1.02)
         axis.legend(loc="upper left", frameon=False, fontsize=9)
@@ -3549,7 +3549,7 @@ def export_figures(
                 lo = float(np.floor(finite.min() * 1e5) / 1e5) if len(finite) else 0.99997
                 axis.set_xticks([t for t in np.arange(lo, 1.0 + 1e-9, 1e-5) if t <= 1.0 + 1e-9])
                 axis.xaxis.set_major_formatter(FuncFormatter(lambda v, _pos: f"{v:.5f}"))
-                axis.tick_params(axis="x", labelsize=7.4, labelrotation=30)
+                axis.tick_params(axis="x", labelsize=8.0, labelrotation=30)
                 for label in axis.get_xticklabels():
                     label.set_ha("right")
         fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight", facecolor="white")
