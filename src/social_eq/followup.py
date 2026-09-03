@@ -20,6 +20,7 @@ import pandas as pd
 from matplotlib.cm import ScalarMappable
 from matplotlib.ticker import FuncFormatter
 from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap, Normalize, TwoSlopeNorm
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
 from pyomo.environ import (
     ConcreteModel,
@@ -1922,6 +1923,10 @@ def add_locality_labels(
 
     def cabe(caja: tuple[float, float, float, float]) -> bool:
         cx, cy, hw, hh = caja
+        if extent is not None:
+            ex0, ey0, ex1, ey1 = extent
+            if cx - hw < ex0 or cx + hw > ex1 or cy - hh < ey0 or cy + hh > ey1:
+                return False  # el rotulo saldria del recorte
         for ox, oy, ohw, ohh in ocupados:
             if abs(cx - ox) < (hw + ohw) and abs(cy - oy) < (hh + ohh):
                 return False
@@ -2430,6 +2435,43 @@ def load_official_ev_growth(paths: ProjectPaths) -> pd.DataFrame | None:
     return growth
 
 
+def urban_core_extent(gdf: gpd.GeoDataFrame, pad_m: float = 3000.0) -> tuple[float, float, float, float]:
+    """Recorte al nucleo urbano: caja de las UTAM urbanas con un margen fijo.
+
+    Pasada de forma del 2026-09-02: el marco completo de la region (153 x 57 km, relacion
+    2.7) obligaba a apilar los mapas y dejaba la mitad del ancho en blanco. Con 3 km de
+    margen (48 x 28 km, relacion 1.7) entran las 111 UTAM urbanas, 10 unidades del anillo y
+    el 92 % de los puertos; el resto se muestra en el localizador.
+    """
+    if "zone_class" not in gdf.columns or not gdf["zone_class"].eq("urban").any():
+        return tuple(gdf.total_bounds)
+    minx, miny, maxx, maxy = gdf.loc[gdf["zone_class"].eq("urban")].total_bounds
+    return (minx - pad_m, miny - pad_m, maxx + pad_m, maxy + pad_m)
+
+
+def draw_locator(ax: Any, gdf: gpd.GeoDataFrame, crop: tuple[float, float, float, float], *, title: str | None = None) -> None:
+    """Mapa de situacion: region completa en tres clases con el recuadro del recorte."""
+    for zone_name, fill in ZONE_FILLS.items():
+        subset = gdf.loc[gdf["zone_class"].eq(zone_name)] if "zone_class" in gdf.columns else gdf.iloc[0:0]
+        if not subset.empty:
+            subset.plot(ax=ax, color=fill, edgecolor="none")
+    draw_map_outline(ax, gdf)
+    ax.add_patch(
+        Rectangle((crop[0], crop[1]), crop[2] - crop[0], crop[3] - crop[1], fill=False, edgecolor=PAPER_TEXT, linewidth=1.0)
+    )
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_axis_off()
+    ax.set_aspect("equal")
+    ax.margins(0.02)
+    if title:
+        ax.set_title(title, loc="left", fontsize=8.0, color="#6d655e", pad=3)
+
+
+def _titulo_panel(ax: Any, title: str) -> None:
+    ax.set_title(title, loc="left", fontsize=10.0, fontweight="semibold", color=PAPER_TEXT, pad=6)
+
+
 def fig_social_context_panels(
     figures_dir: Path,
     utam_map: gpd.GeoDataFrame,
@@ -2437,90 +2479,69 @@ def fig_social_context_panels(
     protected_mask_s3: np.ndarray,
     rotation_deg: float,
 ) -> None:
-    """Figure 3 - social context: three stacked FULL-WIDTH panels.
+    """Figure 4 - social context: cuadricula 2 x 2 recortada al nucleo urbano.
 
-    Redesign for the R1 revision: light-start sequential ramps (R1.11), one
-    map per row so each panel triples in printed size (R2.m2), locality
-    labels, city-centre marker, scale bar and north arrow (R1.11/R3.6), and
-    the hatched neighbouring-municipality ring (author decision 9).
+    Pasada de forma del 2026-09-02 (el autor: las figuras apiladas dejaban demasiado
+    blanco). Tres mapas recortados al nucleo urbano (2.6 veces mas grandes que en el
+    marco completo) y un cuarto panel con el localizador de la region, la barra de color
+    compartida por (a) y (b) y la leyenda. Se conservan las rampas de arranque claro
+    (R1.11), los elementos cartograficos (R3.6) y la trama del anillo (decision 9).
     """
     gdf_priority = utam_map.merge(df_inputs[["UTAM", "priority_norm", "vulnerability_index"]], on="UTAM", how="left")
     protected_df = pd.DataFrame({"UTAM": df_inputs["UTAM"], "protected_s3": np.asarray(protected_mask_s3).astype(int)})
     gdf_protected = utam_map.merge(protected_df, on="UTAM", how="left")
-    extent = tuple(utam_map.total_bounds)
+    crop = urban_core_extent(utam_map)
+    shared_norm = Normalize(vmin=0.0, vmax=1.0)
 
-    priority_norm = Normalize(
-        vmin=float(np.nanmin(gdf_priority["priority_norm"].to_numpy(dtype=float))),
-        vmax=float(np.nanmax(gdf_priority["priority_norm"].to_numpy(dtype=float))),
-    )
-    vulnerability_norm = Normalize(
-        vmin=float(np.nanmin(gdf_priority["vulnerability_index"].to_numpy(dtype=float))),
-        vmax=float(np.nanmax(gdf_priority["vulnerability_index"].to_numpy(dtype=float))),
-    )
+    fig = plt.figure(figsize=(7.05, 5.10), constrained_layout=True)
+    grid = fig.add_gridspec(2, 2)
+    ax_a = fig.add_subplot(grid[0, 0])
+    ax_b = fig.add_subplot(grid[0, 1])
+    ax_c = fig.add_subplot(grid[1, 0])
+    celda_d = grid[1, 1].subgridspec(3, 1, height_ratios=[0.60, 0.13, 0.27], hspace=0.05)
+    ax_loc = fig.add_subplot(celda_d[0, 0])
+    ax_cbar = fig.add_subplot(celda_d[1, 0])
+    ax_leg = fig.add_subplot(celda_d[2, 0])
 
-    fig, axes = plt.subplots(3, 1, figsize=(6.45, 8.20), constrained_layout=True)
+    plot_map_panel(ax_a, gdf_priority, "priority_norm", "", SEQUENTIAL_CMAP, norm=shared_norm)
+    _titulo_panel(ax_a, "a. Learned charging priority")
+    add_region_ring_overlay(ax_a, gdf_priority)
+    ax_a.set_xlim(crop[0], crop[2])
+    ax_a.set_ylim(crop[1], crop[3])
+    reservado = add_north_arrow(ax_a, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
+    reservado += add_scale_bar(ax_a, gdf_priority, extent=crop, x_frac=0.22)
+    reservado += add_city_centre_marker(ax_a, gdf_priority)
+    add_locality_labels(ax_a, gdf_priority, extent=crop, reserved=reservado)
 
-    plot_map_panel(
-        axes[0],
-        gdf_priority,
-        "priority_norm",
-        "a. Learned charging priority",
-        SEQUENTIAL_CMAP,
-        norm=priority_norm,
-        show_scale_bar=True,
-    )
-    add_region_ring_overlay(axes[0], gdf_priority)
-    reservado = add_north_arrow(axes[0], rotation_deg, extent=extent)
-    reservado += add_city_centre_marker(axes[0], gdf_priority)
-    add_locality_labels(axes[0], gdf_priority, reserved=reservado)
-    add_horizontal_colorbar(
-        fig, axes[0], SEQUENTIAL_CMAP, priority_norm, "Normalized priority (0-1)", fraction=0.05, pad=0.015, shrink=0.5
-    )
+    plot_map_panel(ax_b, gdf_priority, "vulnerability_index", "", SEQUENTIAL_CMAP, norm=shared_norm)
+    _titulo_panel(ax_b, "b. Social vulnerability")
+    add_region_ring_overlay(ax_b, gdf_priority)
+    ax_b.set_xlim(crop[0], crop[2])
+    ax_b.set_ylim(crop[1], crop[3])
 
-    plot_map_panel(
-        axes[1],
-        gdf_priority,
-        "vulnerability_index",
-        "b. Social vulnerability",
-        SEQUENTIAL_CMAP,
-        norm=vulnerability_norm,
-    )
-    add_region_ring_overlay(axes[1], gdf_priority)
-    add_horizontal_colorbar(
-        fig,
-        axes[1],
-        SEQUENTIAL_CMAP,
-        vulnerability_norm,
-        "Social vulnerability index (0-1)",
-        fraction=0.05,
-        pad=0.015,
-        shrink=0.5,
-    )
+    plot_binary_map_panel(ax_c, gdf_protected, "protected_s3", "")
+    _titulo_panel(ax_c, "c. Protected set (soft-floor diagnostic)")
+    add_region_ring_overlay(ax_c, gdf_protected)
+    ax_c.set_xlim(crop[0], crop[2])
+    ax_c.set_ylim(crop[1], crop[3])
 
-    plot_binary_map_panel(
-        axes[2],
-        gdf_protected,
-        "protected_s3",
-        "c. Protected geography (soft-floor policy)",
-    )
-    add_region_ring_overlay(axes[2], gdf_protected)
-    axes[2].legend(
+    draw_locator(ax_loc, utam_map, crop, title="d. Location of the frame within the study region")
+    add_horizontal_colorbar(fig, ax_cbar, SEQUENTIAL_CMAP, shared_norm, "Normalized index, 0-1 (priority in a, vulnerability in b)", cax=ax_cbar)
+    ax_leg.axis("off")
+    ax_leg.legend(
         handles=[
-            Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected UTAM"),
-            Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Other UTAM"),
+            Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected UTAM (c)"),
+            Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Other UTAM (c)"),
             region_ring_legend_patch(),
+            Line2D([0], [0], marker="*", color="none", markerfacecolor=PAPER_TEXT, markeredgecolor="white", markersize=9, label="Historic city centre"),
         ],
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.01),
-        ncol=3,
+        loc="upper left",
+        ncol=2,
         frameon=False,
-        fontsize=8.6,
+        fontsize=7.6,
+        handletextpad=0.5,
+        columnspacing=1.0,
     )
-
-    for axis in axes[1:]:
-        axis.set_xlim(axes[0].get_xlim())
-        axis.set_ylim(axes[0].get_ylim())
-
     fig.savefig(figures_dir / "fig_social_context_panels.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -2531,12 +2552,12 @@ def fig_allocation_composite(
     scenario_outputs: dict[str, pd.DataFrame],
     rotation_deg: float,
 ) -> None:
-    """Figure 5 - scenario allocations: stacked FULL-WIDTH panels.
+    """Figure 6 - scenario allocations: cuadricula 2 x 2 recortada al nucleo urbano.
 
-    Redesign for the R1 revision: one scenario per row (R2.m2), a classed
-    light-start ramp that keeps small allocations readable (R1.11), an
-    explicit "no ports" fill, cartographic elements and the hatched
-    neighbouring-municipality ring (R3.6, author decision 9).
+    Pasada de forma del 2026-09-02: cuatro escenarios en cuadricula al ancho de dos
+    columnas, recortados al nucleo urbano, con la barra de clases, la leyenda y el
+    localizador en una fila inferior. Rampa clasificada de arranque claro (R1.11),
+    relleno explicito de "sin puertos", elementos cartograficos en (a) (R3.6).
     """
     ordered_scenarios = [name for name in ("S0", "S1", "S2", "S3") if name in scenario_outputs]
     if not ordered_scenarios:
@@ -2544,48 +2565,38 @@ def fig_allocation_composite(
     ports_norm = make_ports_norm(scenario_outputs)
     if ports_norm is None:
         return
-    extent = tuple(utam_map.total_bounds)
-
-    nrows = len(ordered_scenarios)
-    fig = plt.figure(figsize=(6.30, 1.95 * nrows + 0.60), constrained_layout=True)
-    grid = fig.add_gridspec(nrows + 1, 5, height_ratios=[1.0] * nrows + [0.075])
-    axes = [fig.add_subplot(grid[row, :]) for row in range(nrows)]
-    cbar_ax = fig.add_subplot(grid[nrows, 1:3])
-    legend_ax = fig.add_subplot(grid[nrows, 3:])
-    legend_ax.axis("off")
-
+    crop = urban_core_extent(utam_map)
+    titulos = {
+        "S0": "S0: priority matching",
+        "S1": "S1: territorial equalization",
+        "S2": "S2: socially weighted equalization",
+        "S3": "S3: soft-floor diagnostic (identical to S2)",
+    }
+    ncols = 2
+    nrows = int(np.ceil(len(ordered_scenarios) / ncols))
+    fig = plt.figure(figsize=(7.05, 2.35 * nrows + 0.85), constrained_layout=True)
+    grid = fig.add_gridspec(nrows + 1, ncols, height_ratios=[1.0] * nrows + [0.30])
+    axes = []
     for idx, scenario_name in enumerate(ordered_scenarios):
-        axis = axes[idx]
+        axis = fig.add_subplot(grid[idx // ncols, idx % ncols])
+        axes.append(axis)
         gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
-        subtitle = SCENARIO_PANEL_TITLES.get(scenario_name, "")
-        title = f"{chr(97 + idx)}. {scenario_name}" + (f" - {subtitle}" if subtitle else "")
-        plot_map_panel(
-            axis,
-            gdf,
-            "ports_total",
-            title,
-            SEQUENTIAL_CMAP,
-            norm=ports_norm,
-            zero_fill=MAP_DELTA_ZERO,
-            show_scale_bar=(idx == 0),
-        )
+        plot_map_panel(axis, gdf, "ports_total", "", SEQUENTIAL_CMAP, norm=ports_norm, zero_fill=MAP_DELTA_ZERO)
+        _titulo_panel(axis, f"{chr(97 + idx)}. {titulos.get(scenario_name, scenario_name)}")
         add_region_ring_overlay(axis, gdf)
+        axis.set_xlim(crop[0], crop[2])
+        axis.set_ylim(crop[1], crop[3])
         if idx == 0:
-            reservado = add_north_arrow(axis, rotation_deg, extent=extent)
+            reservado = add_north_arrow(axis, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
+            reservado += add_scale_bar(axis, gdf, extent=crop, x_frac=0.22)
             reservado += add_city_centre_marker(axis, gdf)
-            add_locality_labels(axis, gdf, reserved=reservado)
-        axis.set_xlim(axes[0].get_xlim())
-        axis.set_ylim(axes[0].get_ylim())
+            add_locality_labels(axis, gdf, extent=crop, reserved=reservado)
 
-    add_horizontal_colorbar(
-        fig,
-        axes,
-        SEQUENTIAL_CMAP,
-        ports_norm,
-        "Charging ports per UTAM (class breaks)",
-        cax=cbar_ax,
-        spacing="uniform",
-    )
+    fila = grid[nrows, :].subgridspec(1, 2, width_ratios=[1.15, 0.85], wspace=0.08)
+    cbar_ax = fig.add_subplot(fila[0, 0])
+    legend_ax = fig.add_subplot(fila[0, 1])
+    add_horizontal_colorbar(fig, axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports per UTAM (class breaks)", cax=cbar_ax, spacing="uniform")
+    legend_ax.axis("off")
     legend_ax.legend(
         handles=[
             Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated"),
@@ -2594,7 +2605,7 @@ def fig_allocation_composite(
         loc="center left",
         ncol=1,
         frameon=False,
-        fontsize=8.4,
+        fontsize=7.8,
     )
     fig.savefig(figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -2606,14 +2617,16 @@ def fig_net_change_S2_minus_S1(
     scenario_outputs: dict[str, pd.DataFrame],
     rotation_deg: float,
 ) -> None:
-    """Figure 6 - net reallocation S2 minus S1, compact and labelled.
+    """Figure 7 - net reallocation S2 minus S1, labelled, on the urban-core frame.
 
-    Redesign for the R1 revision: the map is cropped to the extent that
-    contains every reallocated unit (R2.m2: the previous full-region map was
-    excessively large for ten one-port changes), every gaining/losing UTAM is
-    labelled with its identifier (R1.12), gains/losses use discrete diverging
-    fills around a neutral no-change grey, and a small overview locator keeps
-    the full three-class study region visible (author decision 9).
+    Pasada de forma del 2026-09-02: usa el MISMO marco que las Figuras 4 y 6
+    (`urban_core_extent`), de modo que el lector se orienta con la Figura 4d y no
+    hace falta localizador propio. Con los insumos corregidos las zonas que cambian
+    incluyen una unidad rural extensa y una del anillo lejano; recortar a su caja
+    envolvente alargaba el mapa y dejaba los rotulos flotando sobre blanco. Las
+    unidades que caen fuera del marco se enumeran en una nota dentro de la figura.
+    Cada zona con cambio lleva su identificador UTAM (R1.12) en dos escaleras
+    laterales con lineas guia y prueba de colision frente a los nombres de localidad.
     """
     if not {"S1", "S2"}.issubset(scenario_outputs):
         return
@@ -2628,18 +2641,11 @@ def fig_net_change_S2_minus_S1(
     if changed.empty:
         return
 
-    minx, miny, maxx, maxy = changed.total_bounds
-    pad_x = 0.16 * (maxx - minx)
-    pad_y = 0.14 * (maxy - miny)
-    # Franja inferior para el locator y la barra de escala (2026-09-02): con el
-    # margen simetrico el locator tapaba el poligono de UTAM572, una de las diez
-    # unidades reasignadas. Con 0.45 de margen abajo, el rectangulo de unidades
-    # reasignadas empieza en la fraccion 0.28 del recorte y el mobiliario
-    # (locator hasta 0.25) queda por debajo de cualquier unidad.
-    pad_bottom = 0.45 * (maxy - miny)
-    crop = (minx - pad_x, miny - pad_bottom, maxx + pad_x, maxy + pad_y)
+    crop = urban_core_extent(utam_map)
+    span_x = crop[2] - crop[0]
+    span_y = crop[3] - crop[1]
 
-    fig, ax = plt.subplots(1, 1, figsize=(7.00, 5.20), constrained_layout=True)
+    fig, ax = plt.subplots(1, 1, figsize=(7.05, 4.75), constrained_layout=True)
     gdf.plot(ax=ax, color=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.3)
     gains = changed.loc[changed["net_change"].gt(0)]
     losses = changed.loc[changed["net_change"].lt(0)]
@@ -2649,60 +2655,32 @@ def fig_net_change_S2_minus_S1(
         losses.plot(ax=ax, color=LOSS_FILL, edgecolor="white", linewidth=0.6, zorder=5)
     add_region_ring_overlay(ax, gdf)
     draw_map_outline(ax, gdf)
-    # La flecha va antes para que su caja quede reservada frente a los rotulos.
-    reservado_nc = add_north_arrow(ax, rotation_deg, extent=crop, x_frac=0.955, y_frac=0.90, size_frac=0.10)
-    reservado_nc += add_scale_bar(ax, gdf, extent=crop, x_frac=0.67)
-    # El locator va en `locator_box` (fraccion del eje: x, y, ancho, alto). Con
-    # xlim/ylim = crop y aspecto igual, la fraccion del eje coincide con la
-    # fraccion del recorte, asi que su rectangulo se reserva en unidades de dato.
-    locator_box = (0.755, 0.035, 0.235, 0.215)
-    _cx0, _cy0, _cx1, _cy1 = crop
-    _cw, _ch = _cx1 - _cx0, _cy1 - _cy0
-    reservado_nc.append(
-        (
-            _cx0 + (locator_box[0] + locator_box[2] / 2) * _cw,
-            _cy0 + (locator_box[1] + locator_box[3] / 2) * _ch,
-            locator_box[2] / 2 * _cw,
-            locator_box[3] / 2 * _ch,
-        )
-    )
+    reservado_nc = add_north_arrow(ax, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
+    reservado_nc += add_scale_bar(ax, gdf, extent=crop, x_frac=0.50)
 
-    # Direct UTAM identifiers for every gain and loss (R1.12), laddered on the
-    # left/right margins with thin leader lines so labels never collide.
-    # Se dibujan ANTES que los rotulos de localidad y municipio para reservar
-    # sus cajas y sus puntos de anclaje (2026-09-02: "Cota" caia justo sobre el
-    # punto de UTAM610, que es la propia unidad de ese municipio). La escalera
-    # derecha arranca por encima del locator, que antes tapaba sus dos ultimos
-    # rotulos.
+    # Escaleras de identificadores UTAM (R1.12) a ambos margenes, con lineas guia.
     reps = changed.copy()
     reps["rep_point"] = reps.geometry.representative_point()
+    dentro = reps["rep_point"].apply(lambda p: crop[0] <= p.x <= crop[2] and crop[1] <= p.y <= crop[3])
+    fuera = reps.loc[~dentro].copy()
+    reps = reps.loc[dentro].copy()
     centre_x = 0.5 * (crop[0] + crop[2])
-    span_x = crop[2] - crop[0]
-    span_y = crop[3] - crop[1]
-    ladder_floor = locator_box[1] + locator_box[3] + 0.05  # por encima de la franja del mobiliario
-    for side_mask, x_label, ha, y_floor in (
-        (reps["rep_point"].apply(lambda p: p.x) <= centre_x, crop[0] + 0.015 * span_x, "left", ladder_floor),
-        (reps["rep_point"].apply(lambda p: p.x) > centre_x, crop[2] - 0.015 * span_x, "right", ladder_floor),
+    for side_mask, x_label, ha in (
+        (reps["rep_point"].apply(lambda p: p.x) <= centre_x, crop[0] + 0.015 * span_x, "left"),
+        (reps["rep_point"].apply(lambda p: p.x) > centre_x, crop[2] - 0.015 * span_x, "right"),
     ):
         group = reps.loc[side_mask].copy()
         if group.empty:
             continue
         group["_y"] = group["rep_point"].apply(lambda p: p.y)
         group = group.sort_values("_y")
-        y_slots = np.linspace(crop[1] + y_floor * span_y, crop[3] - 0.16 * span_y, len(group))
+        y_slots = np.linspace(crop[1] + 0.10 * span_y, crop[3] - 0.16 * span_y, len(group))
         for (_, row), y_slot in zip(group.iterrows(), y_slots):
             point = row["rep_point"]
             net = int(row["net_change"])
             label_color = GAIN_FILL if net > 0 else LOSS_FILL
             texto = f"{row['UTAM']} ({net:+d})"
-            ax.plot(
-                [x_label, point.x],
-                [y_slot, point.y],
-                color="#9a938a",
-                linewidth=0.7,
-                zorder=6,
-                alpha=0.85,
-            )
+            ax.plot([x_label, point.x], [y_slot, point.y], color="#9a938a", linewidth=0.7, zorder=6, alpha=0.85)
             ax.scatter([point.x], [point.y], s=9, color="#5d574f", zorder=7)
             ax.text(
                 x_label,
@@ -2717,44 +2695,34 @@ def fig_net_change_S2_minus_S1(
                 zorder=8,
             )
             reservado_nc.append(label_box(ax, crop, texto, 7.6, x_label, y_slot, ha=ha))
-            # Punto de anclaje: caja pequena para que ningun nombre caiga encima.
             reservado_nc.append((point.x, point.y, 0.012 * span_x, 0.02 * span_y))
+
+    if not fuera.empty:
+        partes = [f"{u} ({int(n):+d})" for u, n in zip(fuera["UTAM"], fuera["net_change"])]
+        nota = "Outside the frame: " + ", ".join(partes)
+        ax.text(
+            crop[0] + 0.015 * span_x,
+            crop[1] + 0.025 * span_y,
+            nota,
+            ha="left",
+            va="bottom",
+            fontsize=6.8,
+            color="#6d655e",
+            bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
+            zorder=8,
+        )
+        reservado_nc.append(label_box(ax, crop, nota, 6.8, crop[0] + 0.015 * span_x, crop[1] + 0.025 * span_y, ha="left", va="bottom"))
 
     add_locality_labels(
         ax,
         gdf,
-        locality_names=("SUBA", "ENGATIVA", "FONTIBON", "BOSA", "USME", "USAQUEN", "SAN CRISTOBAL"),
-        municipality_names=("SOACHA", "COTA", "CHIA", "MOSQUERA"),
+        locality_names=("SUBA", "ENGATIVA", "FONTIBON", "BOSA", "USME", "USAQUEN", "SAN CRISTOBAL", "KENNEDY", "CIUDAD BOLIVAR"),
+        municipality_names=("SOACHA", "COTA", "CHIA", "MOSQUERA", "LA CALERA"),
         fontsize=6.6,
         color="#847c71",
         extent=crop,
         reserved=reservado_nc,
     )
-
-    # Overview locator: full three-class study region with the crop box.
-    inset_ax = ax.inset_axes(list(locator_box))
-    for zone_name, fill in ZONE_FILLS.items():
-        subset = gdf.loc[gdf["zone_class"].eq(zone_name)] if "zone_class" in gdf.columns else gdf.iloc[0:0]
-        if not subset.empty:
-            subset.plot(ax=inset_ax, color=fill, edgecolor="none")
-    draw_map_outline(inset_ax, gdf)
-    inset_ax.add_patch(
-        Rectangle(
-            (crop[0], crop[1]),
-            crop[2] - crop[0],
-            crop[3] - crop[1],
-            fill=False,
-            edgecolor=PAPER_TEXT,
-            linewidth=0.9,
-        )
-    )
-    inset_ax.set_xticks([])
-    inset_ax.set_yticks([])
-    inset_ax.set_facecolor("white")
-    inset_ax.margins(0.02)
-    for spine in inset_ax.spines.values():
-        spine.set_edgecolor(MAP_OUTLINE)
-        spine.set_linewidth(0.8)
 
     ax.legend(
         handles=[
@@ -3094,7 +3062,7 @@ def export_figures(
         fig, axes = plt.subplots(
             1,
             2,
-            figsize=(7.05, 3.15),
+            figsize=(7.05, 2.90),
             gridspec_kw={"width_ratios": [1.35, 1.0]},
             constrained_layout=True,
         )
