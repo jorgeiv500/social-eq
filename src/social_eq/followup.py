@@ -56,6 +56,29 @@ SEQUENTIAL_CMAP = LinearSegmentedColormap.from_list(
     "social_eq_seq",
     ["#fff6d0", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#5c2301"],
 )
+# Sequential ramp for provision intensity (ports per 10,000 residents): one hue, light -> dark,
+# distinct from the port-count ramp so the two scales in Figure 6 are not confused.
+INTENSITY_CMAP = LinearSegmentedColormap.from_list(
+    "social_eq_intensity",
+    ["#eaf3f8", "#c6dfec", "#93c1d8", "#5b9ec0", "#2f7aa3", "#1a5a82", "#0e3d5e"],
+)
+# Nombres de localidades y municipios con su ortografía (el shapefile los trae en mayúsculas sin tilde).
+PLACE_NAMES = {
+    "USAQUEN": "Usaquén", "ENGATIVA": "Engativá", "FONTIBON": "Fontibón", "CIUDAD BOLIVAR": "Ciudad Bolívar",
+    "SAN CRISTOBAL": "San Cristóbal", "CHIA": "Chía", "ZIPAQUIRA": "Zipaquirá", "ANTONIO NARIÑO": "Antonio Nariño",
+    "LOS MARTIRES": "Los Mártires", "CANDELARIA": "La Candelaria", "TUNJUELITO": "Tunjuelito", "PUENTE ARANDA": "Puente Aranda",
+    "RAFAEL URIBE URIBE": "Rafael Uribe Uribe", "BARRIOS UNIDOS": "Barrios Unidos", "TEUSAQUILLO": "Teusaquillo",
+    "SANTA FE": "Santa Fe", "USME": "Usme", "SUBA": "Suba", "BOSA": "Bosa", "KENNEDY": "Kennedy", "CHAPINERO": "Chapinero",
+    "SUMAPAZ": "Sumapaz", "SOACHA": "Soacha", "MOSQUERA": "Mosquera", "LA CALERA": "La Calera", "COTA": "Cota",
+}
+
+
+def place_name(raw: str) -> str:
+    """Nombre legible de una localidad o municipio a partir del código en mayúsculas."""
+    key = str(raw).upper().strip()
+    return PLACE_NAMES.get(key, key.title())
+
+
 # Diverging ramp: two hues around a NEUTRAL midpoint (losses blue, gains warm red).
 DIVERGING_CMAP = LinearSegmentedColormap.from_list(
     "social_eq_div",
@@ -1942,14 +1965,14 @@ def add_locality_labels(
             candidatos.append((float(unidad.geometry.area.iloc[0]), name, unidad.geometry.representative_point().iloc[0]))
         # Las unidades grandes se rotulan primero: son las que el lector busca.
         for _area, name, point in sorted(candidatos, key=lambda c: -c[0]):
-            caja = label_box(ax, limites, name.title(), fontsize, point.x, point.y)
+            caja = label_box(ax, limites, place_name(name), fontsize, point.x, point.y)
             if not within_extent(point) or not cabe(caja):
                 continue
             ocupados.append(caja)
             ax.text(
                 point.x,
                 point.y,
-                name.title(),
+                place_name(name),
                 ha="center",
                 va="center",
                 fontsize=fontsize,
@@ -1967,14 +1990,14 @@ def add_locality_labels(
             unidad = subset.dissolve()
             cand_mun.append((float(unidad.geometry.area.iloc[0]), name, unidad.geometry.representative_point().iloc[0]))
         for _area, name, point in sorted(cand_mun, key=lambda c: -c[0]):
-            caja = label_box(ax, limites, name.title(), fontsize - 0.5, point.x, point.y)
+            caja = label_box(ax, limites, place_name(name), fontsize - 0.5, point.x, point.y)
             if not within_extent(point) or not cabe(caja):
                 continue
             ocupados.append(caja)
             ax.text(
                 point.x,
                 point.y,
-                name.title(),
+                place_name(name),
                 ha="center",
                 va="center",
                 fontsize=fontsize - 0.5,
@@ -2039,8 +2062,19 @@ def make_ports_norm(scenario_outputs: dict[str, pd.DataFrame]) -> BoundaryNorm |
     if not all_ports:
         return None
     top = float(np.max(all_ports))
-    bounds = [1.0, 10.0, 25.0, 75.0, 150.0, 300.0, 600.0, max(top + 1.0, 601.0)]
+    # La clase superior es abierta (300 puertos o más): un corte en 600 dejaba una clase de
+    # ancho 1 con la zona máxima sola (R3.6).
+    bounds = [1.0, 10.0, 25.0, 75.0, 150.0, 300.0, max(top + 1.0, 301.0)]
     return BoundaryNorm(bounds, ncolors=256)
+
+
+def label_open_top_class(cbar: Any, norm: BoundaryNorm, *, unit: str = "") -> None:
+    """Etiqueta el último corte de una escala clasificada como abierto ("300+")."""
+    bounds = list(norm.boundaries)
+    cbar.set_ticks(bounds)
+    labels = [f"{b:g}{unit}" for b in bounds[:-1]] + [f"{bounds[-2]:g}+"]
+    labels[-2] = ""  # el penúltimo corte se lee en la etiqueta abierta
+    cbar.set_ticklabels(labels)
 
 
 def plot_map_panel(
@@ -2544,11 +2578,17 @@ def fig_social_context_panels(
     plt.close(fig)
 
 
+def make_intensity_norm() -> BoundaryNorm:
+    """Cortes fijos para puertos por 10.000 residentes: 10 y 15 enmarcan la brecha 10.4 / 15.6."""
+    return BoundaryNorm([0.0, 5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 1e9], ncolors=256)
+
+
 def fig_allocation_composite(
     figures_dir: Path,
     utam_map: gpd.GeoDataFrame,
     scenario_outputs: dict[str, pd.DataFrame],
     rotation_deg: float,
+    population: pd.DataFrame | None = None,
 ) -> None:
     """Figure 6 - scenario allocations: cuadricula 2 x 2 recortada al nucleo urbano.
 
@@ -2557,7 +2597,12 @@ def fig_allocation_composite(
     localizador en una fila inferior. Rampa clasificada de arranque claro (R1.11),
     relleno explicito de "sin puertos", elementos cartograficos en (a) (R3.6).
     """
-    ordered_scenarios = [name for name in ("S0", "S1", "S2", "S3") if name in scenario_outputs]
+    # Con población censal, el cuarto panel es la intensidad de provisión bajo S2 (la magnitud
+    # detrás de la brecha 10.4 / 15.6 de la Tabla 4) en vez del diagnóstico S3, que difiere de
+    # S2 en tres puertos y no se distingue a escala de mapa.
+    intensity_panel = population is not None and "S2" in scenario_outputs
+    core = ["S0", "S1", "S2"] if intensity_panel else ["S0", "S1", "S2", "S3"]
+    ordered_scenarios = [name for name in core if name in scenario_outputs]
     if not ordered_scenarios:
         return
     ports_norm = make_ports_norm(scenario_outputs)
@@ -2568,19 +2613,38 @@ def fig_allocation_composite(
         "S0": "S0: priority matching",
         "S1": "S1: territorial equalization",
         "S2": "S2: socially weighted equalization",
-        "S3": "S3: soft-floor diagnostic (identical to S2)",
+        "S3": "S3: soft-floor diagnostic",
     }
+    paneles = list(ordered_scenarios) + (["intensity"] if intensity_panel else [])
     ncols = 2
-    nrows = int(np.ceil(len(ordered_scenarios) / ncols))
-    fig = plt.figure(figsize=(7.05, 2.35 * nrows + 0.85), constrained_layout=True)
-    grid = fig.add_gridspec(nrows + 1, ncols, height_ratios=[1.0] * nrows + [0.30])
+    nrows = int(np.ceil(len(paneles) / ncols))
+    fig = plt.figure(figsize=(7.05, 2.35 * nrows + 0.95), constrained_layout=True)
+    grid = fig.add_gridspec(nrows + 1, ncols, height_ratios=[1.0] * nrows + [0.34])
     axes = []
-    for idx, scenario_name in enumerate(ordered_scenarios):
+    intensity_norm = make_intensity_norm()
+    for idx, scenario_name in enumerate(paneles):
         axis = fig.add_subplot(grid[idx // ncols, idx % ncols])
         axes.append(axis)
-        gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
-        plot_map_panel(axis, gdf, "ports_total", "", SEQUENTIAL_CMAP, norm=ports_norm, zero_fill=MAP_DELTA_ZERO)
-        _titulo_panel(axis, f"{chr(97 + idx)}. {titulos.get(scenario_name, scenario_name)}")
+        if scenario_name == "intensity":
+            pop = population[["UTAM", "dane_population"]].copy()
+            pop["UTAM"] = pop["UTAM"].map(normalize_zone_code)
+            s2 = scenario_outputs["S2"][["UTAM", "ports_total"]].copy()
+            s2["UTAM"] = s2["UTAM"].map(normalize_zone_code)
+            gdf = utam_map.copy()
+            gdf["UTAM"] = gdf["UTAM"].map(normalize_zone_code)
+            gdf = gdf.merge(s2, on="UTAM", how="left").merge(pop, on="UTAM", how="left")
+            with np.errstate(divide="ignore", invalid="ignore"):
+                gdf["ports_per_10k"] = np.where(
+                    pd.to_numeric(gdf["dane_population"], errors="coerce") > 0,
+                    1e4 * pd.to_numeric(gdf["ports_total"], errors="coerce") / pd.to_numeric(gdf["dane_population"], errors="coerce"),
+                    np.nan,
+                )
+            plot_map_panel(axis, gdf, "ports_per_10k", "", INTENSITY_CMAP, norm=intensity_norm, zero_fill=MAP_DELTA_ZERO)
+            _titulo_panel(axis, f"{chr(97 + idx)}. S2: ports per 10,000 residents")
+        else:
+            gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
+            plot_map_panel(axis, gdf, "ports_total", "", SEQUENTIAL_CMAP, norm=ports_norm, zero_fill=MAP_DELTA_ZERO)
+            _titulo_panel(axis, f"{chr(97 + idx)}. {titulos.get(scenario_name, scenario_name)}")
         add_region_ring_overlay(axis, gdf)
         axis.set_xlim(crop[0], crop[2])
         axis.set_ylim(crop[1], crop[3])
@@ -2590,21 +2654,30 @@ def fig_allocation_composite(
             reservado += add_city_centre_marker(axis, gdf)
             add_locality_labels(axis, gdf, extent=crop, reserved=reservado)
 
-    fila = grid[nrows, :].subgridspec(1, 2, width_ratios=[1.15, 0.85], wspace=0.08)
-    cbar_ax = fig.add_subplot(fila[0, 0])
-    legend_ax = fig.add_subplot(fila[0, 1])
-    add_horizontal_colorbar(fig, axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports per UTAM (class breaks)", cax=cbar_ax, spacing="uniform")
-    legend_ax.axis("off")
-    legend_ax.legend(
-        handles=[
+    if intensity_panel:
+        fila = grid[nrows, :].subgridspec(1, 3, width_ratios=[1.0, 1.0, 0.62], wspace=0.10)
+        cbar_ax = fig.add_subplot(fila[0, 0])
+        cbar2_ax = fig.add_subplot(fila[0, 1])
+        legend_ax = fig.add_subplot(fila[0, 2])
+        cbar2 = add_horizontal_colorbar(fig, axes, INTENSITY_CMAP, intensity_norm, "Ports per 10,000 residents, S2 (d)", cax=cbar2_ax, spacing="uniform")
+        label_open_top_class(cbar2, intensity_norm)
+        handles = [
+            Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated"),
+            Patch(facecolor=MAP_MISSING, edgecolor=MAP_EDGE, linewidth=0.6, label="No census population (d)"),
+            region_ring_legend_patch(),
+        ]
+    else:
+        fila = grid[nrows, :].subgridspec(1, 2, width_ratios=[1.15, 0.85], wspace=0.08)
+        cbar_ax = fig.add_subplot(fila[0, 0])
+        legend_ax = fig.add_subplot(fila[0, 1])
+        handles = [
             Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated"),
             region_ring_legend_patch(),
-        ],
-        loc="center left",
-        ncol=1,
-        frameon=False,
-        fontsize=7.8,
-    )
+        ]
+    cbar = add_horizontal_colorbar(fig, axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports per UTAM, (a)-(c)" if intensity_panel else "Charging ports per UTAM (class breaks)", cax=cbar_ax, spacing="uniform")
+    label_open_top_class(cbar, ports_norm)
+    legend_ax.axis("off")
+    legend_ax.legend(handles=handles, loc="center left", ncol=1, frameon=False, fontsize=7.4)
     fig.savefig(figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -2711,6 +2784,7 @@ def fig_net_change_S2_minus_S1(
         )
         reservado_nc.append(label_box(ax, crop, nota, 6.8, crop[0] + 0.015 * span_x, crop[1] + 0.025 * span_y, ha="left", va="bottom"))
 
+    reservado_nc.extend(add_city_centre_marker(ax, gdf))
     add_locality_labels(
         ax,
         gdf,
@@ -2728,12 +2802,13 @@ def fig_net_change_S2_minus_S1(
             Patch(facecolor=LOSS_FILL, edgecolor="none", label="Loss (-1 port)"),
             Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No change"),
             region_ring_legend_patch(),
+            Line2D([0], [0], marker="*", color="none", markerfacecolor=PAPER_TEXT, markeredgecolor="white", markersize=9, label="Historic city centre"),
         ],
         loc="upper center",
         bbox_to_anchor=(0.5, -0.005),
-        ncol=4,
+        ncol=5,
         frameon=False,
-        fontsize=8.2,
+        fontsize=7.8,
     )
     ax.set_xlim(crop[0], crop[2])
     ax.set_ylim(crop[1], crop[3])
@@ -2803,6 +2878,7 @@ def fig_policy_tradeoff(
     sweep_df: pd.DataFrame | None = None,
     benchmark_df: pd.DataFrame | None = None,
     benchmark_percapita: tuple[float, float] | None = None,
+    frontier_percapita: list[tuple[str, tuple[float, float]]] | None = None,
 ) -> None:
     """Figure 9 - policy trade-off synthesis, redisenada el 2026-09-03.
 
@@ -2856,8 +2932,10 @@ def fig_policy_tradeoff(
     etiquetas_a = {"S0": (6, 6), "S1": (-4, 7), "S2": (12, 7)}
     for name, x, y in familia:
         if name in etiquetas_a:
-            txt = "S2 = S3" if name == "S2" and "S3" in td.index else name
-            ax_a.annotate(txt, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=7.6, color=PAPER_TEXT)
+            ax_a.annotate(name, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=7.6, color=PAPER_TEXT)
+        elif name.startswith("eps = ") and float(name.split("=")[1]) in (1.0, 10.0, 100.0):
+            # Los puntos de la frontera (concesiones de 100 % a 10.000 %) se rotulan con su tolerancia
+            ax_a.annotate(f"eps = {float(name.split('=')[1]):g}", xy=(x, y), xytext=(5, 5), textcoords="offset points", fontsize=6.8, color="#6d655e")
     if benchmark_df is not None and len(benchmark_df):
         for _, r in benchmark_df.iterrows():
             ax_a.scatter(float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"]), s=52, marker="D", color="#8e4a8b", edgecolor="white", linewidth=0.9, zorder=3)
@@ -2865,25 +2943,28 @@ def fig_policy_tradeoff(
         ax_a.annotate(
             "direct-equity benchmark\n(no priority target)",
             xy=(float(rb["perdida_fidelidad_vs_S0_pct"]), float(rb["gini_ponderado_6d"])),
-            xytext=(-8, 10), textcoords="offset points", fontsize=7.2, color="#6d655e", ha="right", va="bottom",
+            xytext=(-10, 4), textcoords="offset points", fontsize=7.0, color="#6d655e", ha="right", va="bottom",
         )
     if familia:
         y_all = ys + ([float(v) for v in benchmark_df["gini_ponderado_6d"]] if benchmark_df is not None and len(benchmark_df) else [])
         pad = 0.06 * (max(y_all) - min(y_all) or 0.01)
         ax_a.set_ylim(min(y_all) - pad, max(y_all) + 2.2 * pad)
-        # Recuadro de zoom sobre la familia lexicografica: la caida es de 6e-4 y no se ve a escala completa.
-        ins = ax_a.inset_axes([0.50, 0.30, 0.46, 0.40])
-        ins.plot(xs, ys, color="#b8aea4", linewidth=1.4, zorder=1)
-        for name, x, y in familia:
+        # Recuadro de zoom sobre la familia publicada (S0 a eps = 0.30): la caida es de 8e-4 y no se
+        # ve a escala completa. Los puntos de la frontera (eps >= 1) quedan fuera del recuadro.
+        publicada = [f for f in familia if not f[0].startswith("eps = ") or float(f[0].split("=")[1]) <= 0.30]
+        xz = [f[1] for f in publicada]; yz = [f[2] for f in publicada]
+        ins = ax_a.inset_axes([0.10, 0.17, 0.40, 0.34])
+        ins.plot(xz, yz, color="#b8aea4", linewidth=1.4, zorder=1)
+        for name, x, y in publicada:
             ins.scatter(x, y, s=22, color=SCENARIO_COLORS.get(name, "#2a9d8f"), edgecolor="white", linewidth=0.7, zorder=3)
-        ins.set_xlim(-1.5, max(xs) + 2.0)
-        yp = 0.15 * (max(ys) - min(ys) or 1e-4)
-        ins.set_ylim(min(ys) - yp, max(ys) + yp)
+        ins.set_xlim(-1.5, max(xz) + 2.0)
+        yp = 0.15 * (max(yz) - min(yz) or 1e-4)
+        ins.set_ylim(min(yz) - yp, max(yz) + yp)
         ins.tick_params(labelsize=6.5)
         ins.set_facecolor("white")
         for spine in ins.spines.values():
             spine.set_edgecolor("#8a8178")
-        ins.set_title("zoom: S0 to the tolerance sweep (eps = 0.30)", fontsize=6.8, color="#6d655e", pad=2)
+        ins.set_title("zoom: published sweep, eps <= 0.30", fontsize=6.6, color="#6d655e", pad=2, loc="left")
         ins.yaxis.set_major_locator(plt.MaxNLocator(3))
         ins.xaxis.set_major_locator(plt.MaxNLocator(4))
 
@@ -2891,8 +2972,10 @@ def fig_policy_tradeoff(
     estilo(ax_b, "b. Provision intensity by vulnerability", "", "Ports per 10,000 residents")
     ax_b.set_axisbelow(True)
     cats: list[tuple[str, tuple[float, float]]] = [(n, percapita[n]) for n in ("S0", "S1", "S2") if percapita.get(n) is not None]
+    for etiqueta, valores in (frontier_percapita or []):
+        cats.append((etiqueta, valores))
     if benchmark_percapita is not None:
-        cats.append(("Direct-equity\nbenchmark", benchmark_percapita))
+        cats.append(("Direct-\nequity\nbenchmark" if frontier_percapita else "Direct-equity\nbenchmark", benchmark_percapita))
     if cats:
         xpos = np.arange(len(cats)); w = 0.36
         vuln = [c[1][0] for c in cats]; resto = [c[1][1] for c in cats]
@@ -2902,7 +2985,7 @@ def fig_policy_tradeoff(
             ax_b.text(i - w / 2, v + 0.25, f"{v:.1f}", ha="center", va="bottom", fontsize=7.4, color=PAPER_TEXT)
             ax_b.text(i + w / 2, r + 0.25, f"{r:.1f}", ha="center", va="bottom", fontsize=7.4, color=PAPER_TEXT)
         ax_b.set_xticks(xpos)
-        ax_b.set_xticklabels([c[0] for c in cats], fontsize=8)
+        ax_b.set_xticklabels([c[0] for c in cats], fontsize=7.0 if len(cats) > 4 else 8)
         ax_b.set_ylim(0, max(vuln + resto) * 1.28)
         ax_b.legend(loc="upper left", frameon=False, fontsize=7.2)
 
@@ -3137,7 +3220,9 @@ def export_figures(
             fig.savefig(paths.figures_dir / f"fig_allocation_{scenario_name}.png", dpi=300, bbox_inches="tight", facecolor="white")
             plt.close(fig)
 
-    fig_allocation_composite(paths.figures_dir, utam_map, scenario_outputs, rotation_deg)
+    poblacion_csv = paths.input_dir / "utam_social_vulnerability.csv"
+    poblacion = pd.read_csv(poblacion_csv) if poblacion_csv.exists() else None
+    fig_allocation_composite(paths.figures_dir, utam_map, scenario_outputs, rotation_deg, population=poblacion)
     fig_net_change_S2_minus_S1(paths.figures_dir, utam_map, scenario_outputs, rotation_deg)
 
     delta_specs: list[tuple[str, str, str, str]] = []

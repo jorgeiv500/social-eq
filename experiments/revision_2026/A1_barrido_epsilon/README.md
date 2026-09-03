@@ -92,3 +92,30 @@ de terminación queda registrada en el manifiesto JSON.
   entradas deterministas); no se relanza S1.
 - La corrida a ε = 0.08 no se repite: ya existe como S2 oficial y entra al resumen como fila
   de contexto.
+
+## Ampliación 2026-09-03: la frontera completa (ε = 1, 3, 10, 30, 100)
+
+Motivo: un revisor exigente objetaría que la "cota estructural" se prueba solo donde es
+trivial (ε ≤ 0,30 gasta como máximo 33 puertos de presupuesto de fidelidad) y que entre
+ε = 0,30 (desviación 141) y el benchmark de equidad directa (18.064) no había ningún punto.
+Se corrieron cinco tolerancias más con `run_a1.py --lanzar --epsilons 1.00,3.00,10.00,30.00,100.00`
+(5 corridas NEOS/CPLEX, todas `optimal`; el resumen previo se conservó en
+`resumen_barrido_epsilon_0.15-0.30.csv` y se consolidó en `resumen_barrido_epsilon.csv`).
+
+Resultado (ver `resumen_barrido_epsilon.csv` y `percapita_por_epsilon.csv`):
+
+| ε | desviación | Gini pond. | puertos movidos vs S1 | ρ(prioridad, puertos) | puertos/10k cuartil vulnerable | resto |
+|---|---|---|---|---|---|---|
+| 0,30 | 141,48 | 0,164002 | 20 | 0,927 | 10,40 | 15,64 |
+| 1 | 217,67 | 0,161908 | 59 | 0,927 | 10,30 | 15,73 |
+| 3 | 435,33 | 0,156830 | 170 | 0,918 | 10,21 | 15,82 |
+| 10 | 1.197,17 | 0,153305 | 554 | 0,882 | 9,73 | 16,38 |
+| 30 | 3.373,84 | 0,133569 | 1.648 | 0,742 | 8,27 | 17,17 |
+| 100 | 10.992,20 | 0,069283 | 5.435 | 0,320 | 4,68 | 14,40 |
+
+Lectura: la etapa de equidad sí compra reducción del Gini cuando la concesión es grande,
+pero lo hace **sacando capacidad del cuartil vulnerable** (de 10,4 a 4,7 puertos por 10.000
+residentes); la cobertura a 15 min sigue completa en todas las corridas. En ningún punto de la
+frontera la provisión del cuartil supera la de S0 (10,43). Es el mismo mecanismo del
+benchmark A2 (1,7 puertos por 10.000) visto de forma continua. Se reporta en §5.5, Tabla 6,
+resumen, discusión y conclusiones del manuscrito.

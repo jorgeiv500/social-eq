@@ -1,0 +1,30 @@
+{
+  "corrida": "S2_eps_100.000",
+  "epsilon": 100.0,
+  "kappa": 4.0,
+  "u_star": 108.83370014026023,
+  "fuente_u_star": "/Users/jorgeiv500/Documents/social-eq/outputs/social_equity_followup_outputs/paper_v6_experiments/tables/table_priority_summary.csv",
+  "time_limit_s": 3600,
+  "mip_gap": 0.01,
+  "termination": "optimal",
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.320148146567559,
+    "rho_priority_access": -0.2859714453960783,
+    "objective_abs_dev": 10992.203714166291,
+    "accessibility_gini": 0.07184399905221633,
+    "accessibility_weighted_gini": 0.06928342760709658,
+    "share_access_most_vulnerable_quartile": 0.2567909550589347,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 241.1586367283207
+  },
+  "comparacion_vs_S1": {
+    "zonas_cambiadas_total": 132,
+    "zonas_cambiadas_sede": 133,
+    "puertos_movidos": 5435.0
+  },
+  "comparacion_vs_S2": {
+    "zonas_cambiadas_total": 134,
+    "zonas_cambiadas_sede": 134,
+    "puertos_movidos": 5432.0
+  }
+}

@@ -42,7 +42,7 @@ Durante la revisión se detectó que el cuaderno con el que se entrenó el ST-GN
 de abril emparejaba códigos de zona con ceros a la izquierda (`UTAM043`) contra códigos sin
 ellos (`UTAM43`): la etiqueta de entrenamiento quedó en cero en 98 de las 142 zonas. El modelo
 se reentrenó con el emparejamiento corregido y **todos** los resultados se recalcularon
-(41 corridas NEOS/CPLEX, todas óptimas). Los insumos superados se conservan en
+(46 corridas NEOS/CPLEX, todas óptimas). Los insumos superados se conservan en
 `data/inputs/superseded_2026-04/`.
 
 - `REPRODUCIBILITY.md` (en inglés): mapa de cada tabla y figura del manuscrito al archivo que

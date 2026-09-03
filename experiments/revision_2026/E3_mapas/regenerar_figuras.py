@@ -282,7 +282,8 @@ def main() -> int:
     mascara_protegida = vulnerabilidad >= np.quantile(vulnerabilidad, 1.0 - S3_PROTECTED_SHARE)
 
     fig_social_context_panels(SALIDAS, utam_map, df_inputs, mascara_protegida, rotation_deg)
-    fig_allocation_composite(SALIDAS, utam_map, escenarios, rotation_deg)
+    poblacion = pd.read_csv(RAIZ / "data" / "inputs" / "utam_social_vulnerability.csv")
+    fig_allocation_composite(SALIDAS, utam_map, escenarios, rotation_deg, population=poblacion)
     fig_net_change_S2_minus_S1(SALIDAS, utam_map, escenarios, rotation_deg)
 
     estaciones, fecha_osm = (None, "")

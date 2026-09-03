@@ -19,7 +19,7 @@ codes without them (`UTAM43`). The training label was therefore zero in 98 of th
 survey expansion factor was not applied, and comma-decimal weights were coerced to zero. The
 model was retrained with the matching corrected (`scripts/retrain_stgnn.py`, variant
 `fexp_miles`), and every downstream result was recomputed: the allocation pipeline
-(16 NEOS runs) and the seven solver-based experiments (25 NEOS runs), 41 runs in total, all
+(16 NEOS runs) and the seven solver-based experiments (30 NEOS runs), 46 runs in total, all
 terminating at optimality. The superseded inputs are kept for the record in
 `data/inputs/superseded_2026-04/` with a README, and `data/inputs/input_manifest.json` records
 the replacement under the key `superseded`. The retraining outputs (priority scores, temporal
@@ -48,7 +48,7 @@ allocation table.
 | --- | --- | --- | --- |
 | 0 | All figures and derived tables from the archived allocations and experiment outputs | none | about 20 min (map rendering dominates) |
 | 1 | Experiments that need no solver: static baselines (B1), grid-capacity diagnostic (A4), rental-tenure check (B3), trip-duration evidence (E6) | B3 needs the EM-2021 raw files; E6 the EM-2023 trip table (see Section 6) | minutes |
-| 2 | The allocation pipeline (S0 to S3 plus the robustness battery, 16 NEOS runs) and the solver experiments A1, A2, A3, B2, B4, C1 (25 NEOS runs) | NEOS account and network access | pipeline: see `outputs/social_equity_followup_outputs/run_manifest.json`; experiments: 6 min (A1), 1.5 min (A2), 8 min (A3), 3.5 min (B2), 4 min (C1), 10 min (B4) in our runs, dominated by the NEOS queue |
+| 2 | The allocation pipeline (S0 to S3 plus the robustness battery, 16 NEOS runs) and the solver experiments A1, A2, A3, B2, B4, C1 (30 NEOS runs) | NEOS account and network access | pipeline: see `outputs/social_equity_followup_outputs/run_manifest.json`; experiments: 6 min (A1, three runs; the five frontier runs took a further 12 min), 1.5 min (A2), 8 min (A3), 3.5 min (B2), 4 min (C1), 10 min (B4) in our runs, dominated by the NEOS queue |
 | 3 | Retraining of the ST-GNN | EM-2023 microdata (Section 6) | minutes on CPU (best epoch 119 of at most 1,200, early stopping) |
 
 `scripts/reproduce_all.sh LEVEL` runs the levels in order up to `LEVEL` (default 0). Levels 2
@@ -79,7 +79,7 @@ relative to `experiments/revision_2026/`.
 | Table 3 (scenario design) | `outputs/tables/table_scenario_design.csv` | pipeline |
 | Table 4 (accessibility and equity metrics; ports per 10,000 residents) | `outputs/tables/table_equity_metrics_final.csv`; per-capita rows in `outputs/hoja_de_cifras.json` (`ports_per_capita_by_quartile` in `src/social_eq/followup.py`) | pipeline, `scripts/hoja_de_cifras.py` |
 | Table 5 (compact trade-off) | `outputs/tables/table_policy_tradeoff.csv` | pipeline |
-| Table 6 (tolerance sweep and direct-equity benchmark) | `experiments/A1_barrido_epsilon/salidas/tablas/resumen_barrido_epsilon.csv`, `experiments/A2_benchmark_equidad/salidas/tablas/resumen_benchmark.csv` | `run_a1.py --lanzar`, `run_a2.py --lanzar` |
+| Table 6 (tolerance sweep, frontier runs and direct-equity benchmark) | `experiments/A1_barrido_epsilon/salidas/tablas/resumen_barrido_epsilon.csv` (ε = 0.15–100), `percapita_por_epsilon.csv` (provision per capita along the frontier, cited in Section 5.5 and Fig. 9b), `experiments/A2_benchmark_equidad/salidas/tablas/resumen_benchmark.csv` | `run_a1.py --lanzar` (published sweep) and `run_a1.py --lanzar --epsilons 1.00,3.00,10.00,30.00,100.00` (frontier), `run_a2.py --lanzar` |
 | Table 7 (static baselines vs the ST-GNN) | `experiments/B1_baselines/resultados/b1_metricas_cv.csv`, `b1_spearman_prioridad.csv`, `b1_diagnostico_insumos.csv` | `run_baselines.py` |
 | Table 8 (projected growth) | `experiments/A3_escenarios_crecimiento/salidas/tablas/resumen_crecimiento.csv`, `derivacion_cuotas.csv` | `run_a3.py --lanzar` |
 | Grid-capacity caps (text) | `experiments/A4_topes_capacidad/salidas/tablas/resumen_diagnostico.json`, `diagnostico_topes.csv` | `preparar_topes.py`, then `run_a4.py` |

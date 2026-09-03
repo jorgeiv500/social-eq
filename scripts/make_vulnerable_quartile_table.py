@@ -19,7 +19,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from social_eq.followup import normalize_zone_code  # noqa: E402
+from social_eq.followup import normalize_zone_code, place_name  # noqa: E402
 
 TABLAS = ROOT / "outputs" / "social_equity_followup_outputs" / "paper_v6_experiments" / "tables"
 SHAPEFILE = ROOT / "outputs" / "social_equity_followup_outputs" / "utam_shp" / "UTAM2023"
@@ -44,7 +44,7 @@ def main() -> int:
     corte = d["vulnerability_index"].quantile(0.75)
     q = d.loc[d["vulnerability_index"] >= corte].copy()
     q["ports_per_10k_S2"] = 1e4 * q["ports_S2"] / q["dane_population"]
-    q["locality"] = q["LOCNombre"].fillna(q["MUNNombre"]).astype(str).str.title()
+    q["locality"] = q["LOCNombre"].fillna(q["MUNNombre"]).astype(str).map(place_name)
     q = q.sort_values("ports_per_10k_S2", na_position="last").reset_index(drop=True)
     out = q[["UTAM", "locality", "dane_population", "ports_S0", "ports_S2", "ports_per_10k_S2", "vulnerability_index"]]
     out.to_csv(TABLAS / "table_vulnerable_quartile_provision.csv", index=False)
