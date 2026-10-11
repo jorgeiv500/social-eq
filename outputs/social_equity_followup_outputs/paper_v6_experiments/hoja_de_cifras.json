@@ -6665,7 +6665,7 @@
   "cuartil_vulnerable_por_zona": [
     {
       "UTAM": "UTAM11",
-      "locality": "Usaquen",
+      "locality": "Usaqu\u00e9n",
       "dane_population": 66116.0,
       "ports_S0": 30,
       "ports_S2": 30,
@@ -6674,7 +6674,7 @@
     },
     {
       "UTAM": "UTAM50",
-      "locality": "San Cristobal",
+      "locality": "San Crist\u00f3bal",
       "dane_population": 89694.0,
       "ports_S0": 60,
       "ports_S2": 60,
@@ -6683,7 +6683,7 @@
     },
     {
       "UTAM": "UTAM75",
-      "locality": "Fontibon",
+      "locality": "Fontib\u00f3n",
       "dane_population": 127247.0,
       "ports_S0": 88,
       "ports_S2": 88,
@@ -6710,7 +6710,7 @@
     },
     {
       "UTAM": "UTAM30",
-      "locality": "Engativa",
+      "locality": "Engativ\u00e1",
       "dane_population": 122005.0,
       "ports_S0": 93,
       "ports_S2": 93,
@@ -6737,7 +6737,7 @@
     },
     {
       "UTAM": "UTAM51",
-      "locality": "San Cristobal",
+      "locality": "San Crist\u00f3bal",
       "dane_population": 71649.0,
       "ports_S0": 62,
       "ports_S2": 62,
@@ -6746,7 +6746,7 @@
     },
     {
       "UTAM": "UTAM69",
-      "locality": "Ciudad Bolivar",
+      "locality": "Ciudad Bol\u00edvar",
       "dane_population": 150749.0,
       "ports_S0": 131,
       "ports_S2": 131,
@@ -6755,7 +6755,7 @@
     },
     {
       "UTAM": "UTAM34",
-      "locality": "San Cristobal",
+      "locality": "San Crist\u00f3bal",
       "dane_population": 82236.0,
       "ports_S0": 72,
       "ports_S2": 72,
@@ -6791,7 +6791,7 @@
     },
     {
       "UTAM": "UTAM32",
-      "locality": "San Cristobal",
+      "locality": "San Crist\u00f3bal",
       "dane_population": 91065.0,
       "ports_S0": 92,
       "ports_S2": 92,
@@ -6818,7 +6818,7 @@
     },
     {
       "UTAM": "UTAM66",
-      "locality": "Ciudad Bolivar",
+      "locality": "Ciudad Bol\u00edvar",
       "dane_population": 67506.0,
       "ports_S0": 69,
       "ports_S2": 69,
@@ -6836,7 +6836,7 @@
     },
     {
       "UTAM": "UTAM70",
-      "locality": "Ciudad Bolivar",
+      "locality": "Ciudad Bol\u00edvar",
       "dane_population": 92569.0,
       "ports_S0": 96,
       "ports_S2": 96,
@@ -6854,7 +6854,7 @@
     },
     {
       "UTAM": "UTAM29",
-      "locality": "Engativa",
+      "locality": "Engativ\u00e1",
       "dane_population": 106448.0,
       "ports_S0": 121,
       "ports_S2": 121,

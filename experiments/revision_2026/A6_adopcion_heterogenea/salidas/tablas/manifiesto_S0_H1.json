@@ -1,0 +1,39 @@
+{
+  "hipotesis": "H1",
+  "escenario": "S0",
+  "termination": "optimal",
+  "objective_abs_dev": 111.54315393898122,
+  "u_star": 111.54315393898122,
+  "perdida_fidelidad_pct": 0.0,
+  "gini_no_ponderado_6d": 0.165641,
+  "gini_ponderado_6d": 0.160878,
+  "cobertura_15min_vulnerables": 1.0,
+  "puertos_cuartil_vulnerable": 6976,
+  "puertos_10k_cuartil_vulnerable": 19.097861483013553,
+  "puertos_10k_resto": 37.84557746370074,
+  "puertos_10k_ciudad": 28.435608681283878,
+  "gini_per_capita_pond_poblacion": 0.3676246065386668,
+  "spearman_vs_A3_mismo_escenario": 0.86801395350516,
+  "spearman_vs_S2_paper": 0.8690926448458679,
+  "zonas_cambiadas_total_vs_A3_mismo_escenario": 140,
+  "zonas_cambiadas_sede_vs_A3_mismo_escenario": 140,
+  "puertos_movidos_vs_A3_mismo_escenario": 3479.0,
+  "time_limit_s": 3600,
+  "mip_gap": 0.01,
+  "cuotas": {
+    "residential": 15853,
+    "workplace": 5906,
+    "public": 1680
+  },
+  "s_stock_2024": 0.46375527646047215,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.8460732440445439,
+    "rho_priority_access": -0.16418792475130506,
+    "objective_abs_dev": 111.54315393898122,
+    "accessibility_gini": 0.16564077082481493,
+    "accessibility_weighted_gini": 0.16087820661920926,
+    "share_access_most_vulnerable_quartile": 0.27139321918434806,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 946.4780946952536
+  }
+}

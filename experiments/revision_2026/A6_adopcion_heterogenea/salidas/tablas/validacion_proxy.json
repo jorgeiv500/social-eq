@@ -1,0 +1,11 @@
+{
+  "spearman_c_residencia_vs_ve_hibridos_por_hogar": 0.6327495195070464,
+  "spearman_c_residencia_vs_estrato_medio": 0.8761879519041698,
+  "spearman_c_residencia_vs_nu": -0.2928986566186069,
+  "spearman_c_destino_vs_nu": -0.3979175708300151,
+  "spearman_c_residencia_vs_c_destino": 0.9253129250132547,
+  "spearman_ve_hibridos_vs_nu": -0.293632278917886,
+  "hogares_muestra_min": 2,
+  "hogares_muestra_mediana": 147.0,
+  "utam_con_algun_ve_hibrido": 41
+}

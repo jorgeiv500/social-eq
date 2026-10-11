@@ -1,0 +1,31 @@
+{
+  "fuente": "Encuesta de Movilidad de Bogotá 2023 (Secretaría Distrital de Movilidad), módulos de hogares, vehículos y viajes; microdatos con factores de expansión fexp_hg y fexp_vj",
+  "archivos": {
+    "a. Modulo hogares.csv": {
+      "md5": "3457db73377b8fe1de642d2a87790c7a",
+      "filas": 22755
+    },
+    "b. Modulo vehiculos.csv": {
+      "md5": "fd379dc778c96e2b26c0368f30ef680c",
+      "filas": 17392
+    },
+    "d. Modulo viajes.csv": {
+      "md5": "454361c9cdb0568f99f9de19248b4462",
+      "filas_validas_destino": 98938
+    }
+  },
+  "definicion_automovil": "tipo_vehículo en ['Automóvil', 'Campero/Camioneta'], tipo_placa = Privada, propiedad_vh = Este hogar",
+  "definicion_ve": "tipo_vehículo en ['Automóvil', 'Campero/Camioneta'], tipo_combustible en ['Eléctrico', 'Híbrido (eléctrico- gasolina / diesel)']",
+  "umbral_muestra_minima": 30,
+  "utam_con_respaldo_residencia": [
+    "UPR4",
+    "UTAM117"
+  ],
+  "utam_con_respaldo_destino": [
+    "UPR5",
+    "UTAM89"
+  ],
+  "control_total_hogares_expandidos": 3667331.21,
+  "control_share_hogares_con_auto_total": 0.2497028022729368,
+  "control_ve_hibridos_expandidos_total": 12476.679999999998
+}

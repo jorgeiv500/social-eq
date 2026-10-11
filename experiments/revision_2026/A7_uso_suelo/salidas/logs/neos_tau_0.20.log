@@ -1,0 +1,14 @@
+S0 exacto sin topes = 108.8337007840 (archivado 108.8337001403): validado
+ tau  pares_excluidos  pares_excluidos_residential  pares_excluidos_workplace  pares_excluidos_public  puertos_S2_en_pares_excluidos     cota_2D  u_star_cap  infactible_vs_u_star_archivado
+0.01                1                            1                          0                       0                            110  219.305595  288.970643                            True
+0.05                6                            2                          2                       2                            170  341.716558  398.055247                            True
+0.10               13                            3                          5                       5                            301  604.980699  618.966340                            True
+0.20               34                            6                         14                      14                            660 1321.693033 1321.693033                            True
+0.30               61                           11                         25                      25                           1225 2451.870978 2451.870978                            True
+0.40              106                           18                         44                      44                           2222 4447.107320 4447.107320                            True
+0.50              144                           26                         59                      59                           3076 6153.677272 6153.677272                            True
+
+Plan NEOS: 1 corrida(s) S2 con topes de uso del suelo, tau = [0.2], epsilon = 0.08 sobre u*_cap, timelimit = 3600 s, gap = 0.01; correo jorgei.romerog@utadeo.edu.co
+Lanzando S2_uso_suelo_tau_0.20 (u*_cap = 1321.693033) vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+  S2_uso_suelo_tau_0.20: termination=optimal

@@ -1,0 +1,44 @@
+{
+  "descripcion": "B5 núcleo robusto y arrepentimiento cruzado; sin corridas NEOS",
+  "fuentes": {
+    "B4": "experiments/revision_2026/B4_contrafactual_prioridad/salidas/tablas",
+    "paper": "outputs/social_equity_followup_outputs/paper_v6_experiments/tables",
+    "poblacion": "data/inputs/utam_social_vulnerability.csv"
+  },
+  "u_star": {
+    "A": 109.42164777026346,
+    "B": 102.59417170509506,
+    "C": 105.79682200096084,
+    "D": 108.8337007839975
+  },
+  "minimax_S2": {
+    "asignacion": "S2_D",
+    "perdida_max_pct": 3406.493341483849,
+    "exceso_puertos_max": 1801.9808484821253
+  },
+  "minimax_fidelidad_local": {
+    "r_mejor_factible_pct": 1792.3698290062723,
+    "cota_inferior_r_pct": 1791.781997007233,
+    "termination": "TerminationCondition.maxTimeLimit",
+    "limite_s": 240,
+    "solver": "HiGHS local (appsi_highs)"
+  },
+  "cotejo_gini_ponderado_S2": {
+    "A": {
+      "b4": 0.160881,
+      "b5": 0.160881
+    },
+    "B": {
+      "b4": 0.166628,
+      "b5": 0.166628
+    },
+    "C": {
+      "b4": 0.16832,
+      "b5": 0.16832
+    },
+    "D": {
+      "b4": 0.164653,
+      "b5": 0.164653
+    }
+  }
+}

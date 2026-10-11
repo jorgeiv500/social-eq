@@ -1,0 +1,189 @@
+Preparando insumos con el camino de código oficial (sin NEOS)...
+senal                    nombre  u_star_archivado_neos  u_star_exacto_local    diferencia  desviacion_realizada_S0_archivada
+    A          etiqueta_directa             110.323233           109.421648 -9.015854e-01                         110.323234
+    B           lineal_estatica             102.594171           102.594172  5.949224e-07                         102.594172
+    C bosque_aleatorio_estatico             105.796822           105.796822  1.566292e-07                         105.796822
+    D           stgnn_publicado             108.833700           108.833701  6.437373e-07                         108.833701
+Running HiGHS 1.14.0 (git hash: 7df0786): Copyright (c) 2026 under MIT licence terms
+MIP has 3415 rows; 2131 cols; 8950 nonzeros; 426 integer variables (0 binary)
+Coefficient ranges:
+  Matrix  [1e+00, 1e+02]
+  Cost    [1e+00, 1e+00]
+  Bound   [0e+00, 0e+00]
+  RHS     [1e-08, 7e+03]
+WARNING: Problem has some excessively small row bounds
+Presolving model
+3382 rows, 2131 cols, 8884 nonzeros 0s
+3349 rows, 2098 cols, 8818 nonzeros 0s
+Presolve reductions: rows 3349(-66); columns 2098(-33); nonzeros 8818(-132) 
+
+Solving MIP model with:
+   3349 rows
+   2098 cols (0 binary, 426 integer, 0 implied int., 1672 continuous, 0 domain fixed)
+   8818 nonzeros
+
+Src: B => Branching; C => Central rounding; F => Feasibility pump; H => Heuristic;
+     I => Shifting; J => Feasibility jump; L => Sub-MIP; P => Empty MIP; R => Randomized rounding;
+     S => Solve LP; T => Evaluate node; U => Unbounded; X => User solution; Y => HiGHS solution;
+     Z => ZI Round; l => Trivial lower; p => Trivial point; u => Trivial upper; z => Trivial zero
+
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+         0       0         0   0.00%   0               inf                  inf        0      0      0         0     0.1s
+ R       0       0         0   0.00%   17.79391569     18.29001338        2.71%        0      0      0      2545     0.2s
+ C       0       0         0   0.00%   17.91267759     18.14723371        1.29%     1553    632      0      3364     1.2s
+ L       0       0         0   0.00%   17.91756806     17.92725681        0.05%     1591    596      0      3469     4.4s
+ L      52      48         0   0.00%   17.91758515     17.9272568         0.05%     1717    579     66     13676     9.9s
+ L      85      78         0   0.00%   17.9175886      17.92722836        0.05%     1802    579     94     19388    12.1s
+ L     138     125         1   0.00%   17.91760056     17.92722836        0.05%     1946    582    168     31067    17.9s
+       206     154         4   0.00%   17.91760623     17.92722836        0.05%     2114    582    255     46499    23.0s
+       263     163        25   0.00%   17.91760623     17.92722836        0.05%     2346    582    485     69622    28.0s
+       346     262        29   0.00%   17.91762424     17.92722836        0.05%     1277    586    498     77970    33.6s
+       426     308        41   0.00%   17.91765993     17.92722836        0.05%     1250    587    516     84873    38.8s
+       472     342        41   0.00%   17.91769393     17.92722836        0.05%     1116    588    516     92901    44.3s
+       579     437        41   0.00%   17.917706       17.92722836        0.05%     1063    589    519    100584    49.5s
+       674     500        44   0.00%   17.917706       17.92722836        0.05%     1011    601    522    109424    54.8s
+       756     578        47   0.00%   17.91770914     17.92722836        0.05%     1018    600    526    118391    60.3s
+       835     633        50   0.00%   17.91770914     17.92722836        0.05%     1042    586    533    126179    65.9s
+       900     686        53   0.00%   17.91770914     17.92722836        0.05%     1052    592    536    132960    70.9s
+       973     737        56   0.00%   17.91770914     17.92722836        0.05%     1061    586    539    140649    76.1s
+
+Restarting search from the root node
+Model after restart has 3338 rows, 2095 cols (0 bin., 426 int., 0 impl., 1669 cont., 0 dom.fix.), and 8796 nonzeros
+
+      1039       0         0   0.00%   17.91770914     17.92722836        0.05%      586      0      0    146659    80.8s
+      1039       0         0   0.00%   17.91770914     17.92722836        0.05%      586    450      0    147715    80.9s
+
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+      1151      93         3   0.01%   17.91770914     17.92722836        0.05%      846    530      5    148950    86.0s
+      1377     247        23   0.01%   17.91770914     17.92722836        0.05%      576    537     27    152419    91.4s
+      1543     383        24   0.01%   17.91770914     17.92722836        0.05%      591    541     29    157029    96.7s
+      1679     483        30   0.01%   17.91770914     17.92722836        0.05%      593    543     38    161942   102.2s
+      1849     617        34   0.01%   17.91772724     17.92722836        0.05%      601    543     50    169135   107.6s
+      2056     768        46   0.01%   17.91774362     17.92722836        0.05%      616    540     62    173530   112.6s
+      2235     897        50   0.02%   17.91776191     17.92722836        0.05%      594    541     66    177663   117.8s
+      2370    1014        51   0.02%   17.91776772     17.92722836        0.05%      605    543     69    184390   122.8s
+      2466    1096        51   0.02%   17.91776772     17.92722836        0.05%      607    544     69    193645   128.2s
+      2542    1162        51   0.02%   17.91776965     17.92722836        0.05%      608    540     69    201277   133.3s
+
+Restarting search from the root node
+Model after restart has 3337 rows, 2095 cols (0 bin., 426 int., 0 impl., 1669 cont., 0 dom.fix.), and 8794 nonzeros
+
+      2581       0         0   0.00%   17.91776965     17.92722836        0.05%      540      0      0    204969   136.6s
+      2581       0         0   0.00%   17.91776965     17.92722836        0.05%      540    504      0    205557   136.6s
+      2691      91         2   0.04%   17.91776965     17.92722836        0.05%      625    531      2    206403   141.7s
+      2858     214        11   0.04%   17.91776965     17.92722836        0.05%      555    533     11    208379   146.7s
+      3041     327        27   0.04%   17.91776965     17.92722836        0.05%      558    534     27    211769   151.9s
+      3252     476        38   0.04%   17.91776965     17.92722836        0.05%      572    536     39    215841   157.2s
+      3403     607        39   0.04%   17.91776965     17.92722836        0.05%      576    537     40    218753   162.4s
+      3576     738        41   0.04%   17.91776965     17.92722836        0.05%      582    539     43    223779   167.7s
+      3770     898        44   0.04%   17.91776965     17.92722836        0.05%      585    539     46    229891   173.0s
+      3969    1057        49   0.04%   17.91777716     17.92722836        0.05%      595    535     51    236712   178.0s
+
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+      4135    1187        50   0.04%   17.91778564     17.92722836        0.05%      598    537     56    243201   183.2s
+      4260    1270        62   0.04%   17.91778594     17.92722836        0.05%      614    538     69    252623   188.3s
+      4356    1335        65   0.04%   17.91778831     17.92722836        0.05%      616    539     72    261267   194.8s
+      4436    1408        65   0.04%   17.9177905      17.92722836        0.05%      630    540     71    270874   201.0s
+      4501    1457        67   0.04%   17.91779312     17.92722836        0.05%      642    537     69    281144   206.5s
+      4557    1503        68   0.04%   17.91779577     17.92722836        0.05%      653    538     69    289367   211.5s
+ L    4625     727        68   1.45%   17.91779842     17.92369829        0.03%      656    540     57    294896   216.1s
+      4759     822        69   1.50%   17.91780642     17.92369829        0.03%      642    541    107    300592   221.2s
+      4853     888        69   1.51%   17.91780891     17.92369829        0.03%      671    547    150    306476   226.2s
+      4958     951        77   1.51%   17.91781216     17.92369829        0.03%      726    546    236    315097   231.3s
+      5062    1021        77   1.51%   17.91781877     17.92369829        0.03%      744    548    288    321363   236.5s
+      5134    1056        86   1.51%   17.91781997     17.92369829        0.03%      758    549    324    326046   240.0s
+
+Solving report
+  Status            Time limit reached
+  Primal bound      17.9236982901
+  Dual bound        17.9178199701
+  Gap               0.0328% (tolerance: 0.01%)
+  P-D integral      0.184372150342
+  Solution status   feasible
+                    17.9236982901 (objective)
+                    0 (bound viol.)
+                    0 (int. viol.)
+                    0 (row viol.)
+  Timing            240.03
+  Max sub-MIP depth 7
+  Nodes             5134
+  Repair LPs        82 (82 feasible; 0 iterations)
+  LP iterations     326046
+                    76350 (strong br.)
+                    1216 (separation)
+                    107727 (heuristics)
+
+== Núcleo robusto ==
+                                             0         1         2
+escenario                                   S0        S1        S2
+puertos_sistema                          10870     10870     10870
+puertos_nucleo                            7803      7803      7802
+fraccion_nucleo                       0.717847  0.717847  0.717755
+nucleo_residential                        5164      5165      5163
+nucleo_workplace                          2055      2053      2056
+nucleo_public                              584       585       583
+fraccion_nucleo_residential           0.702394   0.70253  0.702258
+fraccion_nucleo_workplace             0.750274  0.749544  0.750639
+fraccion_nucleo_public                0.749679  0.750963  0.748395
+puertos_nucleo_por_zona_total             7810      7810      7808
+fraccion_nucleo_por_zona_total        0.718491  0.718491  0.718307
+puertos_en_disputa_sum_max_menos_min      6345      6343      6344
+zonas_con_puertos_bajo_las_4               133       133       133
+zonas_con_puertos_bajo_alguna              142       142       142
+zonas_rango_0                                0         0         0
+zonas_rango_ge_10                          137       137       138
+zonas_rango_ge_25                          104       104       103
+rango_zona_mediana                        40.0      39.0      39.5
+rango_zona_max                             196       196       196
+
+== Núcleo por cuartil (S2) ==
+                                  8         9          10         11
+escenario                         S2        S2         S2         S2
+cuartil_vulnerabilidad             1         2          3          4
+zonas                             36        24         46         36
+poblacion_dane              869554.0  752551.0  2002625.0  3652765.0
+puertos_nucleo                  1473       611       3024       2694
+fraccion_del_nucleo_total   0.188798  0.078313   0.387593   0.345296
+nucleo_por_10k             15.628702  8.119051  10.021846   7.375235
+puertos_A                       2464      1046       3735       3625
+fraccion_nucleo_sobre_A     0.597808   0.58413   0.809639   0.743172
+puertos_B                       2266      1051       4161       3392
+fraccion_nucleo_sobre_B     0.650044  0.581351   0.726748   0.794222
+puertos_C                       2030      1175       4050       3615
+fraccion_nucleo_sobre_C     0.725616      0.52   0.746667   0.745228
+puertos_D                       2440      1074       3551       3805
+fraccion_nucleo_sobre_D     0.603689  0.568901   0.851591   0.708016
+puertos_min_senales             2030      1046       3551       3392
+puertos_max_senales             2464      1175       4161       3805
+
+== Matriz de pérdida de fidelidad cruzada (S2, %) ==
+            evaluada_con_A  evaluada_con_B  evaluada_con_C  evaluada_con_D
+asignacion                                                                
+S2_A                  8.73         3517.41         2981.23         2420.82
+S2_B               3270.52            7.53         3560.65         3088.36
+S2_C               2862.87         3667.79            7.29         3290.56
+S2_D               2395.20         3301.27         3406.49            7.73
+            evaluada_con_A  evaluada_con_B  evaluada_con_C  evaluada_con_D
+asignacion                                                                
+S2_A                   4.8          1804.3          1577.0          1317.3
+S2_B                1789.3             3.9          1883.5          1680.6
+S2_C                1566.3          1881.5             3.9          1790.6
+S2_D                1310.4          1693.5          1802.0             4.2
+Minimax entre las S2: S2_D (3406.49 %)
+Minimax local de fidelidad: r = 1792.370 % (cota 1791.782 %, TerminationCondition.maxTimeLimit)
+
+== Estabilidad de equidad ==
+             asignacion  gini_ponderado  gini_no_ponderado  cobertura_15min_cuartil_vulnerable  puertos_por_10k_cuartil_vulnerable  puertos_por_10k_resto  puertos_cuartil_vulnerable  zonas_con_puertos  zonas_vulnerables_con_puertos
+                   S2_A        0.160881           0.165529                                 1.0                            9.923989              15.929462                        3625                140                             36
+                   S2_B        0.166628           0.171698                                 1.0                            9.286116              15.292173                        3392                135                             36
+                   S2_C        0.168320           0.173598                                 1.0                            9.896613              15.747380                        3615                141                             36
+                   S2_D        0.164653           0.169942                                 1.0                           10.416766              15.623233                        3805                141                             36
+minimax_fidelidad_local        0.165574           0.170815                                 1.0                           10.126575              15.609438                        3699                141                             36
+
+Cotejo Gini ponderado S2 (B4 vs recalculado): {'A': {'b4': 0.160881, 'b5': 0.160881}, 'B': {'b4': 0.166628, 'b5': 0.166628}, 'C': {'b4': 0.16832, 'b5': 0.16832}, 'D': {'b4': 0.164653, 'b5': 0.164653}}

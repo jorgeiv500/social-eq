@@ -1,0 +1,5 @@
+corrida,zonas_cambio_abs_gt1,zonas_cambio_abs_gt5,max_abs_cambio,puertos_cuartil_vuln,puertos_cuartil_vuln_S2,zonas_con_puertos,movidos_residential,movidos_workplace,movidos_public,mayores_cambios
+tau_0.05,10,7,110,3815,3805,141,157.0,18.0,3.0,UTAM117 -110; UTAM89 +109; UTAM61 -46; UTAM97 +12; UTAM52 -7
+tau_0.10,23,10,140,3758,3805,141,185.0,96.0,25.0,UTAM89 +140; UTAM117 -110; UTAM97 +91; UTAM61 -46; UTAM79 -38
+tau_0.10_holgura_abs,41,10,126,3776,3805,141,185.0,91.0,25.0,UTAM89 +126; UTAM117 -110; UTAM97 +52; UTAM61 -46; UTAM79 -38
+tau_0.20,67,27,272,3577,3805,141,283.0,335.0,86.0,UTAM89 +272; UTAM97 +152; UTAM117 -109; UTAM27 -57; UTAM48 -52

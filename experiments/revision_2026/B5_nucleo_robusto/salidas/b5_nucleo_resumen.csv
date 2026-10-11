@@ -1,0 +1,4 @@
+escenario,puertos_sistema,puertos_nucleo,fraccion_nucleo,nucleo_residential,nucleo_workplace,nucleo_public,fraccion_nucleo_residential,fraccion_nucleo_workplace,fraccion_nucleo_public,puertos_nucleo_por_zona_total,fraccion_nucleo_por_zona_total,puertos_en_disputa_sum_max_menos_min,zonas_con_puertos_bajo_las_4,zonas_con_puertos_bajo_alguna,zonas_rango_0,zonas_rango_ge_10,zonas_rango_ge_25,rango_zona_mediana,rango_zona_max
+S0,10870,7803,0.7178472861085556,5164,2055,584,0.7023939064200218,0.7502738225629791,0.7496790757381258,7810,0.718491260349586,6345,133,142,0,137,104,40.0,196
+S1,10870,7803,0.7178472861085556,5165,2053,585,0.7025299238302503,0.7495436290617014,0.7509627727856226,7810,0.718491260349586,6343,133,142,0,137,104,39.0,196
+S2,10870,7802,0.7177552897884084,5163,2056,583,0.7022578890097932,0.7506389193136181,0.748395378690629,7808,0.7183072677092917,6344,133,142,0,138,103,39.5,196

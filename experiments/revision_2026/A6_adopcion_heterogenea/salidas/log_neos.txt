@@ -1,0 +1,37 @@
+Preparando insumos (mismo camino de código que el pipeline oficial)...
+
+Cuotas 2030 (A3): {'residential': 15853, 'workplace': 5906, 'public': 1680} | VE2024=8899, VE2030=19189, s=0.463755
+hipotesis  max_err_total_por_sede  max_dif_vs_A3  masa_reubicada_vs_A3_pct  multiplicador_p05  multiplicador_mediana  multiplicador_p95  spearman_multiplicador_vs_nu  share_objetivo_cuartil_vulnerable  spearman_objetivo_vs_A3
+        U                     0.0       0.000000                  0.000000           1.000000               1.000000           1.000000                      0.119362                           0.350691                 1.000000
+       H1                     0.0     201.015903                 14.908571           0.597156               0.965978           1.736692                     -0.327563                           0.297520                 0.868430
+       H2                     0.0     134.499687                  9.306931           0.636240               0.985974           1.826876                      0.291549                           0.354198                 0.913138
+Validación del proxy: {
+  "spearman_c_residencia_vs_ve_hibridos_por_hogar": 0.6327495195070464,
+  "spearman_c_residencia_vs_estrato_medio": 0.8761879519041698,
+  "spearman_c_residencia_vs_nu": -0.2928986566186069,
+  "spearman_c_destino_vs_nu": -0.3979175708300151,
+  "spearman_c_residencia_vs_c_destino": 0.9253129250132547,
+  "spearman_ve_hibridos_vs_nu": -0.293632278917886,
+  "hogares_muestra_min": 2,
+  "hogares_muestra_mediana": 147.0,
+  "utam_con_algun_ve_hibrido": 41
+}
+
+Corridas NEOS previstas: 6 (['H1', 'H2']) | timelimit=3600s, mipgap=0.01
+Correo NEOS: jorgei.romerog@utadeo.edu.co
+[H1] S0 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H1] S1 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H1] S2 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H1] terminado: {'hipotesis': 'H1', 'escenario': 'S2', 'termination': 'optimal', 'objective_abs_dev': 120.46660625409977, 'u_star': 111.54315393898122, 'perdida_fidelidad_pct': 8.00000000000005, 'gini_no_ponderado_6d': 0.165439, 'gini_ponderado_6d': 0.160675, 'cobertura_15min_vulnerables': 1.0, 'puertos_cuartil_vulnerable': 6967, 'puertos_10k_cuartil_vulnerable': 19.07322261355439, 'puertos_10k_resto': 37.86213042074858, 'puertos_10k_ciudad': 28.43148638370758, 'gini_per_capita_pond_poblacion': 0.36804598722650195, 'spearman_vs_A3_mismo_escenario': 0.8688019549947747, 'spearman_vs_S2_paper': 0.8694222449512727, 'zonas_cambiadas_total_vs_A3_mismo_escenario': 140, 'zonas_cambiadas_sede_vs_A3_mismo_escenario': 140, 'puertos_movidos_vs_A3_mismo_escenario': 3471.0, 'epsilon': 0.08, 'zonas_cambiadas_total_S2_vs_S1': 13, 'zonas_cambiadas_sede_S2_vs_S1': 13, 'puertos_movidos_S2_vs_S1': 8.0}
+[H2] S0 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H2] S1 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H2] S2 vía NEOS/CPLEX...
+Submitting model to NEOS using solver=cplex
+[H2] terminado: {'hipotesis': 'H2', 'escenario': 'S2', 'termination': 'optimal', 'objective_abs_dev': 118.54055682998876, 'u_star': 109.75977484258217, 'perdida_fidelidad_pct': 8.000000000000009, 'gini_no_ponderado_6d': 0.170189, 'gini_ponderado_6d': 0.165069, 'cobertura_15min_vulnerables': 1.0, 'puertos_cuartil_vulnerable': 8299, 'puertos_10k_cuartil_vulnerable': 22.719775293510533, 'puertos_10k_resto': 32.64243129833119, 'puertos_10k_ciudad': 27.66199083613249, 'gini_per_capita_pond_poblacion': 0.22658261287005643, 'spearman_vs_A3_mismo_escenario': 0.9132522343684434, 'spearman_vs_S2_paper': 0.9133814635959363, 'zonas_cambiadas_total_vs_A3_mismo_escenario': 141, 'zonas_cambiadas_sede_vs_A3_mismo_escenario': 142, 'puertos_movidos_vs_A3_mismo_escenario': 1934.0, 'epsilon': 0.08, 'zonas_cambiadas_total_S2_vs_S1': 8, 'zonas_cambiadas_sede_S2_vs_S1': 8, 'puertos_movidos_S2_vs_S1': 5.0}
+
+Resumen: /Users/jorgeiv500/Documents/social-eq/experiments/revision_2026/A6_adopcion_heterogenea/salidas/tablas/resumen_adopcion_heterogenea.csv

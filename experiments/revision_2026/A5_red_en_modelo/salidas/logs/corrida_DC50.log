@@ -1,0 +1,13 @@
+Preparando insumos (mismo camino de código que el pipeline oficial)...
+AC7.4  target>tope=  0  S0arch viola=  0  S2arch viola=  0  D_lb=0.00  2D=0.00  presup=117.54  S0red(HiGHS)=108.83370014726832  -> u* archivado (S0 archivado cumple la red)
+MIXTO  target>tope=  0  S0arch viola=  0  S2arch viola=  0  D_lb=0.00  2D=0.00  presup=117.54  S0red(HiGHS)=108.83370014726832  -> u* archivado (S0 archivado cumple la red)
+DC50   target>tope= 15  S0arch viola= 15  S2arch viola= 15  D_lb=485.54  2D=971.08  presup=117.54  S0red(HiGHS)=985.4477617946911  -> u*_red = S0 con red (NEOS)
+Correo NEOS: jorgei.romerog@utadeo.edu.co; timelimit=3600s; gap=0.01
+[DC50] S0 con red vía NEOS/CPLEX...
+  restricción de red añadida: 100 UTAM, kW por sede = (50.0, 50.0, 50.0)
+Submitting model to NEOS using solver=cplex
+[DC50] u*_red = 985.447761 (S0 con red (NEOS/CPLEX)); presupuesto = 1064.283582
+[DC50] S2 con red vía NEOS/CPLEX (eps=0.08, kappa=4.0)...
+  restricción de red añadida: 100 UTAM, kW por sede = (50.0, 50.0, 50.0)
+Submitting model to NEOS using solver=cplex
+[DC50] S2 con red: termination=optimal; Σu=1064.283582; Gini=0.161086; Gini_w=0.156937; movidos=504.0; zonas=100

@@ -1,0 +1,33 @@
+{
+  "corrida": "S2_uso_suelo_tau_0.20",
+  "tau": 0.2,
+  "epsilon": 0.08,
+  "presupuesto_desviacion": 1427.4284756692653,
+  "kappa": 4.0,
+  "u_star_archivado": 108.83370014026023,
+  "u_star_cap": 1321.6930330270973,
+  "time_limit_s": 3600,
+  "mip_gap": 0.01,
+  "termination": "optimal",
+  "pares_excluidos": 34,
+  "gap_relativo_reportado": NaN,
+  "violaciones_de_tope": 0,
+  "topes_activos": 34,
+  "metricas_precision_completa": {
+    "rho_priority_ports": 0.820644216594046,
+    "rho_priority_access": -0.18222682322172884,
+    "objective_abs_dev": 1427.428475669265,
+    "accessibility_gini": 0.15601798437559306,
+    "accessibility_weighted_gini": 0.15197907784749995,
+    "share_access_most_vulnerable_quartile": 0.2710274879221167,
+    "coverage_within_threshold_vulnerable": 1.0,
+    "mean_access_high_vulnerability": 423.94071771007583
+  },
+  "puertos_10k_cuartil_vulnerable": 9.792581783936278,
+  "puertos_10k_resto": 16.0894742504959,
+  "comparacion_vs_S2": {
+    "zonas_cambiadas_total": 115,
+    "zonas_cambiadas_sede": 116,
+    "puertos_movidos": 692.0
+  }
+}
