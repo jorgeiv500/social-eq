@@ -1,0 +1,6 @@
+50 trabajos, 8 procesos
+[Parallel(n_jobs=8)]: Using backend LokyBackend with 8 concurrent workers.
+[Parallel(n_jobs=8)]: Done   2 tasks      | elapsed:  5.4min
+[Parallel(n_jobs=8)]: Done  46 out of  50 | elapsed: 20.1min remaining:  1.7min
+[Parallel(n_jobs=8)]: Done  50 out of  50 | elapsed: 20.5min finished
+listo en 20.5 min

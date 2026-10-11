@@ -1,0 +1,11 @@
+{
+  "gini_ponderado_S2_recalculado": 0.16465302843467972,
+  "provision_Q4_S2": 10.416766476901744,
+  "provision_resto_S2": 15.623232626981872,
+  "cupos_imputados": {
+    "mediana": 30.0,
+    "p25": 10.0,
+    "p75": 58.5
+  },
+  "n_osm_fuera_con_cupos": 50
+}

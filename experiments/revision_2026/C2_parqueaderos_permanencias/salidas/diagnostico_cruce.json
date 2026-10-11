@@ -1,0 +1,44 @@
+{
+  "zat_sin_candidato": 316,
+  "zat_sin_candidato_con_llegadas_muestra": 183,
+  "pct_llegadas_expandidas_en_zat_sin_candidato": 13.0,
+  "pct_llegadas_expandidas_en_zat_sin_capacidad_conocida": 63.8,
+  "por_cuartil": [
+    {
+      "cuartil_vulnerabilidad": 1,
+      "llegadas_expandidas": 502389.1,
+      "llegadas_muestra": 3442,
+      "candidatos": 1978,
+      "cupos_conocidos": 7627.0,
+      "candidatos_por_1000_llegadas": 3.9,
+      "cupos_por_1000_llegadas": 15.2
+    },
+    {
+      "cuartil_vulnerabilidad": 2,
+      "llegadas_expandidas": 109630.3,
+      "llegadas_muestra": 1089,
+      "candidatos": 507,
+      "cupos_conocidos": 1861.0,
+      "candidatos_por_1000_llegadas": 4.6,
+      "cupos_por_1000_llegadas": 17.0
+    },
+    {
+      "cuartil_vulnerabilidad": 3,
+      "llegadas_expandidas": 251693.6,
+      "llegadas_muestra": 1127,
+      "candidatos": 618,
+      "cupos_conocidos": 1047.0,
+      "candidatos_por_1000_llegadas": 2.5,
+      "cupos_por_1000_llegadas": 4.2
+    },
+    {
+      "cuartil_vulnerabilidad": 4,
+      "llegadas_expandidas": 234051.4,
+      "llegadas_muestra": 964,
+      "candidatos": 661,
+      "cupos_conocidos": 440.0,
+      "candidatos_por_1000_llegadas": 2.8,
+      "cupos_por_1000_llegadas": 1.9
+    }
+  ]
+}

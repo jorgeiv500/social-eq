@@ -1,0 +1,43 @@
+osm_type,osm_id,nombre,operador,ZAT,UTAM,candidato_mas_cercano,fuente_candidato,dist_m,dist_m_osm
+node,13995048783,Tesla Supercharger,Tesla,242,UTAM97,osm_node_1008089635,OSM,5.5,5.5
+node,6876751240,Estación de carga Aparcar 114,Codensa,851,UTAM16,osm_way_734321301,OSM,8.6,8.6
+node,13009697994,Punto de carga Éxito de Modelia,,321,UTAM114,osm_way_1148702526,OSM,18.0,18.0
+node,13010025702,Punto de carga Centro Comercial Atlantis Plaza,,246,UTAM97,osm_node_1338541520,OSM,21.8,21.8
+node,6876755454,Punto de carga Aparcar Calle 77,Codensa,241,UTAM97,zpp_48,ZPP_TerminalTransporte,22.6,24.3
+node,6876751154,Estación de carga El Retiro,,246,UTAM97,osm_node_1661379343,OSM,22.9,22.9
+node,13009961999,Punto de carga Fundación Santafé,,153,UTAM14,osm_node_13509949158,OSM,23.9,23.9
+node,13010000994,Universidad EAN (Bogotá),,246,UTAM97,zpp_37,ZPP_TerminalTransporte,24.5,103.3
+node,13009673810,Punto de carga Enel Olímpica Chicó Reservado Calle 97 con 11,,259,UTAM97,zpp_142,ZPP_TerminalTransporte,35.7,136.7
+node,13009676655,Punto de carga Carulla La Alhambra,,141,UTAM20,osm_way_29979702,OSM,36.2,36.2
+node,6876762284,,Codensa,299,UTAM105,osm_way_60177052,OSM,37.8,37.8
+node,6876783132,Estación de carga Uniandes - Santo Domingo,Universiad de Los Andes,353,UTAM92,osm_node_2042761290,OSM,50.1,50.1
+node,13010043978,Punto de carga Concesionario Marcali (Bogotá),,342,UTAM91,osm_way_542617648,OSM,55.3,55.3
+node,11371341369,,,360,UTAM102,cat_006108011,Catastro_UAECD_2026,55.4,223.8
+node,13009962720,Punto de carga Chevrolet San Jorge Carrera 30,,506,UTAM40,osm_way_1014131744,OSM,55.9,55.9
+node,6876710563,Estación de carga de Unicentro,Codensa,147,UTAM16,osm_way_241854132,OSM,58.3,58.3
+node,13009943281,Punto de carga Centro Comercial Sorpresas,,71,UTAM13,osm_way_1281997266,OSM,63.5,63.5
+node,13010002963,Voltex Trinidad,,382,UTAM43,osm_way_251409025,OSM,65.2,65.2
+node,6900649800,Ministerio de Minas y Energía,,294,UTAM104,osm_way_964088939,OSM,66.9,66.9
+node,6876702735,EDS Terpel - Cruz Roja,Terpel,842,UTAM26,osm_way_1475273670,OSM,72.0,72.0
+node,13009700956,Punto de carga San Andresito Carrera 38,,370,UTAM108,osm_way_857343262,OSM,73.0,73.0
+node,13009696528,Punto de carga Clínica Nicolás de Federmán,,290,UTAM106,osm_node_262713556,OSM,74.0,74.0
+node,13017555397,Punto de carga Éxito de Modelia,,321,UTAM114,osm_way_42737116,OSM,78.8,78.8
+node,13017542768,Punto de carga Unicentro,,147,UTAM16,osm_way_345612196,OSM,80.7,80.7
+node,13010048854,Punto de carga Parque Los Ejidos,,370,UTAM108,osm_way_857343256,OSM,84.9,84.9
+way,24587409,Compensar,,299,UTAM105,osm_way_239371923,OSM,86.5,86.5
+node,13015491671,Punto de carga Compensar Avenida 68,,299,UTAM105,osm_way_239371923,OSM,86.7,86.7
+node,13009406831,Voltex Las Vegas,Terpel,627,UTAM65,osm_way_657407784,OSM,90.3,90.3
+node,6876777150,Estación de carga Centro Internacional,Hotel Tequendama,992,UTAM91,osm_way_1081853127,OSM,97.5,97.5
+node,13010029817,Punto de carga Centro Comercial Carrera,,993,UTAM93,osm_way_537471397,OSM,103.3,103.3
+node,11371338669,,,360,UTAM102,cat_006108011,Catastro_UAECD_2026,109.0,235.3
+node,6876729187,Autogermana 128,Autogermana,86,UTAM14,osm_way_72146410,OSM,142.0,142.0
+node,6876784306,Estación de carga Carulla 102,Car-B,850,UTAM16,osm_node_9399398446,OSM,144.2,144.2
+node,13009702030,Punto de carga Terminal de Transportes Salitre,,996,UTAM110,osm_way_185564320,OSM,166.5,166.5
+way,58069884,Bolera Compensar,,299,UTAM105,osm_way_379781761,OSM,173.9,173.9
+node,9414815176,Estación de carga Voltex EDS La Juana,,60,UTAM11,osm_way_109743310,OSM,183.0,183.0
+node,6876765986,Estación de carga Tercer Milenio,Codensa,453,UTAM93,cat_003107024,Catastro_UAECD_2026,199.3,279.0
+node,13009988556,Punto de carga Taller Autos Bencar,,67,UTAM19,osm_node_9895430063,OSM,206.8,206.8
+node,13009908337,Punto de carga Chevrolet Autogrande,,573,UTAM42,osm_way_975119129,OSM,222.3,222.3
+node,11371343170,,,359,UTAM102,osm_way_204559358,OSM,232.2,232.2
+node,13009973825,Punto de carga Éxito Colina,,838,UTAM23,osm_way_29251681,OSM,236.7,236.7
+node,13009418551,Punto de carga Voltex Avenida Boyacá,,181,UTAM30,osm_node_5495053503,OSM,284.9,284.9

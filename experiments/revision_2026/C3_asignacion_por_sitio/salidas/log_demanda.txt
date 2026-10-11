@@ -1,0 +1,20 @@
+viajes de conductor de auto: 8110
+[Parallel(n_jobs=4)]: Using backend LokyBackend with 4 concurrent workers.
+[Parallel(n_jobs=4)]: Done   6 out of  10 | elapsed: 12.4min remaining:  8.2min
+[Parallel(n_jobs=4)]: Done  10 out of  10 | elapsed: 17.6min finished
+       demanda_EB  demanda_RF_rezago  demanda_GCN  demanda_STGNN
+count      1124.0             1124.0       1124.0         1124.0
+mean       1909.1             1468.6       1737.1         1536.6
+std        1478.2             1505.4       1621.0         1605.5
+min          31.5              133.7        133.7          107.0
+25%        1115.6              720.3        804.4          660.1
+50%        1563.1             1001.5       1226.3         1065.9
+75%        2294.1             1611.6       2056.3         1733.0
+max       20947.1            20947.1      20947.1        20947.1
+correlación Spearman entre estimadores (ZAT con dato):
+              EB  RF_rezago    GCN  STGNN
+EB         1.000      0.612  0.551  0.639
+RF_rezago  0.612      1.000  0.924  0.952
+GCN        0.551      0.924  1.000  0.895
+STGNN      0.639      0.952  0.895  1.000
+listo en 17.9 min

@@ -1,0 +1,17 @@
+{
+  "veredicto": "NO-GO",
+  "criterio": "ZAT, principal, AUTO: IC95 de (STGNN - mejor de EB/RF) excluye 0 y mejora relativa >= 10 %",
+  "escala": "zat",
+  "modo": "auto",
+  "regimen": "principal",
+  "mejor_clasico": "RF_rezago",
+  "wMAE_STGNN": 0.11691098617957692,
+  "wMAE_mejor": 0.11602171445768565,
+  "dif_STGNN_menos_mejor": 0.000889271721891266,
+  "IC95_inf": -0.0003521261650875691,
+  "IC95_sup": 0.0019315995001169296,
+  "mejora_relativa": -0.007664700750613308,
+  "mejora_rel_IC95_inf": -0.015975576538787083,
+  "mejora_rel_IC95_sup": 0.0031471829910294812,
+  "n_localidades": 21.0
+}

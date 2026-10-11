@@ -1,0 +1,38 @@
+S2 publicado: Gini ponderado 0.164653 | provisión vulnerable 10.42 vs resto 15.62
+cupos imputados (OSM fuera de vía con cupos > 0, n=50): {'mediana': 30.0, 'p25': 10.0, 'p75': 58.5}
+[ambas   ] principal                    frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 338/346 m
+[ambas   ] capacidad_5                  frac Q1..Q4 (Bogotá) = 0.881 0.683 0.580 0.373 | dist Q4/resto = 337/337 m
+[ambas   ] capacidad_20                 frac Q1..Q4 (Bogotá) = 0.982 0.907 0.986 0.923 | dist Q4/resto = 340/348 m
+[ambas   ] imputacion_p25               frac Q1..Q4 (Bogotá) = 0.890 0.695 0.580 0.381 | dist Q4/resto = 337/337 m
+[ambas   ] imputacion_p75               frac Q1..Q4 (Bogotá) = 0.982 0.898 0.965 0.904 | dist Q4/resto = 340/348 m
+[ambas   ] con_en_via                   frac Q1..Q4 (Bogotá) = 0.982 0.878 0.904 0.816 | dist Q4/resto = 332/343 m
+[ambas   ] A4_residencial_vulnerable    frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.403 | dist Q4/resto = 336/346 m
+[ambas   ] reubicacion                  frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 336/340 m
+[ambas   ] reubicacion_solo_bogota      frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 338/344 m
+[ambas   ] estimador_EB                 frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 339/344 m
+[ambas   ] estimador_GCN                frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 337/344 m
+[ambas   ] estimador_STGNN              frac Q1..Q4 (Bogotá) = 0.968 0.878 0.904 0.790 | dist Q4/resto = 339/345 m
+[OSM     ] principal                    frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 360/401 m
+[OSM     ] capacidad_5                  frac Q1..Q4 (Bogotá) = 0.846 0.626 0.516 0.322 | dist Q4/resto = 360/393 m
+[OSM     ] capacidad_20                 frac Q1..Q4 (Bogotá) = 0.982 0.882 0.918 0.889 | dist Q4/resto = 362/402 m
+[OSM     ] imputacion_p25               frac Q1..Q4 (Bogotá) = 0.856 0.638 0.516 0.330 | dist Q4/resto = 360/393 m
+[OSM     ] imputacion_p75               frac Q1..Q4 (Bogotá) = 0.978 0.878 0.898 0.853 | dist Q4/resto = 362/402 m
+[OSM     ] con_en_via                   frac Q1..Q4 (Bogotá) = 0.982 0.854 0.845 0.740 | dist Q4/resto = 353/390 m
+[OSM     ] A4_residencial_vulnerable    frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.348 | dist Q4/resto = 359/401 m
+[OSM     ] reubicacion                  frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 359/395 m
+[OSM     ] reubicacion_solo_bogota      frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 359/399 m
+[OSM     ] estimador_EB                 frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 361/391 m
+[OSM     ] estimador_GCN                frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 360/393 m
+[OSM     ] estimador_STGNN              frac Q1..Q4 (Bogotá) = 0.964 0.854 0.845 0.704 | dist Q4/resto = 360/391 m
+[Catastro] principal                    frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 761/855 m
+[Catastro] capacidad_5                  frac Q1..Q4 (Bogotá) = 0.166 0.098 0.100 0.058 | dist Q4/resto = 761/855 m
+[Catastro] capacidad_20                 frac Q1..Q4 (Bogotá) = 0.508 0.480 0.405 0.327 | dist Q4/resto = 761/855 m
+[Catastro] imputacion_p25               frac Q1..Q4 (Bogotá) = 0.166 0.098 0.100 0.058 | dist Q4/resto = 761/855 m
+[Catastro] imputacion_p75               frac Q1..Q4 (Bogotá) = 0.454 0.427 0.360 0.287 | dist Q4/resto = 761/855 m
+[Catastro] con_en_via                   frac Q1..Q4 (Bogotá) = 0.724 0.472 0.346 0.186 | dist Q4/resto = 742/703 m
+[Catastro] A4_residencial_vulnerable    frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.062 | dist Q4/resto = 761/855 m
+[Catastro] reubicacion                  frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 761/851 m
+[Catastro] reubicacion_solo_bogota      frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 761/851 m
+[Catastro] estimador_EB                 frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 761/855 m
+[Catastro] estimador_GCN                frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 763/855 m
+[Catastro] estimador_STGNN              frac Q1..Q4 (Bogotá) = 0.342 0.289 0.261 0.175 | dist Q4/resto = 761/855 m

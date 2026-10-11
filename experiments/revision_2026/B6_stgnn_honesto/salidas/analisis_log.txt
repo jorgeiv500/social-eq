@@ -1,0 +1,217 @@
+escala  modo        regimen       metodo  K  wMAE_omega  DE_entre_particiones  wMAE_logL  spearman_nivel  zonas_evaluadas_por_particion
+  utam  auto        kriging media_ciudad  5      0.0714                0.0042     1.0372         -0.2032                          140.0
+  utam  auto        kriging      crudo_A  5      0.0714                0.0042     1.0372         -0.2032                          140.0
+  utam  auto        kriging           EB  5      0.0645                0.0032     0.6726          0.5037                          140.0
+  utam  auto        kriging    RF_rezago  5      0.0639                0.0038     0.6253          0.7201                          140.0
+  utam  auto        kriging          IDW  5      0.0648                0.0033     0.6759          0.5071                          140.0
+  utam  auto        kriging          GCN  5      0.0612                0.0045     0.6039          0.6770                          140.0
+  utam  auto        kriging        STGNN  5      0.0674                0.0062     0.6238          0.5684                          140.0
+  utam  auto      principal media_ciudad 10      0.0694                0.0031     1.0100             NaN                          140.0
+  utam  auto      principal      crudo_A 10      0.0746                0.0031     0.3189          0.8924                          140.0
+  utam  auto      principal           EB 10      0.0613                0.0030     0.3050          0.8981                          140.0
+  utam  auto      principal    RF_rezago 10      0.0591                0.0031     0.3383          0.8996                          140.0
+  utam  auto      principal          IDW 10      0.0602                0.0033     0.4560          0.7755                          140.0
+  utam  auto      principal          GCN 10      0.0587                0.0041     0.3636          0.8519                          140.0
+  utam  auto      principal        STGNN 10      0.0614                0.0040     0.3587          0.8668                          140.0
+  utam  auto   tiempo_junio media_ciudad  1      0.0770                   NaN     2.1671             NaN                          130.0
+  utam  auto   tiempo_junio      crudo_A  1      0.0879                   NaN     1.8347          0.3723                          130.0
+  utam  auto   tiempo_junio           EB  1      0.0648                   NaN     1.7290          0.3969                          130.0
+  utam  auto   tiempo_junio    RF_rezago  1      0.0648                   NaN     1.7488          0.4011                          130.0
+  utam  auto   tiempo_junio          IDW  1      0.0655                   NaN     1.6631          0.5022                          130.0
+  utam  auto   tiempo_junio          GCN  1      0.0613                   NaN     1.8230          0.3924                          130.0
+  utam  auto   tiempo_junio        STGNN  1      0.0660                   NaN     1.8667          0.3424                          130.0
+  utam  auto tiempo_octubre media_ciudad  1      0.1099                   NaN     3.9013             NaN                           64.0
+  utam  auto tiempo_octubre      crudo_A  1      0.0692                   NaN     3.2473          0.3100                           64.0
+  utam  auto tiempo_octubre           EB  1      0.0734                   NaN     3.2439          0.2687                           64.0
+  utam  auto tiempo_octubre    RF_rezago  1      0.0755                   NaN     3.2873          0.3250                           64.0
+  utam  auto tiempo_octubre          IDW  1      0.0667                   NaN     3.1312          0.3634                           64.0
+  utam  auto tiempo_octubre          GCN  1      0.0664                   NaN     3.1546          0.3409                           64.0
+  utam  auto tiempo_octubre        STGNN  1      0.0722                   NaN     3.1533          0.2802                           64.0
+  utam todos        kriging media_ciudad  5      0.0334                0.0003     0.6304         -0.1574                          140.0
+  utam todos        kriging      crudo_A  5      0.0334                0.0003     0.6304         -0.1574                          140.0
+  utam todos        kriging           EB  5      0.0277                0.0012     0.5442          0.3872                          140.0
+  utam todos        kriging    RF_rezago  5      0.0279                0.0008     0.4331          0.7633                          140.0
+  utam todos        kriging          IDW  5      0.0279                0.0010     0.5561          0.3931                          140.0
+  utam todos        kriging          GCN  5      0.0291                0.0019     0.4194          0.6808                          140.0
+  utam todos        kriging        STGNN  5      0.0286                0.0014     0.4212          0.6082                          140.0
+  utam todos      principal media_ciudad 10      0.0321                0.0007     0.6080             NaN                          140.0
+  utam todos      principal      crudo_A 10      0.0260                0.0023     0.1329          0.9719                          140.0
+  utam todos      principal           EB 10      0.0242                0.0019     0.1329          0.9719                          140.0
+  utam todos      principal    RF_rezago 10      0.0229                0.0013     0.1648          0.9668                          140.0
+  utam todos      principal          IDW 10      0.0236                0.0012     0.3672          0.7644                          140.0
+  utam todos      principal          GCN 10      0.0244                0.0011     0.1668          0.9610                          140.0
+  utam todos      principal        STGNN 10      0.0237                0.0012     0.1839          0.9587                          140.0
+  utam todos   tiempo_junio media_ciudad  1      0.0503                   NaN     1.1902             NaN                          140.0
+  utam todos   tiempo_junio      crudo_A  1      0.0516                   NaN     1.6183         -0.0063                          140.0
+  utam todos   tiempo_junio           EB  1      0.0436                   NaN     1.5666         -0.0059                          140.0
+  utam todos   tiempo_junio    RF_rezago  1      0.0400                   NaN     1.5166         -0.0269                          140.0
+  utam todos   tiempo_junio          IDW  1      0.0411                   NaN     1.2814         -0.0479                          140.0
+  utam todos   tiempo_junio          GCN  1      0.0397                   NaN     1.6199         -0.0163                          140.0
+  utam todos   tiempo_junio        STGNN  1      0.0422                   NaN     1.5980         -0.0237                          140.0
+  utam todos tiempo_octubre media_ciudad  1      0.0745                   NaN     2.7608             NaN                          101.0
+  utam todos tiempo_octubre      crudo_A  1      0.0527                   NaN     2.8009         -0.0792                          101.0
+  utam todos tiempo_octubre           EB  1      0.0545                   NaN     2.7987         -0.0795                          101.0
+  utam todos tiempo_octubre    RF_rezago  1      0.0617                   NaN     2.7948         -0.0980                          101.0
+  utam todos tiempo_octubre          IDW  1      0.0529                   NaN     2.6809         -0.0788                          101.0
+  utam todos tiempo_octubre          GCN  1      0.0663                   NaN     2.7954         -0.0991                          101.0
+  utam todos tiempo_octubre        STGNN  1      0.0597                   NaN     2.6885         -0.0703                          101.0
+   zat  auto        kriging media_ciudad  5      0.1246                0.0023     1.4162         -0.1127                          801.4
+   zat  auto        kriging      crudo_A  5      0.1246                0.0023     1.4162         -0.1127                          801.4
+   zat  auto        kriging           EB  5      0.1281                0.0013     1.1106          0.2111                          801.4
+   zat  auto        kriging    RF_rezago  5      0.1184                0.0025     0.9380          0.4269                          801.4
+   zat  auto        kriging          IDW  5      0.1281                0.0013     1.1106          0.2111                          801.4
+   zat  auto        kriging          GCN  5      0.1199                0.0026     0.9052          0.3470                          801.4
+   zat  auto        kriging        STGNN  5      0.1213                0.0030     0.8107          0.3917                          801.4
+   zat  auto      principal media_ciudad 10      0.1236                0.0020     1.3787             NaN                          803.0
+   zat  auto      principal      crudo_A 10      0.1489                0.0062     0.7057          0.5351                          803.0
+   zat  auto      principal           EB 10      0.1182                0.0029     0.5821          0.4889                          803.0
+   zat  auto      principal    RF_rezago 10      0.1160                0.0024     0.5979          0.6529                          803.0
+   zat  auto      principal          IDW 10      0.1215                0.0022     0.6110          0.4930                          803.0
+   zat  auto      principal          GCN 10      0.1172                0.0029     0.6420          0.5639                          803.0
+   zat  auto      principal        STGNN 10      0.1169                0.0029     0.5629          0.6356                          803.0
+   zat  auto   tiempo_junio media_ciudad  1      0.1223                   NaN     2.7176             NaN                          597.0
+   zat  auto   tiempo_junio      crudo_A  1      0.1568                   NaN     2.4115          0.1683                          597.0
+   zat  auto   tiempo_junio           EB  1      0.1138                   NaN     1.9122          0.1693                          597.0
+   zat  auto   tiempo_junio    RF_rezago  1      0.1137                   NaN     2.2118          0.2012                          597.0
+   zat  auto   tiempo_junio          IDW  1      0.1242                   NaN     2.0492          0.1710                          597.0
+   zat  auto   tiempo_junio          GCN  1      0.1096                   NaN     2.0123          0.1856                          597.0
+   zat  auto   tiempo_junio        STGNN  1      0.1157                   NaN     2.3108          0.1727                          597.0
+   zat  auto tiempo_octubre media_ciudad  1      0.1465                   NaN     4.7712             NaN                          175.0
+   zat  auto tiempo_octubre      crudo_A  1      0.1416                   NaN     4.2472          0.0876                          175.0
+   zat  auto tiempo_octubre           EB  1      0.1168                   NaN     3.8127          0.0607                          175.0
+   zat  auto tiempo_octubre    RF_rezago  1      0.1177                   NaN     4.0185          0.1313                          175.0
+   zat  auto tiempo_octubre          IDW  1      0.1164                   NaN     3.8049          0.0797                          175.0
+   zat  auto tiempo_octubre          GCN  1      0.1093                   NaN     3.7462          0.1358                          175.0
+   zat  auto tiempo_octubre        STGNN  1      0.1202                   NaN     3.9077          0.1114                          175.0
+   zat todos        kriging media_ciudad  5      0.0598                0.0009     1.1754         -0.1383                         1060.2
+   zat todos        kriging      crudo_A  5      0.0598                0.0009     1.1754         -0.1383                         1060.2
+   zat todos        kriging           EB  5      0.0603                0.0009     0.9393          0.2785                         1060.2
+   zat todos        kriging    RF_rezago  5      0.0546                0.0014     0.6900          0.6973                         1060.2
+   zat todos        kriging          IDW  5      0.0604                0.0010     0.9428          0.2770                         1060.2
+   zat todos        kriging          GCN  5      0.0549                0.0014     0.7352          0.5823                         1060.2
+   zat todos        kriging        STGNN  5      0.0559                0.0015     0.6142          0.6514                         1060.2
+   zat todos      principal media_ciudad 10      0.0588                0.0008     1.1836             NaN                         1060.4
+   zat todos      principal      crudo_A 10      0.0607                0.0014     0.3102          0.8974                         1060.4
+   zat todos      principal           EB 10      0.0515                0.0009     0.2960          0.8411                         1060.4
+   zat todos      principal    RF_rezago 10      0.0495                0.0013     0.3137          0.9239                         1060.4
+   zat todos      principal          IDW 10      0.0518                0.0012     0.4206          0.6449                         1060.4
+   zat todos      principal          GCN 10      0.0502                0.0015     0.3359          0.9027                         1060.4
+   zat todos      principal        STGNN 10      0.0502                0.0016     0.3294          0.9104                         1060.4
+   zat todos   tiempo_junio media_ciudad  1      0.0726                   NaN     1.8183             NaN                          886.0
+   zat todos   tiempo_junio      crudo_A  1      0.0967                   NaN     2.0281          0.0954                          886.0
+   zat todos   tiempo_junio           EB  1      0.0666                   NaN     1.6813          0.0939                          886.0
+   zat todos   tiempo_junio    RF_rezago  1      0.0668                   NaN     1.9498          0.1042                          886.0
+   zat todos   tiempo_junio          IDW  1      0.0725                   NaN     1.6888         -0.0564                          886.0
+   zat todos   tiempo_junio          GCN  1      0.0656                   NaN     2.0372          0.0952                          886.0
+   zat todos   tiempo_junio        STGNN  1      0.0674                   NaN     1.8860          0.0993                          886.0
+   zat todos tiempo_octubre media_ciudad  1      0.1001                   NaN     3.7942             NaN                          349.0
+   zat todos tiempo_octubre      crudo_A  1      0.0946                   NaN     3.4900         -0.0238                          349.0
+   zat todos tiempo_octubre           EB  1      0.0906                   NaN     3.4392         -0.0383                          349.0
+   zat todos tiempo_octubre    RF_rezago  1      0.0828                   NaN     3.4700         -0.0180                          349.0
+   zat todos tiempo_octubre          IDW  1      0.0829                   NaN     3.4394         -0.1897                          349.0
+   zat todos tiempo_octubre          GCN  1      0.0788                   NaN     3.5631         -0.0395                          349.0
+   zat todos tiempo_octubre        STGNN  1      0.0795                   NaN     3.6168         -0.0527                          349.0
+escala  modo        regimen  r_res  r_tra  r_pub  wMAE_A_vs_B_con_dato  cota_aprox_alcanzable
+  utam  auto      principal  0.445  0.375  0.158                 0.075                  0.053
+  utam  auto   tiempo_junio  0.337  0.326  0.131                 0.088                  0.062
+  utam  auto tiempo_octubre  0.141  0.100  0.091                 0.069                  0.049
+  utam todos      principal  0.797  0.685  0.325                 0.026                  0.018
+  utam todos   tiempo_junio  0.525  0.062 -0.178                 0.052                  0.036
+  utam todos tiempo_octubre  0.200  0.443  0.495                 0.053                  0.037
+   zat  auto      principal  0.158  0.175  0.115                 0.145                  0.103
+   zat  auto   tiempo_junio  0.053  0.019 -0.004                 0.155                  0.109
+   zat  auto tiempo_octubre -0.010 -0.091 -0.086                 0.142                  0.101
+   zat todos      principal  0.478  0.414  0.219                 0.061                  0.043
+   zat todos   tiempo_junio  0.307  0.039 -0.107                 0.097                  0.068
+   zat todos tiempo_octubre  0.007 -0.063 -0.088                 0.095                  0.067
+escala  modo        regimen mejor_clasico  wMAE_STGNN  wMAE_mejor  dif_STGNN_menos_mejor  IC95_inf  IC95_sup  mejora_relativa  mejora_rel_IC95_inf  mejora_rel_IC95_sup  n_localidades
+  utam  auto        kriging     RF_rezago      0.0674      0.0639                 0.0035    0.0002    0.0070          -0.0554              -0.1067              -0.0040             21
+  utam  auto      principal     RF_rezago      0.0614      0.0591                 0.0024    0.0010    0.0039          -0.0402              -0.0686              -0.0165             21
+  utam  auto   tiempo_junio            EB      0.0660      0.0648                 0.0012   -0.0065    0.0095          -0.0182              -0.1386               0.0983             21
+  utam  auto tiempo_octubre            EB      0.0722      0.0734                -0.0011   -0.0156    0.0042           0.0155              -0.0679               0.1153             21
+  utam todos        kriging            EB      0.0286      0.0277                 0.0009    0.0002    0.0016          -0.0325              -0.0589              -0.0056             21
+  utam todos      principal     RF_rezago      0.0237      0.0229                 0.0008   -0.0001    0.0016          -0.0364              -0.0768               0.0053             21
+  utam todos   tiempo_junio     RF_rezago      0.0422      0.0400                 0.0021   -0.0014    0.0057          -0.0535              -0.1387               0.0292             21
+  utam todos tiempo_octubre            EB      0.0597      0.0545                 0.0052   -0.0085    0.0137          -0.0955              -0.3149               0.1190             21
+   zat  auto        kriging     RF_rezago      0.1213      0.1184                 0.0029    0.0016    0.0038          -0.0243              -0.0315              -0.0137             21
+   zat  auto      principal     RF_rezago      0.1169      0.1160                 0.0009   -0.0004    0.0019          -0.0077              -0.0160               0.0031             21
+   zat  auto   tiempo_junio     RF_rezago      0.1157      0.1137                 0.0021   -0.0022    0.0069          -0.0184              -0.0727               0.0174             21
+   zat  auto tiempo_octubre            EB      0.1202      0.1168                 0.0034   -0.0020    0.0080          -0.0293              -0.0648               0.0145             21
+   zat todos        kriging     RF_rezago      0.0559      0.0546                 0.0014    0.0001    0.0025          -0.0252              -0.0456              -0.0013             21
+   zat todos      principal     RF_rezago      0.0502      0.0495                 0.0006   -0.0003    0.0014          -0.0130              -0.0298               0.0054             21
+   zat todos   tiempo_junio            EB      0.0674      0.0666                 0.0008   -0.0070    0.0061          -0.0127              -0.1016               0.0949             21
+   zat todos tiempo_octubre     RF_rezago      0.0795      0.0828                -0.0033   -0.0046    0.0021           0.0395              -0.0192               0.0575             21
+escala  modo   regimen       metodo   mean    std  count
+  utam  auto principal           EB 3010.1  138.5     10
+  utam  auto principal          GCN 3091.4  141.0     10
+  utam  auto principal          IDW 3530.3  160.1     10
+  utam  auto principal    RF_rezago 2917.1  162.0     10
+  utam  auto principal        STGNN 3060.2  232.9     10
+  utam  auto principal      crudo_A 3417.7  188.1     10
+  utam  auto principal media_ciudad 4348.5   82.1     10
+  utam  auto    tiempo           EB 7849.0 2289.6      2
+  utam  auto    tiempo          GCN 7809.0 2175.1      2
+  utam  auto    tiempo          IDW 7752.0 2349.0      2
+  utam  auto    tiempo    RF_rezago 7722.0 2284.0      2
+  utam  auto    tiempo        STGNN 7830.5 2383.7      2
+  utam  auto    tiempo      crudo_A 8046.5 2109.3      2
+  utam  auto    tiempo media_ciudad 7857.0 2309.4      2
+  utam todos principal           EB 1215.4   80.3     10
+  utam todos principal          GCN 1298.2   83.7     10
+  utam todos principal          IDW 2075.5   54.7     10
+  utam todos principal    RF_rezago 1255.5   76.9     10
+  utam todos principal        STGNN 1242.7   82.2     10
+  utam todos principal      crudo_A 1269.3   82.2     10
+  utam todos principal media_ciudad 3504.0   45.9     10
+  utam todos    tiempo           EB 8428.0 1694.2      2
+  utam todos    tiempo          GCN 8392.5 1728.9      2
+  utam todos    tiempo          IDW 8193.5 1904.2      2
+  utam todos    tiempo    RF_rezago 8345.0 1746.6      2
+  utam todos    tiempo        STGNN 8264.5 1784.0      2
+  utam todos    tiempo      crudo_A 8432.0 1701.3      2
+  utam todos    tiempo media_ciudad 7469.5 2239.4      2
+   zat  auto principal           EB 3443.1  241.4     10
+   zat  auto principal          GCN 3217.4  257.2     10
+   zat  auto principal          IDW 3481.7  194.9     10
+   zat  auto principal    RF_rezago 2964.8  196.2     10
+   zat  auto principal        STGNN 3104.5  144.2     10
+   zat  auto principal      crudo_A 3388.3  203.2     10
+   zat  auto principal media_ciudad 4070.7  184.4     10
+   zat  auto    tiempo           EB 7813.5 2503.9      2
+   zat  auto    tiempo          GCN 7698.0 2539.9      2
+   zat  auto    tiempo          IDW 7849.0 2469.2      2
+   zat  auto    tiempo    RF_rezago 7703.5 2389.3      2
+   zat  auto    tiempo        STGNN 7859.0 2351.8      2
+   zat  auto    tiempo      crudo_A 7926.5 2352.5      2
+   zat  auto    tiempo media_ciudad 7672.0 2511.6      2
+   zat todos principal           EB 1507.9  107.2     10
+   zat todos principal          GCN 1410.5  101.6     10
+   zat todos principal          IDW 1651.5  116.5     10
+   zat todos principal    RF_rezago 1327.8   89.2     10
+   zat todos principal        STGNN 1326.2   73.4     10
+   zat todos principal      crudo_A 1353.5   91.8     10
+   zat todos principal media_ciudad 3271.6   58.7     10
+   zat todos    tiempo           EB 8215.0 1967.2      2
+   zat todos    tiempo          GCN 8360.0 1613.6      2
+   zat todos    tiempo          IDW 8235.5 1980.6      2
+   zat todos    tiempo    RF_rezago 8323.5 1717.6      2
+   zat todos    tiempo        STGNN 8253.0 1868.2      2
+   zat todos    tiempo      crudo_A 8387.5 1738.8      2
+   zat todos    tiempo media_ciudad 7245.5 2334.2      2
+{
+  "veredicto": "NO-GO",
+  "criterio": "ZAT, principal, AUTO: IC95 de (STGNN - mejor de EB/RF) excluye 0 y mejora relativa >= 10 %",
+  "escala": "zat",
+  "modo": "auto",
+  "regimen": "principal",
+  "mejor_clasico": "RF_rezago",
+  "wMAE_STGNN": 0.11691098617957692,
+  "wMAE_mejor": 0.11602171445768565,
+  "dif_STGNN_menos_mejor": 0.000889271721891266,
+  "IC95_inf": -0.0003521261650875691,
+  "IC95_sup": 0.0019315995001169296,
+  "mejora_relativa": -0.007664700750613308,
+  "mejora_rel_IC95_inf": -0.015975576538787083,
+  "mejora_rel_IC95_sup": 0.0031471829910294812,
+  "n_localidades": 21.0
+}

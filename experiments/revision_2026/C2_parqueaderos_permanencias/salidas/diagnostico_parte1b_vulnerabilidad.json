@@ -1,0 +1,42 @@
+{
+  "utam_vulnerables": 36,
+  "utam_vulnerables_sin_candidato": {
+    "total": 1,
+    "osm": 1,
+    "zpp": 32,
+    "catastro": 9
+  },
+  "utam_vulnerables_sin_capacidad_conocida": 28,
+  "utam_vulnerables_sin_ninguna_fuente_lista": [
+    "UTAM96"
+  ],
+  "contraste_solo_utam_con_poblacion": [
+    {
+      "cuartil_vulnerabilidad": 1,
+      "n_osm": 0.4525,
+      "n_catastro": 0.494,
+      "cociente": 0.9158
+    },
+    {
+      "cuartil_vulnerabilidad": 2,
+      "n_osm": 0.1383,
+      "n_catastro": 0.0744,
+      "cociente": 1.8594
+    },
+    {
+      "cuartil_vulnerabilidad": 3,
+      "n_osm": 0.1886,
+      "n_catastro": 0.1964,
+      "cociente": 0.9602
+    },
+    {
+      "cuartil_vulnerabilidad": 4,
+      "n_osm": 0.2206,
+      "n_catastro": 0.2351,
+      "cociente": 0.9381
+    }
+  ],
+  "spearman_densidad_osm_vs_catastro_utam_pobladas": 0.299,
+  "spearman_nu_vs_densidad_osm": -0.295,
+  "spearman_nu_vs_densidad_catastro": 0.103
+}

@@ -1,0 +1,161 @@
+{
+  "fecha_hogares": {
+    "rango": [
+      "2023-03-29 16:34:00",
+      "2023-10-20 07:05:00"
+    ],
+    "pct_con_hora_entre_15_y_23": 67.3,
+    "hogares_por_dia_semana": {
+      "Thursday": 3957,
+      "Wednesday": 3944,
+      "Friday": 3679,
+      "Tuesday": 3098,
+      "Sunday": 2990,
+      "Saturday": 2876,
+      "Monday": 2211
+    },
+    "perfil_viajes_por_dia_de_fecha": [
+      {
+        "dia_semana_fecha": "Friday",
+        "viajes": 16373,
+        "hogares": 3507,
+        "pct_trabajo_estudio": 0.3,
+        "pct_salida_5a8": 0.294
+      },
+      {
+        "dia_semana_fecha": "Monday",
+        "viajes": 9401,
+        "hogares": 2056,
+        "pct_trabajo_estudio": 0.308,
+        "pct_salida_5a8": 0.304
+      },
+      {
+        "dia_semana_fecha": "Saturday",
+        "viajes": 12959,
+        "hogares": 2749,
+        "pct_trabajo_estudio": 0.307,
+        "pct_salida_5a8": 0.29
+      },
+      {
+        "dia_semana_fecha": "Sunday",
+        "viajes": 13895,
+        "hogares": 2852,
+        "pct_trabajo_estudio": 0.317,
+        "pct_salida_5a8": 0.303
+      },
+      {
+        "dia_semana_fecha": "Thursday",
+        "viajes": 17333,
+        "hogares": 3711,
+        "pct_trabajo_estudio": 0.292,
+        "pct_salida_5a8": 0.286
+      },
+      {
+        "dia_semana_fecha": "Tuesday",
+        "viajes": 13575,
+        "hogares": 2892,
+        "pct_trabajo_estudio": 0.309,
+        "pct_salida_5a8": 0.296
+      },
+      {
+        "dia_semana_fecha": "Wednesday",
+        "viajes": 16638,
+        "hogares": 3741,
+        "pct_trabajo_estudio": 0.288,
+        "pct_salida_5a8": 0.281
+      }
+    ]
+  },
+  "horas_decimales_coherentes_con_duracion_pct": 99.97,
+  "modos_grupo_AUTO_muestra": {
+    "Vehículo privado como conductor": 8110,
+    "Vehículo privado como pasajero": 3758,
+    "Auto compartido": 511,
+    "Auto alquilado": 177,
+    "Auto eléctrico": 30
+  },
+  "viajes_conductor_auto_muestra": 8110,
+  "viajes_conductor_auto_expandidos": 1275432.0,
+  "conductores_personas_muestra": 3913,
+  "viajes_conductor_sin_fexp": 0,
+  "estado_permanencia_muestra": {
+    "observada": 4331,
+    "imputada_pernocta": 3619,
+    "excluida_ultimo_no_hogar": 159,
+    "excluida_inconsistente": 1
+  },
+  "estado_permanencia_pct_muestra": {
+    "observada": 53.4,
+    "imputada_pernocta": 44.6,
+    "excluida_ultimo_no_hogar": 2.0,
+    "excluida_inconsistente": 0.0
+  },
+  "estado_permanencia_pct_expandido": {
+    "excluida_inconsistente": 0.0,
+    "excluida_ultimo_no_hogar": 1.7,
+    "imputada_pernocta": 42.8,
+    "observada": 55.6
+  },
+  "variante_vehiculo_con_dato_pct_muestra": 96.2,
+  "contraste_t_parqueo_declarado": {
+    "viajes_con_ambos": 2468,
+    "spearman": 0.766,
+    "mediana_perm_calculada_h": 3.0,
+    "mediana_t_parqueo_declarado_h": 2.5,
+    "pct_dif_abs_menor_1h": 70.0
+  },
+  "lugar_parqueo_destino_pct_expandido": {
+    "Garaje propio": 47.7,
+    "Espacio público no pago": 19.4,
+    "Parqueadero privado": 19.4,
+    "Parqueadero público": 6.8,
+    "Garaje arrendado": 3.8,
+    "Espacio público pago": 1.4,
+    "Otro": 0.9,
+    "Valet parking": 0.5,
+    "No aplica": 0.2
+  },
+  "llegadas_conductor_destino_bogota_muestra": 6622,
+  "llegadas_conductor_destino_fuera_bogota_muestra": 1488,
+  "llegadas_bogota_con_utam_fuera_del_shapefile": 0,
+  "escasez_zat": {
+    "universo": 940,
+    "sin_llegadas": 218,
+    "menos_de_10": 746,
+    "menos_de_30": 896,
+    "mediana_llegadas_muestra": 3.0,
+    "pct_llegadas_en_zonas_con_30_o_mas": 34.7
+  },
+  "escasez_utam": {
+    "universo": 142,
+    "sin_llegadas": 28,
+    "menos_de_10": 38,
+    "menos_de_30": 72,
+    "mediana_llegadas_muestra": 27.0,
+    "pct_llegadas_en_zonas_con_30_o_mas": 89.7
+  },
+  "permanencia_todos_bogota": {
+    "llegadas_muestra": 6622,
+    "llegadas_expandidas": 1097764.4,
+    "con_permanencia_muestra": 6506,
+    "pct_imputada_pernocta": 44.6,
+    "pct_excluida": 1.8,
+    "media_h": 9.66,
+    "p25_h": 2.84,
+    "mediana_h": 9.47,
+    "p75_h": 15.0,
+    "media_h_solo_observada": 4.67
+  },
+  "permanencia_vehiculo_todos_bogota": {
+    "llegadas_muestra": 6622,
+    "llegadas_expandidas": 1097764.4,
+    "con_permanencia_muestra": 6390,
+    "pct_imputada_pernocta": 44.6,
+    "pct_excluida": 3.5,
+    "media_h": 9.81,
+    "p25_h": 3.0,
+    "mediana_h": 9.5,
+    "p75_h": 15.08,
+    "media_h_solo_observada": 4.72
+  }
+}

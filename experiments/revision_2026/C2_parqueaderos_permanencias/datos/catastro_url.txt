@@ -1,0 +1,1 @@
+https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/catastro/usopredominante/MapServer/0/query?where=GRUPOUSOECON%3D%27DEPOSITOS%20Y%20PARQUEADEROS%27%20AND%20ANO%3Ddate%20%272026-01-01%27&outFields=*&outSR=4326&f=geojson
