@@ -1,0 +1,25 @@
+escenario,sede,denominador,modo_viajes,universo,puertos_vulnerable,puertos_resto,denominador_vulnerable,denominador_resto,por_10k_vulnerable,por_10k_resto,razon_resto_vulnerable
+S0,residential,residentes (DANE),todos,zonas con población DANE,2450,3931,3652765.0,3624730.0,6.707247797216629,10.844945692506752,1.616899512346507
+S0,workplace,"viajes atraídos, propósito trabajo",todos,zonas con población DANE,1041,1356,742913.6,2200100.4,14.012396596320219,6.163355090522234,0.43985017467609977
+S0,workplace,"viajes atraídos, propósito trabajo",todos,todas las zonas con denominador,1041,1695,742913.6,2556352.5,14.012396596320219,6.63054097586307,0.4731910726537893
+S0,workplace,"viajes atraídos, propósito trabajo",auto,zonas con población DANE,969,1345,66972.79999999999,302230.60000000003,144.68560370777394,44.5024428366949,0.307580309970423
+S0,workplace,"viajes atraídos, propósito trabajo",auto,todas las zonas con denominador,969,1684,66972.79999999999,351385.2,144.68560370777394,47.92461378566883,0.3312327733895605
+S0,public,viajes atraídos sin regreso al hogar ni trabajo,todos,zonas con población DANE,319,366,1776489.9000000001,2912169.1,1.7956758436960434,1.256795149704734,0.6999009058995136
+S0,public,viajes atraídos sin regreso al hogar ni trabajo,todos,todas las zonas con denominador,319,459,1776489.9000000001,3561454.1,1.7956758436960434,1.2887994260546558,0.7177238757090574
+S0,public,viajes atraídos sin regreso al hogar ni trabajo,auto,zonas con población DANE,306,361,92954.99999999999,453449.60000000003,32.919154429562695,7.961193482142226,0.241840764749193
+S0,public,viajes atraídos sin regreso al hogar ni trabajo,auto,todas las zonas con denominador,306,454,92954.99999999999,522356.8999999999,32.919154429562695,8.691375570993703,0.2640218353600391
+S0,public,viajes atraídos sin regreso al hogar (incl. trabajo),todos,zonas con población DANE,319,366,2519403.5,5112269.5,1.2661727269966878,0.7159246984142755,0.5654241977809938
+S0,public,viajes atraídos sin regreso al hogar (incl. trabajo),todos,todas las zonas con denominador,319,459,2519403.5,6117806.600000001,1.2661727269966878,0.7502688953913647,0.5925486147304508
+S0,total,residentes (DANE) [titular publicado],todos,zonas con población DANE,3810,5657,3652765.0,3624730.0,10.43045473771239,15.606679669934037,1.4962607156048977
+S2,residential,residentes (DANE),todos,zonas con población DANE,2449,3933,3652765.0,3624730.0,6.7045101450545,10.850463344856031,1.618382717022174
+S2,workplace,"viajes atraídos, propósito trabajo",todos,zonas con población DANE,1037,1360,742913.6,2200100.4,13.958554534470766,6.1815360789898515,0.44284929816511426
+S2,workplace,"viajes atraídos, propósito trabajo",todos,todas las zonas con denominador,1037,1699,742913.6,2556352.5,13.958554534470766,6.646188270201391,0.47613728583347037
+S2,workplace,"viajes atraídos, propósito trabajo",auto,zonas con población DANE,965,1348,66972.79999999999,302230.60000000003,144.08834631372738,44.601704790977486,0.3095441507383603
+S2,workplace,"viajes atraídos, propósito trabajo",auto,todas las zonas con denominador,965,1687,66972.79999999999,351385.2,144.08834631372738,48.00999017602335,0.3331982870529302
+S2,public,viajes atraídos sin regreso al hogar ni trabajo,todos,zonas con población DANE,319,366,1776489.9000000001,2912169.1,1.7956758436960434,1.256795149704734,0.6999009058995136
+S2,public,viajes atraídos sin regreso al hogar ni trabajo,todos,todas las zonas con denominador,319,459,1776489.9000000001,3561454.1,1.7956758436960434,1.2887994260546558,0.7177238757090574
+S2,public,viajes atraídos sin regreso al hogar ni trabajo,auto,zonas con población DANE,306,361,92954.99999999999,453449.60000000003,32.919154429562695,7.961193482142226,0.241840764749193
+S2,public,viajes atraídos sin regreso al hogar ni trabajo,auto,todas las zonas con denominador,306,454,92954.99999999999,522356.8999999999,32.919154429562695,8.691375570993703,0.2640218353600391
+S2,public,viajes atraídos sin regreso al hogar (incl. trabajo),todos,zonas con población DANE,319,366,2519403.5,5112269.5,1.2661727269966878,0.7159246984142755,0.5654241977809938
+S2,public,viajes atraídos sin regreso al hogar (incl. trabajo),todos,todas las zonas con denominador,319,459,2519403.5,6117806.600000001,1.2661727269966878,0.7502688953913647,0.5925486147304508
+S2,total,residentes (DANE) [titular publicado],todos,zonas con población DANE,3805,5663,3652765.0,3624730.0,10.416766476901744,15.623232626981872,1.4998159612798276

@@ -1,0 +1,199 @@
+{
+  "viajes": {
+    "viajes_registro": 100174,
+    "viajes_expandidos": 16723043.299999999,
+    "pct_expandido_con_destino_en_UTAM": 99.11607177384994
+  },
+  "verificacion_tabla_publicada": {
+    "S0": {
+      "recalculado": {
+        "vulnerable": 10.43045473771239,
+        "resto": 15.606679669934037,
+        "ciudad": 13.008597051595364,
+        "diferencia": 5.176224932221647,
+        "razon_resto_vulnerable": 1.4962607156048977,
+        "puertos_a_media": 941.7348009170743,
+        "puertos_a_paridad": 1890.7533264546603
+      },
+      "publicado": {
+        "vulnerable": 10.43045473771239,
+        "resto": 15.606679669934037,
+        "puertos_a_media": 941.7348009170736,
+        "puertos_a_paridad": 1890.75332645466
+      }
+    },
+    "S2": {
+      "recalculado": {
+        "vulnerable": 10.416766476901744,
+        "resto": 15.623232626981872,
+        "ciudad": 13.009971150787463,
+        "diferencia": 5.206466150080129,
+        "razon_resto_vulnerable": 1.4998159612798276,
+        "puertos_a_media": 947.2367270606168,
+        "puertos_a_paridad": 1901.7997326697443
+      },
+      "publicado": {
+        "vulnerable": 10.416766476901744,
+        "resto": 15.623232626981872,
+        "puertos_a_media": 947.2367270606164,
+        "puertos_a_paridad": 1901.799732669744
+      }
+    }
+  },
+  "punto2": {
+    "columnas_pca": [
+      "dane_blocks",
+      "dane_area_ha",
+      "dane_population",
+      "dane_dwellings",
+      "dane_households",
+      "persons_per_dwelling",
+      "population_density_ha",
+      "z_persons_per_dwelling",
+      "z_population_density_ha"
+    ],
+    "spearman_indice_vs_puertos_por_hab_S2": {
+      "publicado (personas/vivienda + densidad)": -0.5598166539343009,
+      "(a) personas por vivienda": -0.3506007361622335,
+      "(b) densidad de población": -0.48652684214181535,
+      "(c) % hogares en arriendo (B3)": 0.02511642904571144,
+      "(d) PCA de la batería de robustez": -0.6819431904993402,
+      "(e) estrato medio invertido (EM-2023)": -0.1713797551628165
+    }
+  },
+  "punto3_gradiente_centro": {
+    "spearman_por10k_S2_vs_dist_centro_pob10k": -0.38936166603524996,
+    "spearman_resid_por10k_S2_vs_dist_centro_pob10k": -0.37558735885010547,
+    "zonas_pob10k": 102,
+    "por10k_S2_anillo_0_5km": 17.661555684167908,
+    "zonas_anillo_0_5km": 19,
+    "por10k_S2_anillo_5_10km": 12.976540312517171,
+    "zonas_anillo_5_10km": 34,
+    "por10k_S2_anillo_10_15km": 11.307577989321427,
+    "zonas_anillo_10_15km": 36,
+    "por10k_S2_anillo_15_99km": 8.82286635304797,
+    "zonas_anillo_15_99km": 13
+  },
+  "punto4_bootstrap": {
+    "directa": {
+      "vulnerable": {
+        "muestra_completa": 11.602169863103704,
+        "mediana": 11.600801037022638,
+        "ic95_inf": 11.232518379912204,
+        "ic95_sup": 11.96901525282902
+      },
+      "resto": {
+        "muestra_completa": 13.537560038954625,
+        "mediana": 13.534801212779985,
+        "ic95_inf": 13.233813277126847,
+        "ic95_sup": 13.84392768564831
+      },
+      "diferencia": {
+        "muestra_completa": 1.9353901758509213,
+        "mediana": 1.924725416371289,
+        "ic95_inf": 1.303405929356288,
+        "ic95_sup": 2.587315319957806
+      },
+      "razon_resto_vulnerable": {
+        "muestra_completa": 1.1668127771517718,
+        "mediana": 1.1654636022136688,
+        "ic95_inf": 1.1087546294679271,
+        "ic95_sup": 1.2298558161326614
+      },
+      "puertos_a_media": {
+        "muestra_completa": 352.1145826963811,
+        "mediana": 350.17429314619915,
+        "ic95_inf": 237.1347341873816,
+        "ic95_sup": 470.7223719322378
+      },
+      "puertos_a_paridad": {
+        "muestra_completa": 706.952549569209,
+        "mediana": 703.0569635531472,
+        "ic95_inf": 476.1035559545121,
+        "ic95_sup": 945.0854844705675
+      },
+      "resid_vulnerable": {
+        "muestra_completa": 8.256758920981778,
+        "mediana": 8.270447181792424,
+        "ic95_inf": 7.928035337614109,
+        "ic95_sup": 8.623809634619255
+      },
+      "resid_resto": {
+        "muestra_completa": 8.39510804942713,
+        "mediana": 8.378555092379294,
+        "ic95_inf": 8.115638957936177,
+        "ic95_sup": 8.67409434633752
+      },
+      "puertos_movidos_vs_muestra_completa": {
+        "muestra_completa": null,
+        "mediana": 533.0,
+        "ic95_inf": 472.9,
+        "ic95_sup": 613.025
+      },
+      "puertos_movidos_muestra_completa_vs_S0_publicado": 2113.0
+    },
+    "omega_atencion_fija": {
+      "vulnerable": {
+        "muestra_completa": 9.934939696367,
+        "mediana": 9.951365609339774,
+        "ic95_inf": 9.750832588463807,
+        "ic95_sup": 10.13492518681054
+      },
+      "resto": {
+        "muestra_completa": 15.926703506192185,
+        "mediana": 15.919806440755586,
+        "ic95_inf": 15.752621574572451,
+        "ic95_sup": 16.10333735202346
+      },
+      "diferencia": {
+        "muestra_completa": 5.991763809825185,
+        "mediana": 5.973789091665011,
+        "ic95_inf": 5.652885494824109,
+        "ic95_sup": 6.332758046407661
+      },
+      "razon_resto_vulnerable": {
+        "muestra_completa": 1.6031001689941056,
+        "mediana": 1.5994751613618752,
+        "ic95_inf": 1.5586459616010333,
+        "ic95_sup": 1.6478625812359555
+      },
+      "puertos_a_media": {
+        "muestra_completa": 1090.1096015868097,
+        "mediana": 1086.8393770796133,
+        "ic95_inf": 1028.4558854729544,
+        "ic95_sup": 1152.1482772059614
+      },
+      "puertos_a_paridad": {
+        "muestra_completa": 2188.650513279609,
+        "mediana": 2182.0847711415745,
+        "ic95_inf": 2064.8662284501193,
+        "ic95_sup": 2313.207694538628
+      },
+      "resid_vulnerable": {
+        "muestra_completa": 6.507399189381195,
+        "mediana": 6.510136841543324,
+        "ic95_inf": 6.372980468220649,
+        "ic95_sup": 6.630661977981064
+      },
+      "resid_resto": {
+        "muestra_completa": 10.900122215999536,
+        "mediana": 10.901501629086855,
+        "ic95_inf": 10.778733864315411,
+        "ic95_sup": 11.027097190687307
+      },
+      "puertos_movidos_vs_muestra_completa": {
+        "muestra_completa": null,
+        "mediana": 270.0,
+        "ic95_inf": 223.9,
+        "ic95_sup": 306.125
+      },
+      "puertos_movidos_muestra_completa_vs_S0_publicado": 1367.0
+    },
+    "_contexto": {
+      "B": 200,
+      "semilla": 20261011,
+      "estratos_utam_hogar": 142,
+      "hogares": 22755
+    }
+  }
+}
