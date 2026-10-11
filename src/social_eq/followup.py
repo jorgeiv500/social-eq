@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.cm import ScalarMappable
 from matplotlib.ticker import FuncFormatter
-from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap, Normalize, TwoSlopeNorm
+from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap, ListedColormap, Normalize, TwoSlopeNorm, to_rgb
+from matplotlib.legend_handler import HandlerTuple
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
 from pyomo.environ import (
@@ -36,16 +37,23 @@ from pyomo.environ import (
 from pyomo.opt import SolverFactory, SolverManagerFactory, TerminationCondition
 from scipy.sparse.csgraph import shortest_path
 from shapely.affinity import rotate as rotate_geometry
+from shapely.geometry import box as shapely_box
 
 warnings.filterwarnings("ignore")
 plt.style.use("default")
 plt.rcParams["hatch.linewidth"] = 0.5
+# Tipografia comun de las figuras (guia JTG, especificacion_figuras.md 1.5): Arial con respaldos
+# libres de metrica equivalente; rotulos de 7-8 pt a tamano impreso.
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Arial", "Liberation Sans", "Arimo", "Helvetica", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = True
+plt.rcParams["pdf.fonttype"] = 42
 
 PAPER_PANEL = "#fbf8f4"
 PAPER_GRID = "#d9d1c8"
 PAPER_TEXT = "#2d2a26"
 MAP_EDGE = "#b9b0a3"
-MAP_MISSING = "#dcd8d1"
+MAP_MISSING = "#d9d9d9"
 MAP_OUTLINE = "#8a8178"
 MAP_SCALE = "#4f4a44"
 MAP_DELTA_ZERO = "#e8e5e0"
@@ -85,8 +93,8 @@ DIVERGING_CMAP = LinearSegmentedColormap.from_list(
     ["#1d5a8f", "#7fb3d3", "#f0efec", "#efa583", "#a63a2e"],
 )
 # Discrete fills used when the delta is effectively categorical (gain/loss maps).
-GAIN_FILL = "#b2452f"
-LOSS_FILL = "#2e6b9e"
+GAIN_FILL = "#D6604D"
+LOSS_FILL = "#4393C3"
 # Three-class urban/rural/region layer (author decision 9, revision R1 2026-08).
 # Classified from the UTAM code alone: UPR* = rural Bogota, numeric >= 500 =
 # neighbouring municipalities, numeric < 500 = urban Bogota.
@@ -130,17 +138,39 @@ SCENARIO_PANEL_TITLES = {
     "S2": "Socially weighted equalization",
     "S3": "Soft-floor protection",
 }
+# Paleta de escenarios (Okabe-Ito), RESERVADA a S0-S3: ninguna otra serie la reutiliza.
 SCENARIO_COLORS = {
-    "S0": "#2457a6",
-    "S1": "#2a9d8f",
-    "S2": "#c95a49",
-    "S3": "#8e4a8b",
+    "S0": "#0072B2",
+    "S1": "#009E73",
+    "S2": "#D55E00",
+    "S3": "#CC79A7",
 }
-PROTECTED_COLORS = {0: "#e8dfd2", 1: "#c95a49"}
+SCENARIO_MARKERS = {"S0": "o", "S1": "s", "S2": "^", "S3": "D"}
+SCENARIO_LINESTYLES = {"S0": "-", "S1": (0, (5, 2)), "S2": (0, (1.2, 1.2)), "S3": (0, (6, 2, 1.2, 2))}
+# Series que no son escenarios: grises distinguibles tambien por forma o tipo de linea.
+NEUTRAL_DARK = "#1B1B1B"
+NEUTRAL_MID = "#7F7F7F"
+NEUTRAL_LIGHT = "#BDBDBD"
+# Paletas clasificadas de los mapas (estilo_cartografico_comun.md, 3).
+PORTS_COLORS = ["#FFFFD4", "#FEE391", "#FEC44F", "#FE9929", "#D95F0E", "#993404"]
+PORTS_CMAP = ListedColormap(PORTS_COLORS, name="ports_ylorbr6")
+INDEX_COLORS = ["#FFFFD4", "#FED98E", "#FE9929", "#D95F0E", "#993404"]
+INDEX_CMAP = ListedColormap(INDEX_COLORS, name="index_ylorbr5")
+INTENSITY_COLORS = ["#EFF3FF", "#C6DBEF", "#9ECAE1", "#6BAED6", "#4292C6", "#2171B5", "#084594"]
+INTENSITY_CLASS_CMAP = ListedColormap(INTENSITY_COLORS, name="intensity_blues7")
+# Cambio entero de puertos entre escenarios, clases -2..+2 (RdBu, neutro en cero).
+DELTA_CLASS_COLORS = {-2: "#053061", -1: "#4393C3", 0: "#F0F0F0", 1: "#D6604D", 2: "#67001F"}
+NO_PORTS_FILL = "#FFFFFF"
+NEATLINE_COLOR = "#7F7F7F"
+# Marco urbano comun, EPSG:3116, norte arriba (30 x 47.5 km; 111 UTAM urbanas con >= 3 km de margen).
+URBAN_FRAME_3116 = (980500.0, 981500.0, 1010500.0, 1029000.0)
+PROTECTED_COLORS = {0: "#F0F0F0", 1: "#B2182B"}
 TIME_WINDOWS = [
-    (-0.5, 5.5, "Residential", "#e7eef4"),
-    (7.5, 17.5, "Work", "#f7e5de"),
-    (17.5, 21.5, "Public", "#f7edd7"),
+    (-0.5, 5.5, "Residential", "#F2F2F2"),
+    (7.5, 17.5, "Work", "#E6E6E6"),
+    (17.5, 21.5, "Public", "#D9D9D9"),
+    # La ventana residencial es 22-5 h: las horas 22 y 23 llevan el mismo tono, sin rótulo.
+    (21.5, 23.5, "", "#F2F2F2"),
 ]
 PAPER_MAIN_FIGURES = (
     "fig_official_ev_growth.png",
@@ -1686,6 +1716,8 @@ def configure_line_axis(ax: Any, title: str, xlabel: str, ylabel: str) -> None:
 def add_time_window_bands(ax: Any) -> None:
     for start, end, label, color in TIME_WINDOWS:
         ax.axvspan(start, end, color=color, alpha=0.9, zorder=0)
+        if not label:
+            continue
         ax.text(
             (start + end) / 2,
             0.975,
@@ -1693,8 +1725,8 @@ def add_time_window_bands(ax: Any) -> None:
             transform=ax.get_xaxis_transform(),
             ha="center",
             va="top",
-            fontsize=8.0,
-            color="#5a544e",
+            fontsize=7.0,
+            color="#4d4d4d",
             bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.85},
             zorder=4,
         )
@@ -1705,16 +1737,16 @@ def shorten_robustness_label(text: str) -> str:
         "Alternative travel-time matrix": "Alternative time matrix",
         "Low decay (all lambda x 0.75)": "Low decay",
         "High decay (all lambda x 1.25)": "High decay",
-        "Alternative epsilon tolerance (0.056)": "epsilon = 0.056",
-        "Alternative epsilon tolerance (0.080)": "epsilon = 0.080",
-        "Alternative epsilon tolerance (0.100)": "epsilon = 0.100",
-        "Alternative vulnerability emphasis kappa (2.00)": "kappa = 2.0",
-        "Alternative vulnerability emphasis kappa (4.00)": "kappa = 4.0",
-        "Alternative vulnerability emphasis kappa (6.00)": "kappa = 6.0",
+        "Alternative epsilon tolerance (0.056)": "ε = 0.056",
+        "Alternative epsilon tolerance (0.080)": "ε = 0.080",
+        "Alternative epsilon tolerance (0.100)": "ε = 0.100",
+        "Alternative vulnerability emphasis kappa (2.00)": "κ = 2.0",
+        "Alternative vulnerability emphasis kappa (4.00)": "κ = 4.0",
+        "Alternative vulnerability emphasis kappa (6.00)": "κ = 6.0",
         "PCA weights for vulnerability index": "PCA vulnerability index",
-        "Soft floor gamma (0.65)": "gamma = 0.65",
-        "Soft floor gamma (0.80)": "gamma = 0.80",
-        "Soft floor gamma (0.95)": "gamma = 0.95",
+        "Soft floor gamma (0.65)": "γ = 0.65",
+        "Soft floor gamma (0.80)": "γ = 0.80",
+        "Soft floor gamma (0.95)": "γ = 0.95",
     }
     return replacements.get(text, text)
 
@@ -1767,18 +1799,21 @@ def classify_zone_class(utam_code: Any) -> str:
 
 
 def prepare_context_layers(utam: gpd.GeoDataFrame) -> tuple[gpd.GeoDataFrame, float, tuple[float, float]]:
-    """Horizontalized map frame carrying the columns the figures need.
+    """Marco de mapa en EPSG:3116 con NORTE ARRIBA y las columnas que usan las figuras.
 
-    Keeps locality/municipality names when the shapefile provides them and
-    attaches the three-class urban/rural/region layer.
+    Revision de imprenta del 2026-10-11 (guia JTG, estilo_cartografico_comun.md): los mapas ya no
+    se giran. `horizontalize_bogota` sigue en el modulo pero no se llama; se devuelve una rotacion
+    de 0 grados y el centroide como origen para que los llamadores que rotan capas
+    complementarias (puntos OSM en E3) sigan funcionando sin cambios.
     """
     keep = [column for column in ("UTAM", "LOCNombre", "MUNNombre", "geometry") if column in utam.columns]
     utam_map = utam[keep].copy()
     if utam_map.crs is None:
         utam_map = utam_map.set_crs(4326)
-    utam_map, rotation_deg, rotation_origin = horizontalize_bogota(utam_map)
+    utam_map = utam_map.to_crs(3116)
+    origin = tuple(utam_map.unary_union.centroid.coords[0])
     utam_map["zone_class"] = utam_map["UTAM"].map(classify_zone_class)
-    return utam_map, rotation_deg, rotation_origin
+    return utam_map, 0.0, origin
 
 
 def label_halo(linewidth: float = 2.2) -> list[Any]:
@@ -1790,14 +1825,14 @@ def add_north_arrow(
     rotation_deg: float,
     *,
     extent: tuple[float, float, float, float],
-    x_frac: float = 0.965,
-    y_frac: float = 0.82,
-    size_frac: float = 0.13,
+    x_frac: float = 0.07,
+    y_frac: float = 0.95,
+    size_frac: float = 0.08,
 ) -> list[tuple[float, float, float, float]]:
-    """North arrow honouring the rotation applied by ``horizontalize_bogota``.
+    """Flecha de norte: triangulo relleno + "N" (7 pt), arriba a la derecha.
 
-    Devuelve la caja que ocupa, para que los rotulos de localidad no caigan
-    debajo (R2.m2: al dibujar al tamano de impresion el margen desaparece).
+    Con norte arriba (`rotation_deg = 0`) la flecha es vertical. `y_frac` es la posicion de la
+    letra N; la flecha queda debajo. Devuelve la caja ocupada para que los rotulos no la pisen.
     """
     minx, miny, maxx, maxy = extent
     width = maxx - minx
@@ -1807,67 +1842,59 @@ def add_north_arrow(
     length = size_frac * height
     theta = math.radians(90.0 + rotation_deg)
     dx, dy = math.cos(theta), math.sin(theta)
-    x_tip = minx + x_frac * width
-    y_tip = miny + y_frac * height
+    x_n = minx + x_frac * width
+    y_n = miny + y_frac * height
+    x_tip = x_n - dx * 0.30 * length
+    y_tip = y_n - dy * 0.30 * length
     x_base = x_tip - dx * length
     y_base = y_tip - dy * length
     ax.annotate(
         "",
         xy=(x_tip, y_tip),
         xytext=(x_base, y_base),
-        arrowprops={
-            "arrowstyle": "-|>",
-            "color": MAP_SCALE,
-            "linewidth": 1.3,
-            "mutation_scale": 13,
-            "shrinkA": 0.0,
-            "shrinkB": 0.0,
-        },
+        arrowprops={"arrowstyle": "-|>", "color": MAP_SCALE, "linewidth": 1.1, "mutation_scale": 9, "shrinkA": 0.0, "shrinkB": 0.0},
         annotation_clip=False,
         zorder=11,
     )
-    ax.text(
-        x_tip + dx * 0.42 * length,
-        y_tip + dy * 0.42 * length,
-        "N",
-        ha="center",
-        va="center",
-        fontsize=8.6,
-        fontweight="bold",
-        color=MAP_SCALE,
-        path_effects=label_halo(2.0),
-        zorder=11,
-    )
-    # Caja que cubre flecha y letra, con algo de holgura.
-    cx = 0.5 * (x_base + x_tip + dx * 0.42 * length)
-    cy = 0.5 * (y_base + y_tip + dy * 0.42 * length)
-    return [(cx, cy, 0.85 * abs(dx * length) + 0.02 * width, 0.85 * abs(dy * length) + 0.03 * height)]
+    ax.text(x_n, y_n, "N", ha="center", va="center", fontsize=7.5, fontweight="bold", color=MAP_SCALE,
+            path_effects=label_halo(1.8), zorder=11)
+    cx = 0.5 * (x_base + x_n)
+    cy = 0.5 * (y_base + y_n)
+    return [(cx, cy, 0.06 * width, 0.5 * abs(y_n - y_base) + 0.03 * height)]
 
 
-def add_region_ring_overlay(ax: Any, gdf: gpd.GeoDataFrame, *, linewidth: float = 0.55) -> None:
-    """Subtle hatch + contour marking the neighbouring-municipality ring.
+def add_region_ring_overlay(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    *,
+    linewidth: float = 0.5,
+    fill_colors: pd.Series | None = None,
+) -> None:
+    """Rayado del anillo de municipios vecinos (decision 9 del autor).
 
-    Author decision 9: the ring must be readable at a glance in the
-    choropleths because 22 of its 26 units have no usable DANE population.
+    Con `fill_colors` (color de relleno de cada unidad) el rayado pasa a blanco sobre rellenos
+    oscuros, para que se lea igual sobre la clase alta de cualquier rampa; la leyenda
+    (`region_ring_legend_handle`) muestra las dos variantes.
     """
     if "zone_class" not in gdf.columns:
         return
     ring = gdf.loc[gdf["zone_class"].eq("region")]
     if ring.empty:
         return
-    ring.plot(
-        ax=ax,
-        facecolor="none",
-        edgecolor=REGION_HATCH_COLOR,
-        linewidth=linewidth,
-        hatch=REGION_HATCH,
-        alpha=0.55,
-        zorder=4,
-    )
+    if fill_colors is None:
+        ring.plot(ax=ax, facecolor="none", edgecolor=REGION_HATCH_COLOR, linewidth=linewidth, hatch=REGION_HATCH, alpha=0.75, zorder=4)
+        return
+    colores = fill_colors.reindex(ring.index).fillna(MAP_MISSING)
+    oscuro = colores.map(lambda c: _luminance(c) < 0.45)
+    for mask, edge in ((~oscuro, REGION_HATCH_COLOR), (oscuro, "white")):
+        subset = ring.loc[mask]
+        if not subset.empty:
+            subset.plot(ax=ax, facecolor="none", edgecolor=edge, linewidth=linewidth, hatch=REGION_HATCH, alpha=0.9, zorder=4)
+    ring.boundary.plot(ax=ax, color=MAP_OUTLINE, linewidth=0.35, zorder=4)
 
 
 def region_ring_legend_patch(label: str = "Neighbouring municipalities") -> Patch:
-    return Patch(facecolor="none", edgecolor=REGION_HATCH_COLOR, hatch=REGION_HATCH, linewidth=0.7, label=label)
+    return Patch(facecolor="white", edgecolor=REGION_HATCH_COLOR, hatch=REGION_HATCH, linewidth=0.6, label=label)
 
 
 def label_box(
@@ -2051,9 +2078,7 @@ def add_city_centre_marker(
 
 
 def make_ports_norm(scenario_outputs: dict[str, pd.DataFrame]) -> BoundaryNorm | None:
-    """Classed scale for port counts (R1.11): the distribution is heavy-tailed
-    (median < 1, max ~ 950), so fixed class breaks keep low counts readable
-    instead of collapsing them onto the light end of a linear ramp."""
+    """Clases fijas de puertos por zona (R1.11), seis clases YlOrBr; la ultima es abierta (300+)."""
     all_ports: list[float] = []
     for name in ("S0", "S1", "S2", "S3"):
         frame = scenario_outputs.get(name)
@@ -2062,18 +2087,19 @@ def make_ports_norm(scenario_outputs: dict[str, pd.DataFrame]) -> BoundaryNorm |
     if not all_ports:
         return None
     top = float(np.max(all_ports))
-    # La clase superior es abierta (300 puertos o más): un corte en 600 dejaba una clase de
-    # ancho 1 con la zona máxima sola (R3.6).
     bounds = [1.0, 10.0, 25.0, 75.0, 150.0, 300.0, max(top + 1.0, 301.0)]
-    return BoundaryNorm(bounds, ncolors=256)
+    return BoundaryNorm(bounds, ncolors=len(PORTS_COLORS))
 
 
 def label_open_top_class(cbar: Any, norm: BoundaryNorm, *, unit: str = "") -> None:
-    """Etiqueta el último corte de una escala clasificada como abierto ("300+")."""
+    """Rotula todos los cortes de una escala clasificada; la ultima clase se marca abierta ("300+").
+
+    Revision 2026-10-11 (guia JTG, Fig. 6): antes el corte de 300 quedaba sin numero entre 150 y
+    "300+". Ahora cada corte lleva su numero y el extremo derecho dice "+".
+    """
     bounds = list(norm.boundaries)
     cbar.set_ticks(bounds)
-    labels = [f"{b:g}{unit}" for b in bounds[:-1]] + [f"{bounds[-2]:g}+"]
-    labels[-2] = ""  # el penúltimo corte se lee en la etiqueta abierta
+    labels = [f"{b:g}{unit}" for b in bounds[:-1]] + ["+"]
     cbar.set_ticklabels(labels)
 
 
@@ -2310,11 +2336,15 @@ def add_scale_bar(
     gdf: gpd.GeoDataFrame,
     *,
     extent: tuple[float, float, float, float] | None = None,
-    x_frac: float = 0.5,
+    x_frac: float = 0.06,
+    y_frac: float = 0.04,
+    fontsize: float = 6.8,
 ) -> list[tuple[float, float, float, float]]:
-    """Barra de escala. Devuelve la caja que ocupa, para reservarla frente a
-    los rotulos de localidad (R2.m2). `x_frac` es la fraccion horizontal del
-    extent donde se centra la barra (0.5 = centrada)."""
+    """Barra de escala alternada (blanco / gris oscuro) con 0, mitad y longitud total en km.
+
+    `x_frac` es el extremo IZQUIERDO de la barra en fraccion del extent (revision 2026-10-11:
+    antes era el centro). Devuelve la caja ocupada para reservarla frente a los rotulos.
+    """
     if gdf.empty or gdf.crs is None or not bool(getattr(gdf.crs, "is_projected", False)):
         return []
     minx, miny, maxx, maxy = extent if extent is not None else gdf.total_bounds
@@ -2322,30 +2352,17 @@ def add_scale_bar(
     height = maxy - miny
     if not np.isfinite(width) or width <= 0 or not np.isfinite(height) or height <= 0:
         return []
-
     length_m = choose_scale_length(width)
-    x0 = minx + x_frac * width - 0.5 * length_m
-    y0 = miny + 0.055 * height
-    tick_h = 0.012 * height
-    label_y = y0 + 0.018 * height
-
-    # White underlay keeps the scale bar legible over light polygons.
-    for color, lw, z in [("white", 4.6, 8), (MAP_SCALE, 2.1, 9)]:
-        ax.plot([x0, x0 + length_m], [y0, y0], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
-        ax.plot([x0, x0], [y0 - tick_h, y0 + tick_h], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
-        ax.plot([x0 + length_m, x0 + length_m], [y0 - tick_h, y0 + tick_h], color=color, linewidth=lw, solid_capstyle="butt", zorder=z)
-    ax.text(
-        x0 + 0.5 * length_m,
-        label_y,
-        f"{int(round(length_m / 1000.0))} km",
-        ha="center",
-        va="bottom",
-        fontsize=7.9,
-        color=MAP_SCALE,
-        bbox={"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
-        zorder=10,
-    )
-    return [(x0 + 0.5 * length_m, y0 + 0.02 * height, 0.5 * length_m + 0.02 * width, 0.055 * height)]
+    x0 = minx + x_frac * width
+    y0 = miny + y_frac * height
+    bar_h = 0.011 * height
+    half = 0.5 * length_m
+    for i, color in enumerate((MAP_SCALE, "white")):
+        ax.add_patch(Rectangle((x0 + i * half, y0), half, bar_h, facecolor=color, edgecolor=MAP_SCALE, linewidth=0.6, zorder=10))
+    km = length_m / 1000.0
+    for pos, texto in ((0.0, "0"), (length_m, f"{km:g} km")):
+        ax.text(x0 + pos, y0 + bar_h + 0.008 * height, texto, ha="center", va="bottom", fontsize=fontsize, color=MAP_SCALE, path_effects=label_halo(1.6), zorder=10)
+    return [(x0 + half, y0 + 0.02 * height, half + 0.06 * width, 0.035 * height)]
 
 
 def add_focus_inset(
@@ -2468,13 +2485,17 @@ def load_official_ev_growth(paths: ProjectPaths) -> pd.DataFrame | None:
 
 
 def urban_core_extent(gdf: gpd.GeoDataFrame, pad_m: float = 3000.0) -> tuple[float, float, float, float]:
-    """Recorte al nucleo urbano: caja de las UTAM urbanas con un margen fijo.
+    """Marco urbano comun, norte arriba (estilo_cartografico_comun.md).
 
-    Pasada de forma del 2026-09-02: el marco completo de la region (153 x 57 km, relacion
-    2.7) obligaba a apilar los mapas y dejaba la mitad del ancho en blanco. Con 3 km de
-    margen (48 x 28 km, relacion 1.7) entran las 111 UTAM urbanas, 10 unidades del anillo y
-    el 92 % de los puertos; el resto se muestra en el localizador.
+    Si la capa esta en EPSG:3116 se devuelve la constante `URBAN_FRAME_3116` (30 x 47.5 km), la
+    misma en las Figs. 4, 6, 7 y C1, para que los mapas comparables tengan exactamente el mismo
+    marco. En otro CRS se recurre a la caja de las UTAM urbanas con `pad_m` de margen.
     """
+    try:
+        if gdf.crs is not None and gdf.crs.to_epsg() == 3116:
+            return URBAN_FRAME_3116
+    except Exception:  # noqa: BLE001
+        pass
     if "zone_class" not in gdf.columns or not gdf["zone_class"].eq("urban").any():
         return tuple(gdf.total_bounds)
     minx, miny, maxx, maxy = gdf.loc[gdf["zone_class"].eq("urban")].total_bounds
@@ -2482,26 +2503,31 @@ def urban_core_extent(gdf: gpd.GeoDataFrame, pad_m: float = 3000.0) -> tuple[flo
 
 
 def draw_locator(ax: Any, gdf: gpd.GeoDataFrame, crop: tuple[float, float, float, float], *, title: str | None = None) -> None:
-    """Mapa de situacion: region completa en tres clases con el recuadro del recorte."""
+    """Mapa de situacion: region completa (norte arriba) en tres clases con el recuadro del marco."""
     for zone_name, fill in ZONE_FILLS.items():
         subset = gdf.loc[gdf["zone_class"].eq(zone_name)] if "zone_class" in gdf.columns else gdf.iloc[0:0]
         if not subset.empty:
             subset.plot(ax=ax, color=fill, edgecolor="none")
+    add_region_ring_overlay(ax, gdf)
     draw_map_outline(ax, gdf)
     ax.add_patch(
-        Rectangle((crop[0], crop[1]), crop[2] - crop[0], crop[3] - crop[1], fill=False, edgecolor=PAPER_TEXT, linewidth=1.0)
+        Rectangle((crop[0], crop[1]), crop[2] - crop[0], crop[3] - crop[1], fill=False, edgecolor=NEUTRAL_DARK, linewidth=1.0, zorder=8)
     )
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_axis_off()
     ax.set_aspect("equal")
-    ax.margins(0.02)
+    minx, miny, maxx, maxy = gdf.total_bounds
+    pad = 0.03 * (maxy - miny)
+    ax.set_xlim(minx - pad, maxx + pad)
+    ax.set_ylim(miny - pad, maxy + pad)
+    add_neatline(ax)
     if title:
-        ax.set_title(title, loc="left", fontsize=8.0, color="#6d655e", pad=3)
+        panel_label(ax, title)
 
 
 def _titulo_panel(ax: Any, title: str) -> None:
-    ax.set_title(title, loc="left", fontsize=10.0, fontweight="semibold", color=PAPER_TEXT, pad=6)
+    panel_label(ax, title)
 
 
 def fig_social_context_panels(
@@ -2510,77 +2536,92 @@ def fig_social_context_panels(
     df_inputs: pd.DataFrame,
     protected_mask_s3: np.ndarray,
     rotation_deg: float,
+    imputed_units: set[str] | None = None,
 ) -> None:
-    """Figure 4 - social context: cuadricula 2 x 2 recortada al nucleo urbano.
+    """Figura 4 - insumos socioespaciales, norte arriba, en una fila a doble columna.
 
-    Pasada de forma del 2026-09-02 (el autor: las figuras apiladas dejaban demasiado
-    blanco). Tres mapas recortados al nucleo urbano (2.6 veces mas grandes que en el
-    marco completo) y un cuarto panel con el localizador de la region, la barra de color
-    compartida por (a) y (b) y la leyenda. Se conservan las rampas de arranque claro
-    (R1.11), los elementos cartograficos (R3.6) y la trama del anillo (decision 9).
+    Revision de imprenta del 2026-10-11: (a)-(c) en el marco urbano comun y (d) la region completa
+    como localizador, todos con norte arriba; rotulos "(a)" iguales; indices 0-1 en cinco clases de
+    0.2 (R1.11). `imputed_units` son las unidades sin dato censal cuyo indice de vulnerabilidad el
+    modelo imputa con la mediana (`build_inputs`); en (b) se muestran como "sin dato censal" en vez
+    de con el color de la mediana.
     """
     gdf_priority = utam_map.merge(df_inputs[["UTAM", "priority_norm", "vulnerability_index"]], on="UTAM", how="left")
+    if imputed_units:
+        gdf_priority["vulnerability_shown"] = gdf_priority["vulnerability_index"].where(~gdf_priority["UTAM"].isin(imputed_units))
+    else:
+        gdf_priority["vulnerability_shown"] = gdf_priority["vulnerability_index"]
     protected_df = pd.DataFrame({"UTAM": df_inputs["UTAM"], "protected_s3": np.asarray(protected_mask_s3).astype(int)})
     gdf_protected = utam_map.merge(protected_df, on="UTAM", how="left")
     crop = urban_core_extent(utam_map)
-    shared_norm = Normalize(vmin=0.0, vmax=1.0)
+    index_norm = BoundaryNorm([0.0, 0.2, 0.4, 0.6, 0.8, 1.0001], ncolors=len(INDEX_COLORS))
 
-    fig = plt.figure(figsize=(7.05, 5.10), constrained_layout=True)
-    grid = fig.add_gridspec(2, 2)
-    ax_a = fig.add_subplot(grid[0, 0])
-    ax_b = fig.add_subplot(grid[0, 1])
-    ax_c = fig.add_subplot(grid[1, 0])
-    celda_d = grid[1, 1].subgridspec(3, 1, height_ratios=[0.60, 0.13, 0.27], hspace=0.05)
-    ax_loc = fig.add_subplot(celda_d[0, 0])
-    ax_cbar = fig.add_subplot(celda_d[1, 0])
-    ax_leg = fig.add_subplot(celda_d[2, 0])
+    frame_ratio = (crop[3] - crop[1]) / (crop[2] - crop[0])
+    rb = utam_map.total_bounds
+    locator_ratio = (rb[3] - rb[1]) / (rb[2] - rb[0])
+    fig = plt.figure(figsize=(7.05, 3.80))
+    grid = fig.add_gridspec(2, 4, width_ratios=[1.0, 1.0, 1.0, frame_ratio / locator_ratio], height_ratios=[1.0, 0.25],
+                            left=0.005, right=0.995, top=0.95, bottom=0.0, wspace=0.06, hspace=0.04)
+    axes = [fig.add_subplot(grid[0, i]) for i in range(3)]
+    ax_loc = fig.add_subplot(grid[0, 3])
 
-    plot_map_panel(ax_a, gdf_priority, "priority_norm", "", SEQUENTIAL_CMAP, norm=shared_norm)
-    _titulo_panel(ax_a, "a. Learned charging priority")
-    add_region_ring_overlay(ax_a, gdf_priority)
-    ax_a.set_xlim(crop[0], crop[2])
-    ax_a.set_ylim(crop[1], crop[3])
-    reservado = add_north_arrow(ax_a, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
-    reservado += add_scale_bar(ax_a, gdf_priority, extent=crop, x_frac=0.22)
-    reservado += add_city_centre_marker(ax_a, gdf_priority)
-    add_locality_labels(ax_a, gdf_priority, extent=crop, reserved=reservado)
-
-    plot_map_panel(ax_b, gdf_priority, "vulnerability_index", "", SEQUENTIAL_CMAP, norm=shared_norm)
-    _titulo_panel(ax_b, "b. Social vulnerability")
-    add_region_ring_overlay(ax_b, gdf_priority)
-    ax_b.set_xlim(crop[0], crop[2])
-    ax_b.set_ylim(crop[1], crop[3])
-
-    plot_binary_map_panel(ax_c, gdf_protected, "protected_s3", "")
-    _titulo_panel(ax_c, "c. Protected set (soft-floor diagnostic)")
-    add_region_ring_overlay(ax_c, gdf_protected)
-    ax_c.set_xlim(crop[0], crop[2])
-    ax_c.set_ylim(crop[1], crop[3])
-
-    draw_locator(ax_loc, utam_map, crop, title="d. Location of the frame within the study region")
-    add_horizontal_colorbar(fig, ax_cbar, SEQUENTIAL_CMAP, shared_norm, "Normalized index, 0-1 (priority in a, vulnerability in b)", cax=ax_cbar)
-    ax_leg.axis("off")
-    ax_leg.legend(
-        handles=[
-            Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected UTAM (c)"),
-            Patch(facecolor=PROTECTED_COLORS[0], edgecolor="none", label="Other UTAM (c)"),
-            region_ring_legend_patch(),
-            Line2D([0], [0], marker="*", color="none", markerfacecolor=PAPER_TEXT, markeredgecolor="white", markersize=9, label="Historic city centre"),
-        ],
-        loc="upper left",
-        ncol=2,
-        frameon=False,
-        fontsize=8.0,
-        handletextpad=0.5,
-        columnspacing=1.0,
+    paneles = (
+        (axes[0], gdf_priority, "priority_norm", "(a)"),
+        (axes[1], gdf_priority, "vulnerability_shown", "(b)"),
     )
-    fig.savefig(figures_dir / "fig_social_context_panels.png", dpi=300, bbox_inches="tight", facecolor="white")
+    for ax, gdf, column, label in paneles:
+        plot_map_values(ax, gdf, column, INDEX_CMAP, norm=index_norm, linewidth=0.25)
+        add_region_ring_overlay(ax, gdf, fill_colors=fill_colors_for(gdf, column, INDEX_CMAP, index_norm))
+        draw_map_outline(ax, gdf)
+        set_map_frame(ax, crop)
+        panel_label(ax, label)
+    colors = gdf_protected["protected_s3"].fillna(0).astype(int).map(PROTECTED_COLORS).fillna(MAP_MISSING)
+    gdf_protected.plot(color=colors, ax=axes[2], linewidth=0.25, edgecolor=MAP_EDGE)
+    add_region_ring_overlay(axes[2], gdf_protected)
+    draw_map_outline(axes[2], gdf_protected)
+    set_map_frame(axes[2], crop)
+    panel_label(axes[2], "(c)")
+
+    for ax in axes:
+        reservado = add_north_arrow(ax, rotation_deg, extent=crop)
+        reservado += add_scale_bar(ax, gdf_priority, extent=crop)
+        if ax is axes[0]:
+            reservado += add_city_centre_marker(ax, gdf_priority, fontsize=7.0)
+            add_locality_labels(ax, gdf_priority, extent=crop, reserved=reservado, fontsize=7.0)
+
+    draw_locator(ax_loc, utam_map, crop, title="(d)")
+    for ax in axes + [ax_loc]:
+        ax.set_anchor("N")
+
+    fila = grid[1, :].subgridspec(1, 2, width_ratios=[1.0, 1.25], wspace=0.10)
+    ax_cbar = fig.add_subplot(fila[0, 0])
+    ax_leg = fig.add_subplot(fila[0, 1])
+    pos = ax_cbar.get_position()
+    ax_cbar.set_position([pos.x0 + 0.03, pos.y0 + 0.55 * pos.height, pos.width - 0.05, 0.22 * pos.height])
+    cbar = add_horizontal_colorbar(fig, ax_cbar, INDEX_CMAP, index_norm, "Normalized index, 0–1 (a, b)", cax=ax_cbar, spacing="proportional")
+    cbar.set_ticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    cbar.set_ticklabels(["0", "0.2", "0.4", "0.6", "0.8", "1"])
+    cbar.ax.tick_params(labelsize=7.0)
+    cbar.set_label("Normalized index, 0–1 (a, b)", fontsize=7.5)
+    ax_leg.axis("off")
+    handles = [
+        Patch(facecolor=PROTECTED_COLORS[1], edgecolor="none", label="Protected zone, S3 (c)"),
+        Patch(facecolor=PROTECTED_COLORS[0], edgecolor=MAP_EDGE, linewidth=0.5, label="Other zone (c)"),
+        Patch(facecolor=MAP_MISSING, edgecolor=MAP_EDGE, linewidth=0.5, label="No census data (b)"),
+        region_ring_legend_handle(),
+        Line2D([0], [0], marker="*", color="none", markerfacecolor=NEUTRAL_DARK, markeredgecolor="white", markersize=8, label="Historic city centre"),
+        Patch(facecolor="none", edgecolor=NEUTRAL_DARK, linewidth=1.0, label="Frame of (a)–(c), in (d)"),
+    ]
+    labels = [h.get_label() if not isinstance(h, tuple) else "Neighbouring municipalities" for h in handles]
+    ax_leg.legend(handles=handles, labels=labels, loc="center left", ncol=2, frameon=False, fontsize=7.0,
+                  handletextpad=0.5, columnspacing=1.0, handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0)})
+    save_figure(fig, figures_dir, "fig_social_context_panels")
     plt.close(fig)
 
 
 def make_intensity_norm() -> BoundaryNorm:
     """Cortes fijos para puertos por 10.000 residentes: 10 y 15 enmarcan la brecha 10.4 / 15.6."""
-    return BoundaryNorm([0.0, 5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 1e9], ncolors=256)
+    return BoundaryNorm([0.0, 5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 1e9], ncolors=len(INTENSITY_COLORS))
 
 
 def fig_allocation_composite(
@@ -2590,16 +2631,15 @@ def fig_allocation_composite(
     rotation_deg: float,
     population: pd.DataFrame | None = None,
 ) -> None:
-    """Figure 6 - scenario allocations: cuadricula 2 x 2 recortada al nucleo urbano.
+    """Figura 6 - asignacion por escenario, norte arriba, cuatro paneles en fila.
 
-    Pasada de forma del 2026-09-02: cuatro escenarios en cuadricula al ancho de dos
-    columnas, recortados al nucleo urbano, con la barra de clases, la leyenda y el
-    localizador en una fila inferior. Rampa clasificada de arranque claro (R1.11),
-    relleno explicito de "sin puertos", elementos cartograficos en (a) (R3.6).
+    Revision de imprenta del 2026-10-11: (a)-(c) puertos por zona en S0, S1 y S2 con seis clases
+    comunes YlOrBr; (d) puertos por 10.000 residentes en S2 (Blues). Mismo marco urbano en los
+    cuatro paneles; norte y escala en cada uno; "sin puertos" en blanco y "sin poblacion censal" en
+    gris, cada uno con su entrada. El rayado del anillo cambia a blanco sobre las clases oscuras y la
+    leyenda muestra ambas variantes (antes: rayado sobre azul oscuro en el mapa y sobre blanco en la
+    leyenda).
     """
-    # Con población censal, el cuarto panel es la intensidad de provisión bajo S2 (la magnitud
-    # detrás de la brecha 10.4 / 15.6 de la Tabla 4) en vez del diagnóstico S3, que difiere de
-    # S2 en tres puertos y no se distingue a escala de mapa.
     intensity_panel = population is not None and "S2" in scenario_outputs
     core = ["S0", "S1", "S2"] if intensity_panel else ["S0", "S1", "S2", "S3"]
     ordered_scenarios = [name for name in core if name in scenario_outputs]
@@ -2609,22 +2649,17 @@ def fig_allocation_composite(
     if ports_norm is None:
         return
     crop = urban_core_extent(utam_map)
-    titulos = {
-        "S0": "S0: priority matching",
-        "S1": "S1: territorial equalization",
-        "S2": "S2: socially weighted equalization",
-        "S3": "S3: soft-floor diagnostic",
-    }
     paneles = list(ordered_scenarios) + (["intensity"] if intensity_panel else [])
-    ncols = 2
-    nrows = int(np.ceil(len(paneles) / ncols))
-    fig = plt.figure(figsize=(7.05, 2.35 * nrows + 0.95), constrained_layout=True)
-    grid = fig.add_gridspec(nrows + 1, ncols, height_ratios=[1.0] * nrows + [0.34])
-    axes = []
     intensity_norm = make_intensity_norm()
+
+    fig = plt.figure(figsize=(7.05, 3.55))
+    grid = fig.add_gridspec(2, len(paneles), height_ratios=[1.0, 0.24], left=0.005, right=0.995, top=0.95, bottom=0.0,
+                            wspace=0.05, hspace=0.04)
+    axes = []
     for idx, scenario_name in enumerate(paneles):
-        axis = fig.add_subplot(grid[idx // ncols, idx % ncols])
+        axis = fig.add_subplot(grid[0, idx])
         axes.append(axis)
+        letra = f"({chr(97 + idx)})"
         if scenario_name == "intensity":
             pop = population[["UTAM", "dane_population"]].copy()
             pop["UTAM"] = pop["UTAM"].map(normalize_zone_code)
@@ -2639,47 +2674,157 @@ def fig_allocation_composite(
                     1e4 * pd.to_numeric(gdf["ports_total"], errors="coerce") / pd.to_numeric(gdf["dane_population"], errors="coerce"),
                     np.nan,
                 )
-            plot_map_panel(axis, gdf, "ports_per_10k", "", INTENSITY_CMAP, norm=intensity_norm, zero_fill=MAP_DELTA_ZERO)
-            _titulo_panel(axis, f"{chr(97 + idx)}. S2: ports per 10,000 residents")
+            column, cmap, norm, header = "ports_per_10k", INTENSITY_CLASS_CMAP, intensity_norm, "S2, per capita"
         else:
             gdf = utam_map.merge(scenario_outputs[scenario_name][["UTAM", "ports_total"]], on="UTAM", how="left")
-            plot_map_panel(axis, gdf, "ports_total", "", SEQUENTIAL_CMAP, norm=ports_norm, zero_fill=MAP_DELTA_ZERO)
-            _titulo_panel(axis, f"{chr(97 + idx)}. {titulos.get(scenario_name, scenario_name)}")
-        add_region_ring_overlay(axis, gdf)
-        axis.set_xlim(crop[0], crop[2])
-        axis.set_ylim(crop[1], crop[3])
+            column, cmap, norm, header = "ports_total", PORTS_CMAP, ports_norm, scenario_name
+        plot_map_values(axis, gdf, column, cmap, norm=norm, linewidth=0.25, zero_fill=NO_PORTS_FILL)
+        add_region_ring_overlay(axis, gdf, fill_colors=fill_colors_for(gdf, column, cmap, norm, zero_fill=NO_PORTS_FILL))
+        draw_map_outline(axis, gdf)
+        set_map_frame(axis, crop)
+        panel_label(axis, f"{letra} {header}")
+        reservado = add_north_arrow(axis, rotation_deg, extent=crop)
+        reservado += add_scale_bar(axis, gdf, extent=crop)
         if idx == 0:
-            reservado = add_north_arrow(axis, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
-            reservado += add_scale_bar(axis, gdf, extent=crop, x_frac=0.22)
-            reservado += add_city_centre_marker(axis, gdf)
-            add_locality_labels(axis, gdf, extent=crop, reserved=reservado)
+            reservado += add_city_centre_marker(axis, gdf, fontsize=7.0)
+            add_locality_labels(axis, gdf, extent=crop, reserved=reservado, fontsize=7.0)
 
     if intensity_panel:
-        fila = grid[nrows, :].subgridspec(1, 3, width_ratios=[1.0, 1.0, 0.62], wspace=0.10)
+        fila = grid[1, :].subgridspec(1, 3, width_ratios=[1.0, 1.0, 0.85], wspace=0.12)
         cbar_ax = fig.add_subplot(fila[0, 0])
         cbar2_ax = fig.add_subplot(fila[0, 1])
         legend_ax = fig.add_subplot(fila[0, 2])
-        cbar2 = add_horizontal_colorbar(fig, axes, INTENSITY_CMAP, intensity_norm, "Ports per 10,000 residents, S2 (d)", cax=cbar2_ax, spacing="uniform")
-        label_open_top_class(cbar2, intensity_norm)
-        handles = [
-            Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated"),
-            Patch(facecolor=MAP_MISSING, edgecolor=MAP_EDGE, linewidth=0.6, label="No census population (d)"),
-            region_ring_legend_patch(),
-        ]
     else:
-        fila = grid[nrows, :].subgridspec(1, 2, width_ratios=[1.15, 0.85], wspace=0.08)
+        fila = grid[1, :].subgridspec(1, 2, width_ratios=[1.15, 0.85], wspace=0.10)
         cbar_ax = fig.add_subplot(fila[0, 0])
+        cbar2_ax = None
         legend_ax = fig.add_subplot(fila[0, 1])
-        handles = [
-            Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated"),
-            region_ring_legend_patch(),
-        ]
-    cbar = add_horizontal_colorbar(fig, axes, SEQUENTIAL_CMAP, ports_norm, "Charging ports per UTAM, (a)-(c)" if intensity_panel else "Charging ports per UTAM (class breaks)", cax=cbar_ax, spacing="uniform")
+    for cax in [c for c in (cbar_ax, cbar2_ax) if c is not None]:
+        pos = cax.get_position()
+        cax.set_position([pos.x0 + 0.02, pos.y0 + 0.55 * pos.height, pos.width - 0.03, 0.22 * pos.height])
+    cbar = add_horizontal_colorbar(fig, axes, PORTS_CMAP, ports_norm, "Charging ports per zone, (a)–(c)", cax=cbar_ax, spacing="uniform")
     label_open_top_class(cbar, ports_norm)
+    cbar.ax.tick_params(labelsize=7.0)
+    cbar.set_label("Charging ports per zone, (a)–(c)", fontsize=7.5)
+    handles: list[Any] = [Patch(facecolor=NO_PORTS_FILL, edgecolor=MAP_EDGE, linewidth=0.6, label="No ports allocated")]
+    if cbar2_ax is not None:
+        cbar2 = add_horizontal_colorbar(fig, axes, INTENSITY_CLASS_CMAP, intensity_norm, "Ports per 10,000 residents, S2 (d)", cax=cbar2_ax, spacing="uniform")
+        label_open_top_class(cbar2, intensity_norm)
+        cbar2.ax.tick_params(labelsize=7.0)
+        cbar2.set_label("Ports per 10,000 residents, S2 (d)", fontsize=7.5)
+        handles.append(Patch(facecolor=MAP_MISSING, edgecolor=MAP_EDGE, linewidth=0.6, label="No census population (d)"))
+    handles.append(region_ring_legend_handle())
+    labels = [h.get_label() if not isinstance(h, tuple) else "Neighbouring municipalities" for h in handles]
     legend_ax.axis("off")
-    legend_ax.legend(handles=handles, loc="center left", ncol=1, frameon=False, fontsize=8.0)
-    fig.savefig(figures_dir / "fig_allocation_composite.png", dpi=300, bbox_inches="tight", facecolor="white")
+    legend_ax.legend(handles=handles, labels=labels, loc="center left", ncol=1, frameon=False, fontsize=7.0,
+                     handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0)})
+    save_figure(fig, figures_dir, "fig_allocation_composite")
     plt.close(fig)
+
+
+def _luminance(color: Any) -> float:
+    """Luminancia relativa aproximada (0 negro, 1 blanco) de un color de matplotlib."""
+    r, g, b = to_rgb(color)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def add_neatline(ax: Any) -> None:
+    """Marco fino alrededor del panel de mapa (neat line, guia JTG 1.3)."""
+    ax.add_patch(Rectangle((0, 0), 1, 1, transform=ax.transAxes, fill=False, edgecolor=NEATLINE_COLOR, linewidth=0.5, zorder=20, clip_on=False))
+
+
+def panel_label(ax: Any, text: str, *, x: float = 0.0, y: float = 1.012, fontsize: float = 9.0) -> None:
+    """Rotulo de panel comun a todas las figuras: "(a)" en negrita de 9 pt, arriba a la izquierda,
+    seguido como mucho de un encabezado corto en regular de 8 pt ("(a) S0")."""
+    letra, _, resto = text.partition(" ")
+    t = ax.text(x, y, letra, transform=ax.transAxes, ha="left", va="bottom", fontsize=fontsize, fontweight="bold", color=PAPER_TEXT, clip_on=False)
+    if resto:
+        ax.annotate(resto, xy=(1.0, 0.0), xycoords=t, xytext=(3.5, 0), textcoords="offset points", ha="left", va="bottom",
+                    fontsize=8.0, color=PAPER_TEXT, annotation_clip=False)
+
+
+def fill_colors_for(gdf: gpd.GeoDataFrame, column: str, cmap: Any, norm: Any, *, zero_fill: str | None = None) -> pd.Series:
+    """Color de relleno de cada unidad con la misma regla que `plot_map_values`."""
+    values = pd.to_numeric(gdf[column], errors="coerce")
+    out = []
+    for v in values:
+        if not np.isfinite(v):
+            out.append(MAP_MISSING)
+        elif zero_fill is not None and abs(v) < 1e-9:
+            out.append(zero_fill)
+        else:
+            out.append(cmap(norm(v)))
+    return pd.Series(out, index=gdf.index)
+
+
+def set_map_frame(ax: Any, extent: tuple[float, float, float, float]) -> None:
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    ax.set_aspect("equal")
+    ax.set_axis_off()
+    add_neatline(ax)
+
+
+def region_ring_legend_handle() -> tuple[Patch, Patch]:
+    """Muestra doble del rayado del anillo: sobre relleno claro (gris) y sobre oscuro (blanco)."""
+    return (
+        Patch(facecolor="#FEE391", edgecolor=REGION_HATCH_COLOR, hatch=REGION_HATCH, linewidth=0.0),
+        Patch(facecolor="#993404", edgecolor="white", hatch=REGION_HATCH, linewidth=0.0),
+    )
+
+
+def save_figure(fig: Any, figures_dir: Path, stem: str) -> None:
+    """PNG a >= 300 ppp y >= 2.244 px de ancho, y PDF vectorial con las mismas medidas."""
+    width_in = fig.get_size_inches()[0]
+    dpi = int(max(340, math.ceil(2300 / max(width_in, 1e-6))))
+    fig.savefig(figures_dir / f"{stem}.png", dpi=dpi, bbox_inches="tight", pad_inches=0.03, facecolor="white")
+    fig.savefig(figures_dir / f"{stem}.pdf", bbox_inches="tight", pad_inches=0.03, facecolor="white")
+
+
+def _net_change_classes(values: pd.Series) -> pd.Series:
+    """Clase entera -2..+2 (se recorta a +-2; los cambios observados no pasan de 2 puertos)."""
+    v = pd.to_numeric(values, errors="coerce").fillna(0.0).round().astype(int).clip(-2, 2)
+    return v
+
+
+def plot_net_change_map(
+    ax: Any,
+    gdf: gpd.GeoDataFrame,
+    column: str,
+    crop: tuple[float, float, float, float],
+    rotation_deg: float,
+    *,
+    scale_and_north: bool = True,
+) -> list[tuple[float, float, float, float]]:
+    """Mapa de cambio neto entero entre escenarios con clases discretas {-2,...,+2}."""
+    clases = _net_change_classes(gdf[column])
+    colores = clases.map(DELTA_CLASS_COLORS)
+    zero = clases.eq(0)
+    gdf.loc[zero].plot(ax=ax, color=colores[zero], edgecolor=MAP_EDGE, linewidth=0.22)
+    if (~zero).any():
+        gdf.loc[~zero].plot(ax=ax, color=colores[~zero], edgecolor="white", linewidth=0.45, zorder=3)
+    add_region_ring_overlay(ax, gdf, fill_colors=colores)
+    draw_map_outline(ax, gdf)
+    set_map_frame(ax, crop)
+    reservado: list[tuple[float, float, float, float]] = []
+    if scale_and_north:
+        reservado += add_north_arrow(ax, rotation_deg, extent=crop)
+        reservado += add_scale_bar(ax, gdf, extent=crop)
+    return reservado
+
+
+def net_change_legend_handles(classes_present: list[int] | None = None) -> list[Patch]:
+    etiquetas = {-2: "−2 ports", -1: "−1 port", 0: "No change", 1: "+1 port", 2: "+2 ports"}
+    clases = classes_present if classes_present is not None else [-2, -1, 0, 1, 2]
+    return [Patch(facecolor=DELTA_CLASS_COLORS[c], edgecolor=MAP_EDGE, linewidth=0.5, label=etiquetas[c]) for c in clases]
+
+
+def zones_outside_frame(gdf: gpd.GeoDataFrame, column: str, crop: tuple[float, float, float, float]) -> list[tuple[str, int]]:
+    """Unidades con cambio cuya superficie queda entera fuera del marco."""
+    caja = shapely_box(*crop)
+    cambios = gdf.loc[_net_change_classes(gdf[column]).ne(0)]
+    fuera = cambios.loc[~cambios.geometry.intersects(caja)]
+    return [(str(u), int(round(float(v)))) for u, v in zip(fuera["UTAM"], fuera[column])]
 
 
 def fig_net_change_S2_minus_S1(
@@ -2688,141 +2833,75 @@ def fig_net_change_S2_minus_S1(
     scenario_outputs: dict[str, pd.DataFrame],
     rotation_deg: float,
 ) -> None:
-    """Figure 7 - net reallocation S2 minus S1, labelled, on the urban-core frame.
+    """Figura 7 - cambio neto S2 menos S1, norte arriba, a 1.5 columnas.
 
-    Pasada de forma del 2026-09-02: usa el MISMO marco que las Figuras 4 y 6
-    (`urban_core_extent`), de modo que el lector se orienta con la Figura 4d y no
-    hace falta localizador propio. Con los insumos corregidos las zonas que cambian
-    incluyen una unidad rural extensa y una del anillo lejano; recortar a su caja
-    envolvente alargaba el mapa y dejaba los rotulos flotando sobre blanco. Las
-    unidades que caen fuera del marco se enumeran en una nota dentro de la figura.
-    Cada zona con cambio lleva su identificador UTAM (R1.12) en dos escaleras
-    laterales con lineas guia y prueba de colision frente a los nombres de localidad.
+    Revision de imprenta del 2026-10-11 (guia JTG, ficha Fig. 7): sin titulo interno; las lineas
+    guia largas, que se cruzaban, se sustituyen por un numero dentro de cada zona (con halo) y una
+    clave a la derecha con el identificador UTAM y el cambio (R1.12). Los numeros siguen el orden
+    norte-sur. Las zonas cuya superficie cae entera fuera del marco urbano se listan en la clave.
     """
     if not {"S1", "S2"}.issubset(scenario_outputs):
         return
     delta = scenario_outputs["S2"][["UTAM", "ports_total"]].merge(
-        scenario_outputs["S1"][["UTAM", "ports_total"]],
-        on="UTAM",
-        suffixes=("_S2", "_S1"),
+        scenario_outputs["S1"][["UTAM", "ports_total"]], on="UTAM", suffixes=("_S2", "_S1"),
     )
     delta["net_change"] = delta["ports_total_S2"] - delta["ports_total_S1"]
     gdf = utam_map.merge(delta[["UTAM", "net_change"]], on="UTAM", how="left")
-    changed = gdf.loc[pd.to_numeric(gdf["net_change"], errors="coerce").fillna(0).ne(0)].copy()
+    gdf["net_change"] = pd.to_numeric(gdf["net_change"], errors="coerce").fillna(0)
+    changed = gdf.loc[gdf["net_change"].ne(0)].copy()
     if changed.empty:
         return
-
     crop = urban_core_extent(utam_map)
-    span_x = crop[2] - crop[0]
-    span_y = crop[3] - crop[1]
+    caja = shapely_box(*crop)
 
-    fig, ax = plt.subplots(1, 1, figsize=(7.05, 4.75), constrained_layout=True)
-    gdf.plot(ax=ax, color=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.3)
-    gains = changed.loc[changed["net_change"].gt(0)]
-    losses = changed.loc[changed["net_change"].lt(0)]
-    if not gains.empty:
-        gains.plot(ax=ax, color=GAIN_FILL, edgecolor="white", linewidth=0.6, zorder=5)
-    if not losses.empty:
-        losses.plot(ax=ax, color=LOSS_FILL, edgecolor="white", linewidth=0.6, zorder=5)
-    add_region_ring_overlay(ax, gdf)
-    draw_map_outline(ax, gdf)
-    reservado_nc = add_north_arrow(ax, rotation_deg, extent=crop, x_frac=0.90, y_frac=0.88, size_frac=0.10)
-    reservado_nc += add_scale_bar(ax, gdf, extent=crop, x_frac=0.50)
+    fig = plt.figure(figsize=(5.20, 4.70))
+    grid = fig.add_gridspec(1, 2, width_ratios=[1.0, 0.62], left=0.005, right=0.995, top=0.995, bottom=0.005, wspace=0.04)
+    ax = fig.add_subplot(grid[0, 0])
+    ax_key = fig.add_subplot(grid[0, 1])
+    reservado = plot_net_change_map(ax, gdf, "net_change", crop, rotation_deg)
 
-    # Escaleras de identificadores UTAM (R1.12) a ambos margenes, con lineas guia.
-    reps = changed.copy()
-    reps["rep_point"] = reps.geometry.representative_point()
-    dentro = reps["rep_point"].apply(lambda p: crop[0] <= p.x <= crop[2] and crop[1] <= p.y <= crop[3])
-    fuera = reps.loc[~dentro].copy()
-    reps = reps.loc[dentro].copy()
-    centre_x = 0.5 * (crop[0] + crop[2])
-    for side_mask, x_label, ha in (
-        (reps["rep_point"].apply(lambda p: p.x) <= centre_x, crop[0] + 0.015 * span_x, "left"),
-        (reps["rep_point"].apply(lambda p: p.x) > centre_x, crop[2] - 0.015 * span_x, "right"),
-    ):
-        group = reps.loc[side_mask].copy()
-        if group.empty:
-            continue
-        group["_y"] = group["rep_point"].apply(lambda p: p.y)
-        group = group.sort_values("_y")
-        y_slots = np.linspace(crop[1] + 0.10 * span_y, crop[3] - 0.16 * span_y, len(group))
-        for (_, row), y_slot in zip(group.iterrows(), y_slots):
-            point = row["rep_point"]
-            net = int(row["net_change"])
-            label_color = GAIN_FILL if net > 0 else LOSS_FILL
-            texto = f"{row['UTAM']} ({net:+d})"
-            ax.plot([x_label, point.x], [y_slot, point.y], color="#9a938a", linewidth=0.7, zorder=6, alpha=0.85)
-            ax.scatter([point.x], [point.y], s=9, color="#5d574f", zorder=7)
-            ax.text(
-                x_label,
-                y_slot,
-                texto,
-                ha=ha,
-                va="center",
-                fontsize=8.0,
-                fontweight="semibold",
-                color=label_color,
-                path_effects=label_halo(2.4),
-                zorder=8,
-            )
-            reservado_nc.append(label_box(ax, crop, texto, 7.6, x_label, y_slot, ha=ha))
-            reservado_nc.append((point.x, point.y, 0.012 * span_x, 0.02 * span_y))
-
-    if not fuera.empty:
-        partes = [f"{u} ({int(n):+d})" for u, n in zip(fuera["UTAM"], fuera["net_change"])]
-        nota = "Outside the frame: " + ", ".join(partes)
-        ax.text(
-            crop[0] + 0.015 * span_x,
-            crop[1] + 0.025 * span_y,
-            nota,
-            ha="left",
-            va="bottom",
-            fontsize=8.0,
-            color="#6d655e",
-            bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
-            zorder=8,
-        )
-        reservado_nc.append(label_box(ax, crop, nota, 6.8, crop[0] + 0.015 * span_x, crop[1] + 0.025 * span_y, ha="left", va="bottom"))
-
-    reservado_nc.extend(add_city_centre_marker(ax, gdf))
+    dentro = changed.loc[changed.geometry.intersects(caja)].copy()
+    dentro["rep"] = dentro.geometry.intersection(caja).representative_point()
+    dentro["_y"] = dentro["rep"].apply(lambda p: p.y)
+    dentro = dentro.sort_values("_y", ascending=False).reset_index(drop=True)
+    for i, row in dentro.iterrows():
+        ax.text(row["rep"].x, row["rep"].y, str(i + 1), ha="center", va="center", fontsize=7.0, fontweight="bold",
+                color=NEUTRAL_DARK, path_effects=label_halo(2.0), zorder=12)
+    reservado += add_city_centre_marker(ax, gdf, fontsize=7.0)
+    reservado += [(p.x, p.y, 0.035 * (crop[2] - crop[0]), 0.02 * (crop[3] - crop[1])) for p in dentro["rep"]]
     add_locality_labels(
-        ax,
-        gdf,
-        locality_names=("SUBA", "ENGATIVA", "FONTIBON", "BOSA", "USME", "USAQUEN", "SAN CRISTOBAL", "KENNEDY", "CIUDAD BOLIVAR"),
+        ax, gdf,
+        locality_names=("SUBA", "USAQUEN", "ENGATIVA", "FONTIBON", "KENNEDY", "BOSA", "CIUDAD BOLIVAR", "USME", "SAN CRISTOBAL"),
         municipality_names=("SOACHA", "COTA", "CHIA", "MOSQUERA", "LA CALERA"),
-        fontsize=8.0,
-        color="#847c71",
-        extent=crop,
-        reserved=reservado_nc,
+        fontsize=7.0, color="#6d655e", extent=crop, reserved=reservado,
     )
 
-    ax.legend(
-        handles=[
-            Patch(facecolor=GAIN_FILL, edgecolor="none", label="Gain (+1 port)"),
-            Patch(facecolor=LOSS_FILL, edgecolor="none", label="Loss (-1 port)"),
-            Patch(facecolor=MAP_DELTA_ZERO, edgecolor=MAP_EDGE, linewidth=0.6, label="No change"),
-            region_ring_legend_patch(),
-            Line2D([0], [0], marker="*", color="none", markerfacecolor=PAPER_TEXT, markeredgecolor="white", markersize=9, label="Historic city centre"),
-        ],
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.005),
-        ncol=5,
-        frameon=False,
-        fontsize=7.8,
-    )
-    ax.set_xlim(crop[0], crop[2])
-    ax.set_ylim(crop[1], crop[3])
-    ax.set_title(
-        "Net reallocation of charging ports: S2 minus S1",
-        loc="left",
-        fontsize=11.5,
-        fontweight="semibold",
-        color=PAPER_TEXT,
-        pad=8,
-    )
-    ax.set_axis_off()
-    ax.set_aspect("equal")
-    fig.savefig(figures_dir / "fig_net_change_S2_minus_S1.png", dpi=300, bbox_inches="tight", facecolor="white")
+    def fmt(n: int) -> str:
+        return f"+{n}" if n > 0 else f"−{abs(n)}"
+
+    ax_key.axis("off")
+    ax_key.set_xlim(0, 1)
+    ax_key.set_ylim(0, 1)
+    y = 0.985
+    ax_key.text(0.0, y, "Zones that change", ha="left", va="top", fontsize=7.5, fontweight="bold", color=PAPER_TEXT)
+    y -= 0.055
+    paso = 0.040
+    for i, row in dentro.iterrows():
+        n = int(row["net_change"])
+        ax_key.add_patch(Rectangle((0.0, y - 0.024), 0.07, 0.026, facecolor=DELTA_CLASS_COLORS[int(np.clip(n, -2, 2))], edgecolor="white", linewidth=0.4))
+        ax_key.text(0.035, y - 0.011, str(i + 1), ha="center", va="center", fontsize=6.8, fontweight="bold", color=NEUTRAL_DARK, path_effects=label_halo(1.6))
+        ax_key.text(0.11, y - 0.011, f"{row['UTAM']}  ({fmt(n)})", ha="left", va="center", fontsize=7.0, color=PAPER_TEXT)
+        y -= paso
+    fuera = [(u, n) for u, n in zip(changed["UTAM"], changed["net_change"]) if u not in set(dentro["UTAM"])]
+    if fuera:
+        y -= 0.01
+        ax_key.text(0.0, y, "Outside the frame:\n" + ", ".join(f"{u} ({fmt(int(n))})" for u, n in fuera), ha="left", va="top", fontsize=7.0, color=PAPER_TEXT)
+        y -= 0.09
+    y -= 0.01
+    handles = net_change_legend_handles([1, -1, 0]) + [region_ring_legend_patch(),
+               Line2D([0], [0], marker="*", color="none", markerfacecolor=NEUTRAL_DARK, markeredgecolor="white", markersize=8, label="Historic city centre")]
+    ax_key.legend(handles=handles, loc="upper left", bbox_to_anchor=(-0.04, y), frameon=False, fontsize=7.0, handlelength=1.6, borderaxespad=0.0)
+    save_figure(fig, figures_dir, "fig_net_change_S2_minus_S1")
     plt.close(fig)
 
 
@@ -2880,35 +2959,35 @@ def fig_policy_tradeoff(
     benchmark_percapita: tuple[float, float] | None = None,
     frontier_percapita: list[tuple[str, tuple[float, float]]] | None = None,
 ) -> None:
-    """Figure 9 - policy trade-off synthesis, redisenada el 2026-09-03.
+    """Figura 9 - sintesis del compromiso de politica (revision de imprenta 2026-10-11).
 
-    Con los insumos corregidos la cobertura del cuartil vulnerable es completa en todos
-    los escenarios, asi que la frontera cobertura-fidelidad de la version anterior era una
-    linea plana y los paneles de robustez repetian "+0.0". Esta version muestra lo que si
-    varia: (a) el precio de la equidad, Gini ponderado frente a perdida de fidelidad en
-    escala simetrica-logaritmica, con los escenarios centrales, el barrido de tolerancia y
-    el benchmark de equidad directa (estos dos ultimos son superposiciones opcionales que
-    aporta el paquete de revision); (b) los puertos por 10.000 habitantes del cuartil
-    vulnerable frente al resto; (c) la robustez del Gini ponderado alrededor de S2; (d) el
-    salvaguarda del conjunto protegido de S3.
+    (a) Gini ponderado frente a perdida de fidelidad (escala simetrica-logaritmica) con S0-S2 en
+    la paleta de escenarios, la frontera de tolerancia en gris y el benchmark de equidad directa
+    como rombo negro rotulado; (b) puertos por 10.000 residentes por grupo de vulnerabilidad, en
+    grises, con valores de dos decimales en vertical para que no choquen; (c) robustez del Gini
+    ponderado con familias distinguidas por FORMA (no por los colores de los escenarios) y leyenda
+    fuera de la columna x = 0; (d) salvaguarda del conjunto protegido de S3. Griegas reales.
     """
-    fam_colores = {
-        "Decay": "#c95a49", "Vulnerability index": "#8e4a8b", "Epsilon": "#2a9d8f",
-        "Kappa": "#2457a6", "Soft floor": "#d08a2a", "Other": "#8a8178",
-    }
-    fig = plt.figure(figsize=(7.05, 5.60), constrained_layout=True)
-    grid = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], width_ratios=[0.96, 1.04])
+    fam_marcadores = {"Decay": "o", "Epsilon": "s", "Kappa": "^", "Vulnerability index": "D", "Soft floor": "v", "Other": "P"}
+    fam_etiquetas = {"Decay": "Decay (λ)", "Epsilon": "Tolerance (ε)", "Kappa": "Social weight (κ)",
+                     "Vulnerability index": "Vulnerability index", "Soft floor": "Soft floor (γ)", "Other": "Other"}
+    fig = plt.figure(figsize=(7.05, 5.30), constrained_layout=True)
+    grid = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.95], width_ratios=[1.0, 1.0])
     ax_a = fig.add_subplot(grid[0, 0])
     ax_b = fig.add_subplot(grid[0, 1])
     ax_c = fig.add_subplot(grid[1, 0])
     ax_d = fig.add_subplot(grid[1, 1])
 
-    def estilo(ax: Any, title: str, xlabel: str, ylabel: str) -> None:
-        configure_line_axis(ax, title, xlabel, ylabel)
-        ax.set_title(title, loc="left", fontsize=10.0, fontweight="semibold", color=PAPER_TEXT, pad=6)
-        ax.xaxis.label.set_fontsize(8.5)
-        ax.yaxis.label.set_fontsize(8.5)
-        ax.tick_params(labelsize=8)
+    def estilo(ax: Any, letra: str, xlabel: str, ylabel: str) -> None:
+        configure_line_axis(ax, "", xlabel, ylabel)
+        ax.set_title("")
+        panel_label(ax, letra, y=1.02)
+        ax.xaxis.label.set_fontsize(7.5)
+        ax.yaxis.label.set_fontsize(7.5)
+        ax.tick_params(labelsize=7.0)
+
+    def eps_text(value: float) -> str:
+        return f"ε = {value:g}"
 
     # ---------------- (a) precio de la equidad ----------------
     td = tradeoff_df.copy()
@@ -2920,73 +2999,84 @@ def fig_policy_tradeoff(
             familia.append((name, float(td.loc[name, "relative_fidelity_loss_vs_S0_pct"]), float(td.loc[name, "accessibility_weighted_gini"])))
     if sweep_df is not None and len(sweep_df):
         for _, r in sweep_df.sort_values("epsilon").iterrows():
-            familia.append((f"eps = {float(r['epsilon']):.2f}", float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"])))
-    estilo(ax_a, "a. The price of equity", "Relative fidelity loss vs S0 (%, symlog scale)", "Vulnerability-weighted Gini")
+            familia.append((f"eps={float(r['epsilon'])}", float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"])))
+    estilo(ax_a, "(a)", "Fidelity loss relative to S0 (%, symmetric log scale)", "Vulnerability-weighted Gini")
     ax_a.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
     ax_a.set_xscale("symlog", linthresh=1.0)
+    ax_a.xaxis.set_major_formatter(FuncFormatter(lambda v, _pos: f"{v:,.0f}"))
     xs = [f[1] for f in familia]; ys = [f[2] for f in familia]
-    ax_a.plot(xs, ys, color="#b8aea4", linewidth=1.8, zorder=1)
+    ax_a.plot(xs, ys, color=NEUTRAL_LIGHT, linewidth=1.3, zorder=1)
+
+    def punto(ax: Any, name: str, x: float, y: float, grande: bool = True) -> None:
+        if name in SCENARIO_COLORS:
+            ax.scatter(x, y, s=34 if grande else 20, marker=SCENARIO_MARKERS[name], color=SCENARIO_COLORS[name], edgecolor="white", linewidth=0.6, zorder=4)
+        else:
+            ax.scatter(x, y, s=18 if grande else 12, marker="o", facecolor="white", edgecolor=NEUTRAL_MID, linewidth=0.9, zorder=3)
+
     for name, x, y in familia:
-        color = SCENARIO_COLORS.get(name, "#2a9d8f")
-        ax_a.scatter(x, y, s=46 if name.startswith("S") else 26, color=color, edgecolor="white", linewidth=0.9, zorder=3)
-    etiquetas_a = {"S0": (6, 6), "S1": (-4, 7), "S2": (12, 7)}
+        punto(ax_a, name, x, y)
+    etiquetas_a = {"S0": (2, 6), "S1": (-4, 7), "S2": (4, 7)}
     for name, x, y in familia:
         if name in etiquetas_a:
-            ax_a.annotate(name, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=8.0, color=PAPER_TEXT)
-        elif name.startswith("eps = ") and float(name.split("=")[1]) in (1.0, 10.0, 100.0):
-            # Los puntos de la frontera (concesiones de 100 % a 10.000 %) se rotulan con su tolerancia
-            ax_a.annotate(f"eps = {float(name.split('=')[1]):g}", xy=(x, y), xytext=(5, 5), textcoords="offset points", fontsize=8.0, color="#6d655e")
+            ax_a.annotate(name, xy=(x, y), xytext=etiquetas_a[name], textcoords="offset points", fontsize=7.0, color=PAPER_TEXT)
+        elif name.startswith("eps=") and float(name.split("=")[1]) in (1.0, 10.0, 100.0):
+            ax_a.annotate(eps_text(float(name.split("=")[1])), xy=(x, y), xytext=(5, 3), textcoords="offset points", fontsize=7.0, color=NEUTRAL_DARK)
     if benchmark_df is not None and len(benchmark_df):
-        for _, r in benchmark_df.iterrows():
-            ax_a.scatter(float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"]), s=52, marker="D", color="#8e4a8b", edgecolor="white", linewidth=0.9, zorder=3)
-        # El rombo del benchmark se identifica en la leyenda de la figura: una anotación dentro
-        # del panel choca con las marcas del eje y con el recuadro de zoom.
+        for k, (_, r) in enumerate(benchmark_df.iterrows()):
+            bx, by = float(r["perdida_fidelidad_vs_S0_pct"]), float(r["gini_ponderado_6d"])
+            ax_a.scatter(bx, by, s=30, marker="D", color=NEUTRAL_DARK, edgecolor="white", linewidth=0.6, zorder=4)
+            if k == 0:
+                    ax_a.annotate("Direct-equity\nbenchmark", xy=(bx, by), xytext=(-7, -1), textcoords="offset points", ha="right", va="center",
+                              fontsize=7.0, color=NEUTRAL_DARK)
     if familia:
         y_all = ys + ([float(v) for v in benchmark_df["gini_ponderado_6d"]] if benchmark_df is not None and len(benchmark_df) else [])
         pad = 0.06 * (max(y_all) - min(y_all) or 0.01)
         ax_a.set_ylim(min(y_all) - pad, max(y_all) + 2.2 * pad)
-        # Recuadro de zoom sobre la familia publicada (S0 a eps = 0.30): la caida es de 8e-4 y no se
-        # ve a escala completa. Los puntos de la frontera (eps >= 1) quedan fuera del recuadro.
-        publicada = [f for f in familia if not f[0].startswith("eps = ") or float(f[0].split("=")[1]) <= 0.30]
+        publicada = [f for f in familia if not f[0].startswith("eps=") or float(f[0].split("=")[1]) <= 0.30]
         xz = [f[1] for f in publicada]; yz = [f[2] for f in publicada]
-        ins = ax_a.inset_axes([0.40, 0.13, 0.40, 0.30])
-        ins.plot(xz, yz, color="#b8aea4", linewidth=1.4, zorder=1)
+        ins = ax_a.inset_axes([0.17, 0.12, 0.42, 0.34])
+        ins.plot(xz, yz, color=NEUTRAL_LIGHT, linewidth=1.1, zorder=1)
         for name, x, y in publicada:
-            ins.scatter(x, y, s=22, color=SCENARIO_COLORS.get(name, "#2a9d8f"), edgecolor="white", linewidth=0.7, zorder=3)
+            punto(ins, name, x, y, grande=False)
         ins.set_xlim(-1.5, max(xz) + 2.0)
         yp = 0.15 * (max(yz) - min(yz) or 1e-4)
         ins.set_ylim(min(yz) - yp, max(yz) + yp)
-        ins.tick_params(labelsize=7.6)
+        ins.tick_params(labelsize=6.6, length=2)
         ins.set_facecolor("white")
         for spine in ins.spines.values():
-            spine.set_edgecolor("#8a8178")
-        ins.set_title("zoom: eps <= 0.30", fontsize=8.0, color="#6d655e", pad=2, loc="left")
+            spine.set_edgecolor(NEUTRAL_MID)
+            spine.set_linewidth(0.6)
+        ins.set_title("ε ≤ 0.30", fontsize=7.0, color=NEUTRAL_DARK, pad=2, loc="left")
         ins.yaxis.set_major_locator(plt.MaxNLocator(3))
         ins.xaxis.set_major_locator(plt.MaxNLocator(4))
 
     # ---------------- (b) puertos per capita ----------------
-    estilo(ax_b, "b. Provision intensity by vulnerability", "", "Ports per 10,000 residents")
+    estilo(ax_b, "(b)", "", "Ports per 10,000 residents")
     ax_b.set_axisbelow(True)
     cats: list[tuple[str, tuple[float, float]]] = [(n, percapita[n]) for n in ("S0", "S1", "S2") if percapita.get(n) is not None]
     for etiqueta, valores in (frontier_percapita or []):
-        cats.append((etiqueta, valores))
+        texto = str(etiqueta)
+        if texto.startswith("eps"):
+            texto = eps_text(float(texto.split()[-1].split("\n")[-1]))
+        cats.append((texto, valores))
     if benchmark_percapita is not None:
-        cats.append(("Direct\nequity" if frontier_percapita else "Direct-equity\nbenchmark", benchmark_percapita))
+        cats.append(("Direct\nequity", benchmark_percapita))
     if cats:
-        xpos = np.arange(len(cats)); w = 0.36
+        xpos = np.arange(len(cats)); w = 0.38
         vuln = [c[1][0] for c in cats]; resto = [c[1][1] for c in cats]
-        ax_b.bar(xpos - w / 2, vuln, width=w, color=GAIN_FILL, label="Most vulnerable quartile (36 zones)", zorder=2)
-        ax_b.bar(xpos + w / 2, resto, width=w, color="#c9bfb4", label="Remaining zones", zorder=2)
+        ax_b.bar(xpos - w / 2, vuln, width=w, color=NEUTRAL_DARK, label="Most vulnerable quartile (36 zones)", zorder=2)
+        ax_b.bar(xpos + w / 2, resto, width=w, color=NEUTRAL_LIGHT, edgecolor=NEUTRAL_MID, linewidth=0.5, label="Remaining zones", zorder=2)
         for i, (v, r) in enumerate(zip(vuln, resto)):
-            ax_b.text(i - w / 2, v + 0.30, f"{v:.2f}", ha="center", va="bottom", fontsize=7.8, color=PAPER_TEXT)
-            ax_b.text(i + w / 2, r + 0.30, f"{r:.1f}", ha="center", va="bottom", fontsize=7.8, color="#6d655e")
+            ax_b.annotate(f"{v:.2f}", xy=(i - w / 2, v), xytext=(0, 2), textcoords="offset points", ha="center", va="bottom", rotation=90, fontsize=6.8, color=PAPER_TEXT)
+            ax_b.annotate(f"{r:.2f}", xy=(i + w / 2, r), xytext=(0, 2), textcoords="offset points", ha="center", va="bottom", rotation=90, fontsize=6.8, color=PAPER_TEXT)
         ax_b.set_xticks(xpos)
-        ax_b.set_xticklabels([c[0] for c in cats], fontsize=7.8 if len(cats) > 4 else 8.4)
-        ax_b.set_ylim(0, max(vuln + resto) * 1.34)
-        ax_b.legend(loc="upper left", frameon=False, fontsize=7.8)
+        ax_b.set_xticklabels([c[0] for c in cats], fontsize=7.0)
+        ax_b.set_ylim(0, max(vuln + resto) * 1.45)
+        ax_b.yaxis.set_major_locator(plt.MultipleLocator(5))
+        ax_b.legend(loc="upper left", frameon=False, fontsize=7.0, ncol=1)
 
     # ---------------- (c) robustez del Gini ----------------
-    estilo(ax_c, "c. Robustness of the weighted Gini", "Change in weighted Gini vs S2 (basis points)", "")
+    estilo(ax_c, "(c)", "Change in weighted Gini vs S2 (basis points)", "")
     ax_c.grid(axis="y", visible=False)
     ax_c.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
     rb_df = robust_df.copy()
@@ -2997,14 +3087,19 @@ def fig_policy_tradeoff(
         rb_df["fam"] = rb_df["interpretation"].astype(str).map(_familia_robustez)
         rb_df = rb_df.sort_values("bp").reset_index(drop=True)
         ypos = np.arange(len(rb_df))
-        ax_c.axvline(0.0, linestyle="--", color="#8a8178", linewidth=1.1, zorder=1)
-        ax_c.hlines(ypos, 0.0, rb_df["bp"], color="#c9bfb4", linewidth=1.6, zorder=2)
-        ax_c.scatter(rb_df["bp"], ypos, s=30, color=[fam_colores.get(f, "#8a8178") for f in rb_df["fam"]], edgecolor="white", linewidth=0.7, zorder=3)
+        ax_c.axvline(0.0, linestyle=(0, (4, 2)), color=NEUTRAL_MID, linewidth=0.9, zorder=1)
+        ax_c.hlines(ypos, 0.0, rb_df["bp"], color=NEUTRAL_LIGHT, linewidth=1.4, zorder=2)
+        for fam, sub in rb_df.groupby("fam"):
+            ax_c.scatter(sub["bp"], sub.index, s=22, marker=fam_marcadores.get(fam, "o"), color=NEUTRAL_DARK, edgecolor="white", linewidth=0.5, zorder=3)
         ax_c.set_yticks(ypos)
-        ax_c.set_yticklabels(rb_df["label"], fontsize=7.8)
-        ax_c.tick_params(axis="y", pad=3)
-        handles = [Patch(facecolor=fam_colores[f], edgecolor="none", label=f) for f in ("Decay", "Epsilon", "Kappa", "Vulnerability index", "Soft floor") if f in set(rb_df["fam"])]
-        ax_c.legend(handles=handles, loc="lower right", frameon=False, fontsize=8.0, handlelength=1.0)
+        ax_c.set_yticklabels(rb_df["label"], fontsize=7.0)
+        ax_c.tick_params(axis="y", pad=2)
+        xmin, xmax = float(rb_df["bp"].min()), float(rb_df["bp"].max())
+        ax_c.set_xlim(xmin - 0.08 * (xmax - xmin), xmax + 0.08 * (xmax - xmin))
+        handles = [Line2D([0], [0], marker=fam_marcadores[f], color="none", markerfacecolor=NEUTRAL_DARK, markeredgecolor="white", markersize=5.5, label=fam_etiquetas[f])
+                   for f in ("Decay", "Epsilon", "Kappa", "Vulnerability index", "Soft floor") if f in set(rb_df["fam"])]
+        ax_c.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=3, frameon=False, fontsize=6.8,
+                    handletextpad=0.2, columnspacing=0.8)
 
     # ---------------- (d) salvaguarda de S3 ----------------
     if s3_summary is not None and np.isfinite(pd.to_numeric(s3_summary.get("s3_floor_value"), errors="coerce")):
@@ -3013,39 +3108,29 @@ def fig_policy_tradeoff(
         p_10 = float(pd.to_numeric(s3_summary["s3_protected_p10_access"], errors="coerce"))
         p_25 = float(pd.to_numeric(s3_summary["s3_protected_p25_access"], errors="coerce"))
         p_mean = float(pd.to_numeric(s3_summary["s3_protected_mean_access"], errors="coerce"))
-        estilo(ax_d, "d. S3 protected-set safeguard", "Protected-set accessibility", "")
+        estilo(ax_d, "(d)", "Protected-set accessibility (decay-weighted ports)", "")
         ax_d.grid(axis="x", linestyle="-", linewidth=0.6, color=PAPER_GRID)
         ax_d.grid(axis="y", visible=False)
         ax_d.tick_params(axis="y", left=False, labelleft=False)
         ax_d.spines["left"].set_visible(False)
-        ax_d.hlines(0.0, p_min, p_mean, color="#c9bfb4", linewidth=3.0, zorder=1)
-        ax_d.axvline(floor_value, linestyle="--", color="#8a8178", linewidth=1.4, zorder=0)
-        # Los cuantiles del conjunto protegido no son escenarios: se dibujan en un solo tono
-        # ordenado, para no reutilizar los colores de S0-S3 con otro significado.
-        cuantil_tono = ("#9fc2d8", "#6ba3c6", "#3d7fa8", "#1a5a82")
-        for label, value_, color, offset in (
-            ("Min", p_min, cuantil_tono[0], (-14, -22)),
-            ("P10", p_10, cuantil_tono[1], (18, 18)),
-            ("P25", p_25, cuantil_tono[2], (0, -22)),
-            ("Mean", p_mean, cuantil_tono[3], (0, 20)),
-        ):
-            ax_d.scatter(value_, 0.0, s=70, color=color, edgecolor="white", linewidth=1.1, zorder=3)
-            ax_d.annotate(f"{label}\n{value_:.1f}", xy=(value_, 0.0), xytext=offset, textcoords="offset points", ha="center",
-                          va="bottom" if offset[1] > 0 else "top", fontsize=7.8, color=PAPER_TEXT,
-                          bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
-                          arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.7})
-        ax_d.annotate(f"Soft floor\n{floor_value:.1f}", xy=(floor_value, 0.0), xytext=(-18, 18), textcoords="offset points", ha="center", va="bottom",
-                      fontsize=7.8, color="#6d655e", bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.92},
-                      arrowprops={"arrowstyle": "-", "color": "#8a8178", "lw": 0.7})
+        ax_d.hlines(0.0, p_min, p_mean, color=NEUTRAL_LIGHT, linewidth=2.4, zorder=1)
+        ax_d.axvline(floor_value, linestyle=(0, (4, 2)), color=NEUTRAL_MID, linewidth=1.0, zorder=0)
+        for label, value_, marker in (("Min", p_min, "o"), ("P10", p_10, "s"), ("P25", p_25, "^"), ("Mean", p_mean, "D")):
+            ax_d.scatter(value_, 0.0, s=34, marker=marker, color=NEUTRAL_DARK, edgecolor="white", linewidth=0.7, zorder=3)
+            ax_d.annotate(f"{label}\n{value_:.1f}", xy=(value_, 0.0), xytext=(0, 9), textcoords="offset points", ha="center", va="bottom",
+                          fontsize=7.0, color=PAPER_TEXT)
+        ax_d.annotate(f"Soft floor\n{floor_value:.1f}", xy=(floor_value, 0.0), xytext=(0, -10), textcoords="offset points", ha="center", va="top",
+                      fontsize=7.0, color=NEUTRAL_DARK, bbox={"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.9})
         x_span = max(p_mean - p_min, 1.0)
-        x_pad = max(12.0, 0.16 * x_span)
+        x_pad = max(12.0, 0.12 * x_span)
         ax_d.set_xlim(min(p_min, floor_value) - x_pad, p_mean + x_pad)
-        ax_d.set_ylim(-0.55, 0.58)
+        ax_d.set_ylim(-0.5, 0.5)
     else:
         ax_d.axis("off")
-        ax_d.text(0.0, 0.9, "d. S3 protected-set safeguard: not available for this run", transform=ax_d.transAxes, fontsize=8, color="#6d655e")
+        panel_label(ax_d, "(d)")
+        ax_d.text(0.0, 0.9, "S3 protected-set safeguard: not available for this run", transform=ax_d.transAxes, fontsize=7, color="#6d655e")
 
-    fig.savefig(figures_dir / "fig_policy_tradeoff.png", dpi=300, bbox_inches="tight", facecolor="white")
+    save_figure(fig, figures_dir, "fig_policy_tradeoff")
     plt.close(fig)
 
 
@@ -3113,7 +3198,16 @@ def export_figures(
     fig.savefig(paths.figures_dir / "fig_S3_protected_set.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
-    fig_social_context_panels(paths.figures_dir, utam_map, df_inputs, protected_mask_s3, rotation_deg)
+    # Unidades sin dato censal: el modelo les imputa la mediana del indice (build_inputs); la
+    # Figura 4b las muestra como "sin dato censal" para no presentar la imputacion como medida.
+    vuln_csv = paths.input_dir / "utam_social_vulnerability.csv"
+    imputed_units: set[str] | None = None
+    if vuln_csv.exists():
+        vuln_src = pd.read_csv(vuln_csv)
+        vuln_src["UTAM"] = vuln_src["UTAM"].map(normalize_zone_code)
+        conocidas = set(vuln_src.loc[vuln_src["vulnerability_index"].notna(), "UTAM"])
+        imputed_units = set(df_inputs["UTAM"].map(normalize_zone_code)) - conocidas
+    fig_social_context_panels(paths.figures_dir, utam_map, df_inputs, protected_mask_s3, rotation_deg, imputed_units=imputed_units)
 
     if loss_hist is not None and len(loss_hist):
         fig, ax = plt.subplots(1, 1, figsize=(11, 4.4), constrained_layout=True)
@@ -3141,7 +3235,9 @@ def export_figures(
         fig.savefig(paths.figures_dir / "fig_gnn_learning_history.png", dpi=300, bbox_inches="tight", facecolor="white")
         plt.close(fig)
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.05, 3.30), constrained_layout=True)
+    # Figura 5 (revision de imprenta 2026-10-11): sin titulos internos, rotulos "(a)", series que no
+    # son escenarios en grises distinguibles por forma y tipo de linea, franjas horarias en grises.
+    fig, axes = plt.subplots(1, 2, figsize=(5.50, 2.55), constrained_layout=True)
     attention = pd.read_csv(paths.input_dir / "temporal_attention_by_utam.csv")
     attention = attention.rename(columns={find_utam_col(attention): "UTAM"})
     attention["UTAM"] = attention["UTAM"].map(normalize_zone_code)
@@ -3151,6 +3247,20 @@ def export_figures(
     priority_raw["UTAM"] = priority_raw["UTAM"].map(normalize_zone_code)
     trip_cols = [f"trip_hour_{hour:02d}" for hour in range(24) if f"trip_hour_{hour:02d}" in priority_raw.columns]
     hours = np.arange(24)
+
+    def estilo_horario(axis: Any, letra: str) -> None:
+        configure_line_axis(axis, "", "Hour of day", "Relative intensity (max = 1)")
+        axis.set_title("")
+        panel_label(axis, letra, y=1.02)
+        axis.set_xticks(np.arange(0, 25, 3))
+        axis.set_xticks(hours, minor=True)
+        axis.set_xlim(-0.5, 23.5)
+        axis.set_ylim(-0.03, 1.17)
+        axis.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+        axis.tick_params(labelsize=7.0)
+        axis.xaxis.label.set_fontsize(7.5)
+        axis.yaxis.label.set_fontsize(7.5)
+
     if hour_cols:
         mean_attention = attention[hour_cols].mean(axis=0).to_numpy(dtype=float)
         mean_attention = mean_attention / max(float(np.nanmax(mean_attention)), 1e-9)
@@ -3160,18 +3270,12 @@ def export_figures(
             trip_profile = priority_raw[trip_cols].mean(axis=0).to_numpy(dtype=float)
             trip_profile = trip_profile / max(float(np.nanmax(trip_profile)), 1e-9)
         add_time_window_bands(axes[0])
-        axes[0].plot(hours, smoothed_attention, color=SCENARIO_COLORS["S2"], linewidth=2.8, label="GNN attention")
-        axes[0].scatter(hours, mean_attention, color=SCENARIO_COLORS["S2"], s=18, zorder=3)
+        axes[0].plot(hours, smoothed_attention, color=NEUTRAL_DARK, linewidth=1.6, label="ST-GNN attention")
+        axes[0].scatter(hours, mean_attention, color=NEUTRAL_DARK, s=9, zorder=3)
         if trip_profile is not None:
-            axes[0].plot(hours, trip_profile, color=SCENARIO_COLORS["S0"], linewidth=2.2, linestyle="--", label="Observed trip pressure")
-        configure_line_axis(axes[0], "a. Daily schedule signature", "Hour", "Relative intensity")
-        # Marcas mayores cada 3 h (las 24 etiquetas se solapaban al tamano de
-        # impresion) y techo en y para que los rotulos de franja no pisen la curva.
-        axes[0].set_xticks(np.arange(0, 24, 3))
-        axes[0].set_xticks(hours, minor=True)
-        axes[0].set_xlim(-0.4, 23.4)
-        axes[0].set_ylim(-0.04, 1.2)
-        axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
+            axes[0].plot(hours, trip_profile, color=NEUTRAL_MID, linewidth=1.4, linestyle=(0, (4, 2)), label="Observed trip profile")
+        estilo_horario(axes[0], "(a)")
+        axes[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=1, frameon=False, fontsize=7.0, handlelength=2.2)
 
         attention_vuln = attention.merge(df_inputs[["UTAM", "vulnerability_index"]], on="UTAM", how="left")
         top_cut = float(attention_vuln["vulnerability_index"].quantile(0.75))
@@ -3182,17 +3286,13 @@ def export_figures(
         high_profile = high_profile / scale
         low_profile = low_profile / scale
         add_time_window_bands(axes[1])
-        axes[1].plot(hours, pd.Series(high_profile).rolling(window=3, center=True, min_periods=1).mean(), color=SCENARIO_COLORS["S2"], linewidth=2.8, label="High vulnerability")
-        axes[1].plot(hours, pd.Series(low_profile).rolling(window=3, center=True, min_periods=1).mean(), color=SCENARIO_COLORS["S0"], linewidth=2.8, label="Low vulnerability")
-        axes[1].scatter(hours, high_profile, color=SCENARIO_COLORS["S2"], s=16, zorder=3)
-        axes[1].scatter(hours, low_profile, color=SCENARIO_COLORS["S0"], s=16, zorder=3)
-        configure_line_axis(axes[1], "b. Attention by social vulnerability", "Hour", "Relative intensity")
-        axes[1].set_xticks(np.arange(0, 24, 3))
-        axes[1].set_xticks(hours, minor=True)
-        axes[1].set_xlim(-0.4, 23.4)
-        axes[1].set_ylim(-0.04, 1.2)
-        axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False, fontsize=8.8)
-    fig.savefig(paths.figures_dir / "fig_attention_profile.png", dpi=300, bbox_inches="tight", facecolor="white")
+        axes[1].plot(hours, pd.Series(high_profile).rolling(window=3, center=True, min_periods=1).mean(), color=NEUTRAL_DARK, linewidth=1.6, label="Most vulnerable quartile")
+        axes[1].plot(hours, pd.Series(low_profile).rolling(window=3, center=True, min_periods=1).mean(), color=NEUTRAL_MID, linewidth=1.4, linestyle=(0, (4, 2)), label="Least vulnerable quartile")
+        axes[1].scatter(hours, high_profile, color=NEUTRAL_DARK, s=9, zorder=3)
+        axes[1].scatter(hours, low_profile, facecolor="white", edgecolor=NEUTRAL_MID, linewidth=0.8, s=11, zorder=3)
+        estilo_horario(axes[1], "(b)")
+        axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=1, frameon=False, fontsize=7.0, handlelength=2.2)
+    save_figure(fig, paths.figures_dir, "fig_attention_profile")
     plt.close(fig)
 
     ordered_scenarios = [name for name in ["S0", "S1", "S2", "S3"] if name in scenario_outputs]
@@ -3314,179 +3414,145 @@ def export_figures(
             fig.savefig(label_to_path[label], dpi=300, bbox_inches="tight", facecolor="white")
             plt.close(fig)
 
-        # Suplemento, Figura C1 (2026-09-02). Se dibuja al ancho al que se
-        # imprime (7.0 in de texto en el suplemento) con los paneles apilados:
-        # en fila, cada mapa de la region completa quedaba en ~2.2 in y su
-        # texto se imprimia a la mitad del tamano rotulado, el mismo defecto
-        # que el Revisor 2 senalo en el cuerpo del articulo (R2.m2).
-        n_maps = len(growth_maps)
-        fig = plt.figure(figsize=(7.00, 2.55 * n_maps + 0.55), constrained_layout=True)
-        grid = fig.add_gridspec(n_maps + 1, 1, height_ratios=[1.0] * n_maps + [0.07])
-        axes = [fig.add_subplot(grid[idx, 0]) for idx in range(n_maps)]
-        cbar_ax = fig.add_subplot(grid[n_maps, 0])
-        for idx, (axis, (gdf_delta, label, column)) in enumerate(zip(axes, filtered_growth_maps)):
-            plot_map_panel(
-                axis,
-                gdf_delta,
-                column,
-                f"{chr(97 + idx)}. {label}",
-                DIVERGING_CMAP,
-                norm=delta_norm,
-                linewidth=0.45,
-                edgecolor=MAP_DELTA_EDGE,
-                zero_fill=MAP_DELTA_ZERO,
-                show_scale_bar=(idx == 0),
-                focus_extent=focus_extent,
-                show_focus_box=True,
-            )
-        figure_name = "fig_growth_over_time.png" if growth_long is not None else "fig_growth_progression.png"
-        add_horizontal_colorbar(fig, list(axes), DIVERGING_CMAP, delta_norm, "Net change in ports", cax=cbar_ax)
-        fig.savefig(paths.figures_dir / figure_name, dpi=300, bbox_inches="tight", facecolor="white")
+        # Suplemento, Figura C1 (revision de imprenta 2026-10-11): norte arriba, el MISMO marco
+        # urbano que la Figura 7, norte y escala en cada panel, y clases enteras {-2,...,+2} en
+        # lugar de una rampa continua (los cambios son enteros). Las unidades con cambio que caen
+        # enteras fuera del marco se enumeran bajo cada panel.
+        n_maps = len(filtered_growth_maps)
+        crop = urban_core_extent(utam_map)
+        fig = plt.figure(figsize=(7.00, 4.05))
+        grid = fig.add_gridspec(3, n_maps, height_ratios=[1.0, 0.20, 0.10], left=0.005, right=0.995, top=0.95, bottom=0.0,
+                                wspace=0.05, hspace=0.03)
+        clases_presentes: set[int] = set()
+        for idx, (gdf_delta, label, column) in enumerate(filtered_growth_maps):
+            axis = fig.add_subplot(grid[0, idx])
+            plot_net_change_map(axis, gdf_delta, column, crop, rotation_deg)
+            if idx == 0:
+                add_city_centre_marker(axis, gdf_delta, fontsize=7.0)
+            panel_label(axis, f"({chr(97 + idx)}) {label.replace(' minus ', ' − ')}")
+            clases_presentes.update(int(c) for c in _net_change_classes(gdf_delta[column]).unique())
+            fuera = zones_outside_frame(gdf_delta, column, crop)
+            nota_ax = fig.add_subplot(grid[1, idx])
+            nota_ax.axis("off")
+            if fuera:
+                texto = "Outside frame:\n" + "\n".join(f"{u} ({'+' if n > 0 else '−'}{abs(n)})" for u, n in fuera)
+            else:
+                texto = "Outside frame: none"
+            nota_ax.text(0.0, 1.0, texto, ha="left", va="top", fontsize=6.6, color=PAPER_TEXT, wrap=True, transform=nota_ax.transAxes)
+        legend_ax = fig.add_subplot(grid[2, :])
+        legend_ax.axis("off")
+        handles = net_change_legend_handles(sorted(clases_presentes)) + [region_ring_legend_patch()]
+        legend_ax.legend(handles=handles, loc="center", ncol=len(handles), frameon=False, fontsize=7.0,
+                         title="Net change in charging ports between scenarios", title_fontsize=7.5)
+        figure_name = "fig_growth_over_time" if growth_long is not None else "fig_growth_progression"
+        save_figure(fig, paths.figures_dir, figure_name)
         plt.close(fig)
 
     official_growth = load_official_ev_growth(paths)
     if official_growth is not None and len(official_growth):
-        years = official_growth["year"].to_numpy(dtype=float)
+        # Figura 3 (revision de imprenta 2026-10-11, guia JTG ficha Fig. 3). Los intervalos entre
+        # cortes oficiales miden 8 a 14 meses, asi que (b) muestra adiciones ANUALIZADAS
+        # (vehiculos por ano = adicion / anos del intervalo) y la linea discontinua es la adicion
+        # anual media del periodo (stock final - stock inicial) / anos; ambas en la misma unidad.
+        # Sin porcentajes dentro de las barras ni titulos internos; series en gris (la paleta de
+        # escenarios queda reservada).
+        dates = pd.to_datetime(official_growth["checkpoint_date"])
         counts = official_growth["electric_vehicles"].to_numpy(dtype=float)
         additions = official_growth["annual_addition"].to_numpy(dtype=float)
-        growth_pct = official_growth["annual_growth_pct"].to_numpy(dtype=float)
-        tick_labels = official_growth["checkpoint_label"].astype(str).tolist()
-        # Figura 3 (2026-09-02, tercera version). Dos paneles en fila al ancho
-        # de impresion (7.05 in): la version apilada desperdiciaba el ancho de
-        # dos columnas para cinco puntos y el rotulo de la barra mas alta
-        # chocaba con el borde superior. Aqui el panel a es mas ancho que el b,
-        # las rejillas van detras de las barras, el porcentaje de crecimiento
-        # va dentro de la barra y el eje y lleva separador de miles.
-        fig, axes = plt.subplots(
-            1,
-            2,
-            figsize=(7.05, 2.90),
-            gridspec_kw={"width_ratios": [1.35, 1.0]},
-            constrained_layout=True,
-        )
+        years_float = (dates - dates.iloc[0]).dt.days.to_numpy(dtype=float) / 365.25 + dates.iloc[0].year + (dates.iloc[0].dayofyear / 365.25)
+        interval_years = np.diff((dates - dates.iloc[0]).dt.days.to_numpy(dtype=float)) / 365.25
+        annualised = additions[1:] / interval_years
+        span_years = float((dates.iloc[-1] - dates.iloc[0]).days) / 365.25
+        mean_annual = float(counts[-1] - counts[0]) / round(span_years)
+        fig, axes = plt.subplots(1, 2, figsize=(5.50, 2.45), gridspec_kw={"width_ratios": [1.15, 1.0]}, constrained_layout=True)
         miles = FuncFormatter(lambda v, _pos: f"{int(round(v)):,}")
+        etiquetas = [d.strftime("%b\n%Y") for d in dates]
         axes[0].set_axisbelow(True)
-        axes[0].fill_between(years, counts, 0.0, color="#d08a2a", alpha=0.12, zorder=1)
-        axes[0].plot(years, counts, color=SCENARIO_COLORS["S2"], linewidth=2.4, zorder=2)
-        axes[0].scatter(years, counts, s=46, color=SCENARIO_COLORS["S2"], edgecolor="white", linewidth=1.1, zorder=3)
-        label_offset = 0.035 * max(float(np.nanmax(counts)), 1.0)
-        for x_val, y_val in zip(years, counts):
-            axes[0].text(
-                x_val,
-                y_val + label_offset,
-                f"{int(round(y_val)):,}",
-                ha="center",
-                va="bottom",
-                fontsize=8.2,
-                color=PAPER_TEXT,
-                zorder=4,
-            )
-        configure_line_axis(
-            axes[0],
-            "a. Registered electric vehicles",
-            "Official checkpoint",
-            "Registered electric vehicles",
-        )
-        axes[0].set_xticks(years)
-        axes[0].set_xticklabels(tick_labels, fontsize=8.2)
-        axes[0].set_xlim(float(years[0]) - 0.35, float(years[-1]) + 0.35)
-        axes[0].set_ylim(0.0, max(float(np.nanmax(counts)) * 1.2, 1.0))
+        axes[0].plot(years_float, counts, color=NEUTRAL_DARK, linewidth=1.5, zorder=2)
+        axes[0].scatter(years_float, counts, s=20, color=NEUTRAL_DARK, edgecolor="white", linewidth=0.8, zorder=3)
+        for k, (x_val, y_val) in enumerate(zip(years_float, counts)):
+            axes[0].annotate(f"{int(round(y_val)):,}", xy=(x_val, y_val), xytext=(0, 5) if k == 0 else (-4, 3), textcoords="offset points",
+                             ha="center" if k == 0 else "right", va="bottom", fontsize=7.0, color=PAPER_TEXT)
+        configure_line_axis(axes[0], "", "Official checkpoint", "Registered EVs (vehicles)")
+        axes[0].set_xticks(years_float)
+        axes[0].set_xticklabels(etiquetas)
+        axes[0].set_xlim(years_float[0] - 0.4, years_float[-1] + 0.4)
+        axes[0].set_ylim(0.0, float(np.nanmax(counts)) * 1.15)
         axes[0].yaxis.set_major_formatter(miles)
 
-        delta_years = years[1:]
-        delta_values = additions[1:]
-        delta_labels = tick_labels[1:]
-        ymax_b = max(float(np.nanmax(delta_values)) * 1.34, 1.0)
+        centros = 0.5 * (years_float[1:] + years_float[:-1])
+        anchos = 0.86 * np.diff(years_float)
         axes[1].set_axisbelow(True)
-        axes[1].bar(delta_years, delta_values, width=0.58, color=SCENARIO_COLORS["S3"], alpha=0.92, zorder=2)
-        mean_delta = float(np.nanmean(delta_values)) if len(delta_values) else 0.0
-        axes[1].axhline(mean_delta, linestyle="--", color="#8a8178", linewidth=1.2, zorder=3)
-        for x_val, y_val, pct_val in zip(delta_years, delta_values, growth_pct[1:]):
-            axes[1].text(
-                x_val,
-                y_val + 0.025 * ymax_b,
-                f"+{int(round(y_val)):,}",
-                ha="center",
-                va="bottom",
-                fontsize=8.2,
-                color=PAPER_TEXT,
-                zorder=4,
-            )
-            # Crecimiento relativo en la base de la barra (la mas baja, 787,
-            # mide ~0.5 in en el lienzo): a altura fija no choca con la linea
-            # de la media, que cruza la barra de 2023 justo bajo su tope.
-            axes[1].text(
-                x_val,
-                0.035 * ymax_b,
-                f"{pct_val:.1f}%",
-                ha="center",
-                va="bottom",
-                fontsize=8.0,
-                color="white",
-                zorder=4,
-            )
-        configure_line_axis(
-            axes[1],
-            "b. Year-to-year additions",
-            "Checkpoint reached",
-            "Added electric vehicles",
-        )
-        axes[1].set_xticks(delta_years)
-        axes[1].set_xticklabels(delta_labels, fontsize=8.2)
-        axes[1].set_xlim(float(delta_years[0]) - 0.55, float(delta_years[-1]) + 0.55)
-        axes[1].set_ylim(0.0, ymax_b)
+        axes[1].bar(centros, annualised, width=anchos, color=NEUTRAL_LIGHT, edgecolor=NEUTRAL_MID, linewidth=0.5, zorder=2)
+        axes[1].axhline(mean_annual, linestyle=(0, (4, 2)), color=NEUTRAL_DARK, linewidth=1.0, zorder=3)
+        for x_val, y_val in zip(centros, annualised):
+            axes[1].annotate(f"{int(round(y_val)):,}", xy=(x_val, y_val), xytext=(0, -3), textcoords="offset points",
+                             ha="center", va="top", fontsize=7.0, color=PAPER_TEXT, zorder=4)
+        meses = [int(round(12 * v)) for v in interval_years]
+        configure_line_axis(axes[1], "", "Interval between checkpoints (months)", "EVs added per year (vehicles/year)")
+        axes[1].set_xticks(centros)
+        axes[1].set_xticklabels([f"{m} mo" for m in meses])
+        axes[1].set_xlim(years_float[0], years_float[-1])
+        axes[1].set_ylim(0.0, max(float(np.nanmax(annualised)), mean_annual) * 1.18)
         axes[1].yaxis.set_major_formatter(miles)
-        # Arriba a la izquierda: a la derecha choca con el rotulo de la ultima barra.
-        axes[1].text(
-            0.03,
-            0.965,
-            f"Mean annual addition: {int(round(mean_delta)):,}",
-            transform=axes[1].transAxes,
-            ha="left",
-            va="top",
-            fontsize=7.8,
-            color="#6d655e",
-        )
-        for axis in axes:
-            axis.tick_params(axis="y", labelsize=8.4)
-            axis.xaxis.label.set_fontsize(9)
-            axis.yaxis.label.set_fontsize(9)
-        fig.savefig(paths.figures_dir / "fig_official_ev_growth.png", dpi=300, bbox_inches="tight", facecolor="white")
+        axes[1].text(years_float[0] + 0.08, mean_annual, f"mean {int(round(mean_annual)):,}", ha="left", va="bottom",
+                     fontsize=7.0, color=NEUTRAL_DARK, bbox={"boxstyle": "round,pad=0.1", "facecolor": "white", "edgecolor": "none", "alpha": 0.85}, zorder=5)
+        for axis, letra in zip(axes, ("(a)", "(b)")):
+            axis.set_title("")
+            panel_label(axis, letra, y=1.02)
+            axis.tick_params(labelsize=7.0)
+            axis.xaxis.label.set_fontsize(7.5)
+            axis.yaxis.label.set_fontsize(7.5)
+        save_figure(fig, paths.figures_dir, "fig_official_ev_growth")
         plt.close(fig)
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.05, 3.10), constrained_layout=True)
-    for axis, title, curve_fn in zip(
-        axes,
-        ["a. Unweighted Lorenz curves", "b. Vulnerability-weighted Lorenz curves"],
-        [lorenz_curve, weighted_lorenz],
-    ):
-        axis.plot([0, 1], [0, 1], linestyle="--", color="#8a8178", linewidth=1.4)
-        curves: dict[str, tuple[np.ndarray, np.ndarray]] = {}
-        for scenario_name in ordered_scenarios:
-            df_scenario = scenario_outputs[scenario_name]
-            if curve_fn is weighted_lorenz:
-                x, y = curve_fn(df_scenario["accessibility"], 1.0 + df_scenario["vulnerability_index"])
-            else:
-                x, y = curve_fn(df_scenario["accessibility"])
-            curves[scenario_name] = (np.asarray(x, dtype=float), np.asarray(y, dtype=float))
-            axis.plot(x, y, color=SCENARIO_COLORS.get(scenario_name, "#444444"), linewidth=2.4, label=scenario_name)
-        eje_x = "Cumulative share of zones" if curve_fn is lorenz_curve else "Cumulative share of vulnerability weight"
-        configure_line_axis(axis, title, eje_x, "Cumulative share of accessibility")
+    # Figura 8 (revision de imprenta 2026-10-11). Las cuatro curvas de Lorenz coinciden a escala
+    # completa (diferencia vertical maxima < 0.001), asi que (a) muestra las curvas de S0 con ambas
+    # ponderaciones y (b)-(c) la diferencia de cada escenario frente a S0, en puntos porcentuales de
+    # la proporcion acumulada, calculada sobre una malla comun por interpolacion de las curvas
+    # empiricas. Ningun dato nuevo: son las mismas curvas, restadas.
+    grid_x = np.linspace(0.0, 1.0, 501)
+    curvas: dict[tuple[str, str], np.ndarray] = {}
+    for scenario_name in ordered_scenarios:
+        df_scenario = scenario_outputs[scenario_name]
+        xu, yu = lorenz_curve(df_scenario["accessibility"])
+        xw, yw = weighted_lorenz(df_scenario["accessibility"], 1.0 + df_scenario["vulnerability_index"])
+        curvas[(scenario_name, "u")] = np.interp(grid_x, np.asarray(xu, dtype=float), np.asarray(yu, dtype=float))
+        curvas[(scenario_name, "w")] = np.interp(grid_x, np.asarray(xw, dtype=float), np.asarray(yw, dtype=float))
+    fig, axes = plt.subplots(1, 3, figsize=(7.05, 2.55), gridspec_kw={"width_ratios": [1.0, 1.0, 1.0]}, constrained_layout=True)
+    base = ordered_scenarios[0]
+    axes[0].plot([0, 1], [0, 1], linestyle=(0, (1.5, 1.5)), color=NEUTRAL_MID, linewidth=0.9, label="Equality")
+    axes[0].plot(grid_x, curvas[(base, "u")], color=NEUTRAL_DARK, linewidth=1.5, label=f"{base}, unweighted")
+    axes[0].plot(grid_x, curvas[(base, "w")], color=NEUTRAL_MID, linewidth=1.3, linestyle=(0, (4, 2)), label=f"{base}, weighted")
+    axes[0].set_anchor("N")
+    configure_line_axis(axes[0], "", "Cumulative share of zones or weight", "Cumulative share of accessibility")
+    axes[0].set_xlim(0, 1)
+    axes[0].set_ylim(0, 1.0)
+    axes[0].set_aspect("equal", adjustable="box")
+    axes[0].set_xticks([0, 0.25, 0.5, 0.75, 1.0])
+    axes[0].set_yticks([0, 0.25, 0.5, 0.75, 1.0])
+    axes[0].legend(loc="upper left", frameon=False, fontsize=6.8, handlelength=2.0, borderaxespad=0.2)
+    limite = 0.0
+    for axis, peso, eje in ((axes[1], "u", "Cumulative share of zones"), (axes[2], "w", "Cumulative share of vulnerability weight")):
+        axis.axhline(0.0, color=NEUTRAL_MID, linewidth=0.8, zorder=1)
+        for scenario_name in ordered_scenarios[1:]:
+            dif = 100.0 * (curvas[(scenario_name, peso)] - curvas[(base, peso)])
+            limite = max(limite, float(np.nanmax(np.abs(dif))))
+            axis.plot(grid_x, dif, color=SCENARIO_COLORS.get(scenario_name, NEUTRAL_DARK), linewidth=1.3,
+                      linestyle=SCENARIO_LINESTYLES.get(scenario_name, "-"), label=f"{scenario_name} − {base}")
+        configure_line_axis(axis, "", eje, f"Difference from {base} (percentage points)")
         axis.set_xlim(0, 1)
-        axis.set_ylim(0, 1.02)
-        axis.legend(loc="upper left", frameon=False, fontsize=9)
-        # Las curvas de los cuatro escenarios se superponen: la figura lo declara con la
-        # brecha vertical máxima entre la primera y la última, calculada de los datos.
-        if len(curves) >= 2:
-            (x_first, y_first), (x_last, y_last) = curves[ordered_scenarios[0]], curves[ordered_scenarios[-1]]
-            gap = float(np.max(np.abs(np.interp(x_first, x_last, y_last) - y_first)))
-            gap_text = f"largest vertical gap {gap:.4f}" if gap >= 0.00005 else "largest vertical gap < 0.0001"
-            axis.text(
-                0.97, 0.05,
-                f"{ordered_scenarios[0]}\u2013{ordered_scenarios[-1]} curves coincide\n({gap_text})",
-                transform=axis.transAxes, ha="right", va="bottom", fontsize=7.8, color="#6d655e",
-            )
-    fig.savefig(paths.figures_dir / "fig_lorenz_curves.png", dpi=300, bbox_inches="tight", facecolor="white")
+        axis.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
+    for axis in axes[1:]:
+        axis.set_ylim(-0.12 * limite, 1.45 * limite)
+    axes[1].legend(loc="upper center", frameon=False, fontsize=6.8, ncol=3, handlelength=2.2, columnspacing=0.7, handletextpad=0.4)
+    for axis, letra in zip(axes, ("(a)", "(b)", "(c)")):
+        axis.set_title("")
+        panel_label(axis, letra, y=1.02)
+        axis.tick_params(labelsize=7.0)
+        axis.xaxis.label.set_fontsize(7.5)
+        axis.yaxis.label.set_fontsize(7.5)
+    save_figure(fig, paths.figures_dir, "fig_lorenz_curves")
     plt.close(fig)
 
     tradeoff_path = paths.tables_dir / "table_policy_tradeoff.csv"
@@ -3523,36 +3589,34 @@ def export_figures(
         # con el eje y compartido para que las 13 etiquetas se lean una sola
         # vez a 8.4 pt; los titulos se acortan porque el eje x ya dice contra
         # que se compara.
-        fig, axes = plt.subplots(
-            1,
-            2,
-            figsize=(7.00, max(3.4, 0.26 * len(robust_plot) + 1.6)),
-            sharey=True,
-            constrained_layout=True,
-        )
-        for axis, metric, color, title, baseline, xlabel in [
-            (axes[0], "delta_weighted_gini_bp", SCENARIO_COLORS["S2"], "a. Weighted-Gini shift", 0.0, "Delta weighted Gini vs S2 (bp)"),
-            (axes[1], "rank_stability", SCENARIO_COLORS["S0"], "b. Rank stability", 1.0, "Spearman rank correlation with S2"),
+        # Suplemento, Figura C2 (revision de imprenta 2026-10-11): griegas reales, sin titulos
+        # internos, series en gris (la paleta de escenarios queda reservada), texto de 7-7.5 pt.
+        fig, axes = plt.subplots(1, 2, figsize=(7.00, max(3.0, 0.20 * len(robust_plot) + 1.1)), sharey=True, constrained_layout=True)
+        for axis, metric, baseline, xlabel, letra in [
+            (axes[0], "delta_weighted_gini_bp", 0.0, "Change in weighted Gini vs S2 (basis points)", "(a)"),
+            (axes[1], "rank_stability", 1.0, "Spearman rank correlation with S2", "(b)"),
         ]:
             values = pd.to_numeric(robust_plot[metric], errors="coerce").to_numpy(dtype=float)
-            axis.hlines(y_pos, baseline, values, color=color, linewidth=2.0, alpha=0.75)
-            axis.scatter(values, y_pos, color=color, s=36, zorder=3)
-            axis.axvline(baseline, linestyle="--", color="#8a8178", linewidth=1.4)
-            configure_line_axis(axis, title, xlabel, "")
+            axis.hlines(y_pos, baseline, values, color=NEUTRAL_LIGHT, linewidth=1.6)
+            axis.scatter(values, y_pos, color=NEUTRAL_DARK, s=18, zorder=3)
+            axis.axvline(baseline, linestyle=(0, (4, 2)), color=NEUTRAL_MID, linewidth=0.9)
+            configure_line_axis(axis, "", xlabel, "")
+            axis.set_title("")
+            panel_label(axis, letra, y=1.01)
             axis.set_yticks(y_pos)
-            axis.set_yticklabels(robust_plot["display_label"], fontsize=8.4)
-            axis.tick_params(axis="y", pad=4, labelleft=axis is axes[0])
+            axis.set_yticklabels(robust_plot["display_label"], fontsize=7.0)
+            axis.tick_params(axis="y", pad=3, labelleft=axis is axes[0])
+            axis.tick_params(axis="x", labelsize=7.0)
+            axis.xaxis.label.set_fontsize(7.5)
             if metric == "rank_stability":
-                # Valores entre 0.99997 y 1: cuatro marcas fijas con cinco decimales, giradas para
-                # que no se solapen, en lugar del desplazamiento "1e-5+9.999e-1" de matplotlib.
                 finite = values[np.isfinite(values)]
                 lo = float(np.floor(finite.min() * 1e5) / 1e5) if len(finite) else 0.99997
                 axis.set_xticks([t for t in np.arange(lo, 1.0 + 1e-9, 1e-5) if t <= 1.0 + 1e-9])
                 axis.xaxis.set_major_formatter(FuncFormatter(lambda v, _pos: f"{v:.5f}"))
-                axis.tick_params(axis="x", labelsize=8.0, labelrotation=30)
+                axis.tick_params(axis="x", labelrotation=30)
                 for label in axis.get_xticklabels():
                     label.set_ha("right")
-        fig.savefig(paths.figures_dir / "fig_robustness.png", dpi=300, bbox_inches="tight", facecolor="white")
+        save_figure(fig, paths.figures_dir, "fig_robustness")
         plt.close(fig)
 
 

@@ -46,3 +46,17 @@ acceso, tarifa, conectores (`socket:*`), `motorcar`, horario. Generado con Pytho
 - **Conclusión:** el conteo de OpenChargeMap para Bogotá **no quedó verificado**. La clave
   es gratuita registrándose en https://openchargemap.org (perfil → *my apps*); documentación
   en https://openchargemap.org/site/develop/api.
+
+## colombia — `colombia_silueta_simplificada.geojson` (localizador de la Fig. 2)
+
+- **Origen:** `colombia_deptos.geojson` (33 departamentos, campos `DPTO`, `NOMBRE_DPT`, `AREA`,
+  `PERIMETER`, `HECTARES`; GeoJSON público derivado de los límites departamentales del DANE), copia local fuera del
+  repositorio (fecha de archivo 2026-09-04).
+- **Proceso (2026-10-11):** EPSG:9377 → disolución a un solo polígono → `simplify(2000 m)` → se
+  descartan islas < 500 km² (San Andrés queda fuera del recuadro) → EPSG:4326.
+- **Uso:** solo el recuadro "Location in Colombia" de la Fig. 2 (escala ~1:40 000 000); no entra en
+  ningún cálculo. Procedencia exacta del GeoJSON pendiente de confirmar por el autor.
+- **Estado (2026-10-11, entrega R1):** ya no se usa. La guía de JTG (política de mapas de Elsevier)
+  no admite localizadores que muestren un área mayor que la estudiada, así que el recuadro se
+  sustituyó por un rótulo de texto con las coordenadas del centroide urbano. El archivo no se incluye
+  en el repositorio.
